@@ -1,0 +1,46 @@
+{
+  "name": "eoxc",
+  "version": "0.0.1",
+  "description": "EOxC client generator",
+  "main": "dist/eoxc.js",
+  "scripts": {
+    "build": "webpack -p",
+    "build-dev": "webpack -d",
+    "test": "mocha --compilers js:babel-register test/setup/node.js test/unit/**/*.js",
+    "test:watch": "npm run test -- -w",
+    "build-browser-tests": "webpack -d --config webpack.tests.config.js",
+    "build-browser-tests:watch": "npm run build-browser-tests -- --watch",
+    "server": "webpack-dev-server --content-base dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/eoxc/eoxc.git"
+  },
+  "keywords": [],
+  "author": "Fabian Schindler <fabian.schindler.strauss@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eoxc/eoxc/issues"
+  },
+  "homepage": "https://github.com/eoxc/eoxc",
+  "devDependencies": {
+    "babel-core": "^6.5.1",
+    "babel-loader": "^6.2.2",
+    "babel-polyfill": "^6.3.14",
+    "babel-preset-es2015": "^6.5.0",
+    "babel-register": "^6.5.1",
+    "chai": "^3.4.1",
+    "glob": "^6.0.3",
+    "json-loader": "^0.5.3",
+    "mocha": "^2.3.4",
+    "sinon": "^1.17.2",
+    "sinon-chai": "^2.8.0",
+    "webpack": "^1.12.9"
+  },
+  "dependencies": {
+    "backbone": "^1.3.3",
+    "backbone.marionette": "^2.4.5",
+    "jquery": "^2.2.3",
+    "marionette": "0.0.0"
+  }
+}
