@@ -1,7 +1,8 @@
 
 module.exports = {
     entry: {
-        eoxc: './src/eoxc.js',
+        openlayers: './test/apps/OpenLayers/main.js',
+        //cesium: './test/apps/Cesium/main.js',
     },
     output: {
         path: "./dist",
