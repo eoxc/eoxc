@@ -1,10 +1,6 @@
+import Layer from './core/models/LayerModel';
+import Layers from './core/models/LayersCollection';
+import OpenLayersMapView from './contrib/OpenLayers/OpenLayersMapView';
 
-import Layer from './core/models/layer';
 
-const babelWebpackBoilerplate = {
-    greet() {
-        return 'hello';
-    }
-};
-
-export default babelWebpackBoilerplate;
+export { Layer, Layers, OpenLayersMapView };
