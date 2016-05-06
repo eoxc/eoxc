@@ -1,14 +1,30 @@
-import Backbone from "backbone";
+import Backbone from 'backbone';
 
 /**
  * @memberof core/models
+ *
+ * This model is used to store the relevant values for map views (2D or 3D), such as camera options
+ *
+ *
+ * @param {Object} attributes The attributes of the model instance
+ * @param {Number[]} [attributes.center] The center of the view
+ * @param {Number} [attributes.zoom] The zoomlevel of the view
+ * @param {string} [attributes.tool] The currently selected tool
+ * @param {bool} [attributes.isZooming] Indicator whether the map is currently zooming
+ * @param {bool} [attributes.isPanning] Indicator whether the map is currently panning
+ * @param {Number} [attributes.heading] The heading
+ * @param {Number} [attributes.pitch] The pitch
+ * @param {Number} [attributes.roll] The roll
+ * @param {string?} [attributes.displayMode] The display mode of the map. One of 'map',
+                                             'columbus' and 'globe'
  */
 
 class MapModel extends Backbone.Model {
-  validate(attrs, options) {
-    if ([null, "map", "columbus", "globe"].indexOf(attrs.displayMode) !== -1) {
-      return "invalid display mode";
+  validate(attrs) {
+    if ([null, 'map', 'columbus', 'globe'].indexOf(attrs.displayMode) !== -1) {
+      return 'invalid display mode';
     }
+    return null;
   }
 }
 
@@ -28,7 +44,7 @@ MapModel.prototype.defaults = {
   pitch: 0,
   roll: 0,
 
-  displayMode: null, // one of "map", "columbus", "globe"
-}
+  displayMode: null, // one of 'map', 'columbus', 'globe'
+};
 
 export default MapModel;

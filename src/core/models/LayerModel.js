@@ -1,4 +1,4 @@
-import Backbone from "backbone";
+import Backbone from 'backbone';
 
 /**
  * @memberof core/models
@@ -8,23 +8,23 @@ class LayerModel extends Backbone.Model {
 
   }
 
-  validate(attrs, options) {
-    /*if (!attrs.id) {
-      return "missing mandatory identifier";
-    }
-    else if (!attrs.displayName) {
-      return "missing mandatory display name";
-    }
-    else if (url === null && urls.length === 0) {
-      return "missing mandatory url or urls";
-    }*/
+  validate(attrs) {
+    // if (!attrs.id) {
+    //   return 'missing mandatory identifier';
+    // }
+    // else if (!attrs.displayName) {
+    //   return 'missing mandatory display name';
+    // }
+    // else if (url === null && urls.length === 0) {
+    //   return 'missing mandatory url or urls';
+    // }
   }
 
   /**
-   * Get a compiled hash of view parameters.
+   * Get a compiled hash of display parameters.
    */
 
-  getViewParams() {
+  getDisplayParams() {
 
   }
 
@@ -43,30 +43,31 @@ class LayerModel extends Backbone.Model {
   getDownloadParams() {
 
   }
-};
+}
 
 LayerModel.prototype.defaults = {
   id: null,
   displayName: null,
   visible: false,
-  view: {
+  displayColor: 'red',
+  display: {
     protocol: null,
     url: null,
     urls: [],
     id: null,
     opacity: 0,
     style: 'default',
-    attribution: null
+    attribution: null,
   },
   search: {
     protocol: null,
     url: null,
-    id: null
+    id: null,
   },
   download: {
     protocol: null,
-    id: null
-  }
-}
+    id: null,
+  },
+};
 
-export default LayerModel
+export default LayerModel;
