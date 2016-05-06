@@ -1,0 +1,10 @@
+{
+  "name": "eoxc",
+  "version": "0.0.1",
+  "dependencies": {
+    "libcoverage": "https://github.com/EOX-A/libcoverage.js/releases/download/v0.1.5/libcoverage.js.v0.1.5.zip",
+    "d3": "~3.3.5",
+    "d3.TimeSlider": "https://github.com/EOX-A/d3.TimeSlider/releases/download/v0.0.13/d3.TimeSlider.zip"
+  },
+  "devDependencies": {}
+}
