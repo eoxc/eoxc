@@ -1,12 +1,40 @@
-import Marionette from "backbone.marionette";
-import Backbone from "backbone";
-import ol from "openlayers"
+import Marionette from 'backbone.marionette';
+import ol from 'openlayers';
+
+
+// TODO: move this to a general utils file
+
+function padLeft(str, pad, size) {
+  let out = str;
+  while (out.length < size) {
+    out = pad + str;
+  }
+  return out;
+}
+
+function getDateString(date) {
+  return date.getFullYear() + '-'
+    + padLeft(String(date.getUTCMonth() + 1), '0', 2) + '-'
+    + padLeft(String(date.getUTCDate()), '0', 2);
+}
+
+function getISODateString(date) {
+  return getDateString(date) + 'T';
+}
+
+function getISODateTimeString(date) {
+  return getISODateString(date)
+    + padLeft(String(date.getUTCHours()), '0', 2) + ':'
+    + padLeft(String(date.getUTCMinutes()), '0', 2) + ':'
+    + padLeft(String(date.getUTCSeconds()), '0', 2) + 'Z';
+}
+
 
 /**
  * @memberof contrib/OpenLayers
  */
 
-class OpenLayersMapView extends Backbone.View {
+class OpenLayersMapView extends Marionette.ItemView {
   /**
    * Initialize an OpenLayersMapView
    * @param {Object} options - Options to initialize the view with.
@@ -27,9 +55,15 @@ class OpenLayersMapView extends Backbone.View {
     this.isZooming = false;
   }
 
-  render() {
+  onRender() {
     this.createMap();
     return this;
+  }
+
+  onAttach() {
+    if (this.map) {
+      this.map.setTarget(this.el);
+    }
   }
 
   /**
@@ -37,30 +71,38 @@ class OpenLayersMapView extends Backbone.View {
    */
 
   createMap(options = {}) {
-
     // assure that we only set up everything once
 
     if (this.map) {
       return this;
     }
 
+    this.$el.attr('style', 'width:100%;height:100%;');
+
     // create the map object
 
     this.map = new ol.Map({
-      target: this.el,
+      controls: ol.control.defaults().extend([
+        new ol.control.MousePosition({
+          coordinateFormat: ol.coordinate.createStringXY(4),
+          projection: 'EPSG:4326',
+          undefinedHTML: '&nbsp;',
+        }),
+      ]),
       renderer: options.mapRenderer || 'canvas',
       view: new ol.View({
-        center: this.mapModel.get("center") || [0, 0],
-        zoom: this.mapModel.get("zoom") || 2
-      })
+        projection: ol.proj.get('EPSG:4326'),
+        center: this.mapModel.get('center') || [0, 0],
+        zoom: this.mapModel.get('zoom') || 2,
+      }),
     });
 
     // create layer groups for base, normal and overlay layers
 
     const createGroupForCollection = (collection) => {
-      let group = new ol.layer.Group({
-        layers: collection.map(layerModel => this.createLayer(layerModel) )
-      })
+      const group = new ol.layer.Group({
+        layers: collection.map(layerModel => this.createLayer(layerModel)),
+      });
       this.map.addLayer(group);
       return group;
     };
@@ -68,7 +110,7 @@ class OpenLayersMapView extends Backbone.View {
     this.groups = {
       baseLayers: createGroupForCollection(this.baseLayersCollection),
       layers: createGroupForCollection(this.layersCollection),
-      overlayLayers: createGroupForCollection(this.overlayLayersCollection)
+      overlayLayers: createGroupForCollection(this.overlayLayersCollection),
     };
 
     // TODO: create vector layer for selections etc
@@ -77,26 +119,33 @@ class OpenLayersMapView extends Backbone.View {
 
     this.setupEvents();
 
+
+    this.map.render();
+
     return this;
   }
 
+  /**
+   * Creates an OpenLayers layer from a given LayerModel.
+   *
+   */
   createLayer(layerModel) {
-    const params = layerModel.get("view");
+    const params = layerModel.get('display');
     let layer;
 
-    var projection = ol.proj.get('EPSG:4326');
-    var projectionExtent = projection.getExtent();
-    var size = ol.extent.getWidth(projectionExtent) / 256;
-    var resolutions = new Array(18);
-    var matrixIds = new Array(18);
-    for (var z = 0; z < 18; ++z) {
+    const projection = ol.proj.get('EPSG:4326');
+    const projectionExtent = projection.getExtent();
+    const size = ol.extent.getWidth(projectionExtent) / 256;
+    const resolutions = new Array(18);
+    const matrixIds = new Array(18);
+    for (let z = 0; z < 18; ++z) {
       // generate resolutions and matrixIds arrays for this WMTS
-      resolutions[z] = size / Math.pow(2, z+1);
+      resolutions[z] = size / Math.pow(2, z + 1);
       matrixIds[z] = z;
     }
 
     switch (params.protocol) {
-      case "WMTS":
+      case 'WMTS':
         layer = new ol.layer.Tile({
           visible: params.visible,
           source: new ol.source.WMTS({
@@ -107,48 +156,60 @@ class OpenLayersMapView extends Backbone.View {
             projection: params.projection,
             tileGrid: new ol.tilegrid.WMTS({
               origin: ol.extent.getTopLeft(projectionExtent),
-              resolutions: resolutions,
-              matrixIds: matrixIds
+              resolutions,
+              matrixIds,
             }),
             style: params.style,
             attributions: [
               new ol.Attribution({
-                html: params.attribution
-              })
+                html: params.attribution,
+              }),
             ],
-            wrapX: true
-          })
+            wrapX: true,
+          }),
         });
         break;
-      case "WMS":
+      case 'WMS':
         layer = new ol.layer.Tile({
-          visible: layerdesc.get("visible"),
-            source: new ol.source.TileWMS({
-              crossOrigin: 'anonymous',
-              params: {
-                'LAYERS': params.id,
-                'VERSION': '1.1.0',
-                'FORMAT': 'image/png' // TODO: use format here?
-              },
-              url: params.url || params.urls[0],
-              wrapX: true
-            }),
-            attribution: params.attribution,
-          });
+          visible: params.visible,
+          source: new ol.source.TileWMS({
+            crossOrigin: 'anonymous',
+            params: {
+              LAYERS: params.id,
+              VERSION: '1.1.0',
+              FORMAT: params.format, // TODO: use format here?
+            },
+            url: params.url || params.urls[0],
+            wrapX: true,
+          }),
+          attribution: params.attribution,
+        });
         break;
       default:
-        throw new Error("Unsupported view protocol ")
-    };
-    layer.id = params.id;
+        throw new Error('Unsupported view protocol');
+    }
+    layer.id = layerModel.get('id');
+
+    // TODO: implement
+    this.applyLayerFilters(layer);
+
     return layer;
   }
 
-  removeLayer(layerModel, group) {
-    const viewParams = layerModel.get("view");
-    group.getLayers().remove(this.getLayerOfGroup(group, viewParams.id));
+  applyLayerFilters() {
+
   }
 
-  getLayerOfGroup(group, id) {
+  /**
+   * Remove the layer from the given group;
+   *
+   */
+  removeLayer(layerModel, group) {
+    group.getLayers().remove(this.getLayerOfGroup(layerModel, group));
+  }
+
+  getLayerOfGroup(layerModel, group) {
+    const id = layerModel.get('id');
     let foundLayer;
     group.getLayers().forEach(layer => {
       if (layer.id === id) {
@@ -158,51 +219,61 @@ class OpenLayersMapView extends Backbone.View {
     return foundLayer;
   }
 
-  setupEvents() {
+  /**
+   * Set up all events from the layer collections
+   *
+   */
 
+  setupEvents() {
     // setup collection signals
-    this.listenTo(this.layersCollection, "add", (layerModel) => this.addLayer(layerModel, this.groups.layers) );
-    this.listenTo(this.layersCollection, "change", (layerModel) => this.onLayerChange(layerModel, this.groups.layers) );
-    this.listenTo(this.layersCollection, "remove", (layerModel, layers) => {} );
-    this.listenTo(this.layersCollection, "sort", (layers) => this.onLayersSorted() );
+    this.listenTo(this.layersCollection, 'add', (layerModel) =>
+      this.addLayer(layerModel, this.groups.layers)
+    );
+    this.listenTo(this.layersCollection, 'change', (layerModel) =>
+      this.onLayerChange(layerModel, this.groups.layers)
+    );
+    this.listenTo(this.layersCollection, 'remove', (layerModel, layers) => {});
+    this.listenTo(this.layersCollection, 'sort', (layers) => this.onLayersSorted(layers));
 
     // setup mapModel signals
 
     // directly tie the changes to the map
-    this.listenTo(this.mapModel, "change:center", (mapModel) => {
+    this.listenTo(this.mapModel, 'change:center', (mapModel) => {
       if (!this.isPanning) {
-        this.map.getView().setCenter(mapModel.get("center"))
+        this.map.getView().setCenter(mapModel.get('center'));
       }
     });
-    this.listenTo(this.mapModel, "change:zoom", (mapModel) => {
+    this.listenTo(this.mapModel, 'change:zoom', (mapModel) => {
       if (!this.isZooming) {
-        this.map.getView().setZoom(mapModel.get("zoom"))
+        this.map.getView().setZoom(mapModel.get('zoom'));
       }
     });
 
-    this.listenTo(this.mapModel, "change:roll", (mapModel) => {this.map.getView().setRotation(mapModel.get("roll")) });
+    this.listenTo(this.mapModel, 'change:roll', (mapModel) => {
+      this.map.getView().setRotation(mapModel.get('roll'));
+    });
 
     // setup filters signals
 
-    this.listenTo(this.filtersModel, "change")
+    this.listenTo(this.filtersModel, 'change:time', this.onFiltersTimeChange);
 
 
     // setup map events
 
-    let self = this;
-    this.map.on("pointerdrag", (evt) => {
+    const self = this;
+    this.map.on('pointerdrag', (evt) => {
       // TODO: check if the currently selected tool is the panning tool
       // TODO: improve this to allow
       self.isPanning = true;
     });
 
-    this.map.on("moveend", (evt) => {
+    this.map.on('moveend', (evt) => {
       self.isPanning = false;
       self.isZooming = false;
       self.mapModel.set({
         center: self.map.getView().getCenter(),
-        zoom: self.map.getView().getZoom()
-      })
+        zoom: self.map.getView().getZoom(),
+      });
     });
   }
 
@@ -210,20 +281,30 @@ class OpenLayersMapView extends Backbone.View {
   // collection/model signal handlers
 
   onLayerChange(layerModel, group) {
-    let layer = this.getLayerOfGroup(group, layerModel)
+    let layer = this.getLayerOfGroup(layerModel, group);
   }
 
 
-  onFiltersChange(filtersModel, options) {
-
-
+  onFiltersTimeChange(filtersModel) {
+    const time = filtersModel.get('time');
+    this.layersCollection.forEach((layerModel) => {
+      const source = this.getLayerOfGroup(layerModel, this.groups.layers).getSource();
+      const params = source.getParams();
+      if (time !== null) {
+        params.time = `${getISODateTimeString(time[0])}/${getISODateTimeString(time[1])}`;
+      }
+      else {
+        delete params.time;
+      }
+      source.updateParams(params);
+    }, this);
   }
-
-
 
   onDestroy() {
     // TODO: implement
   }
-};
+}
+
+OpenLayersMapView.prototype.template = () => '';
 
 export default OpenLayersMapView;
