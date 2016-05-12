@@ -1,39 +1,43 @@
-var webpack = require("webpack");
-var path = require("path");
+const webpack = require('webpack');
+const path = require('path');
 
 module.exports = {
-    entry: {
-        openlayers: './test/apps/OpenLayers/main.js',
-        //cesium: './test/apps/Cesium/main.js',
+  entry: {
+    openlayers: './test/apps/OpenLayers/main.js',
+    //cesium: './test/apps/Cesium/main.js',
+  },
+  resolve: {
+    modulesDirectories: ['web_modules', 'node_modules', 'bower_components'],
+    alias: {
+      // necessary to avoid multiple packings of backbone due to marionette
+      backbone: path.join(__dirname, 'node_modules', 'backbone', 'backbone'),
     },
-    resolve: {
-        modulesDirectories: ["web_modules", "node_modules", "bower_components"],
-        alias: {
-            // necessary to avoid multiple packings of backbone due to marionette
-            backbone: path.join(__dirname, 'node_modules', 'backbone', 'backbone')
-        },
-    },
-    output: {
-        path: "./dist",
-        filename: "[name].bundle.js",
-        library: 'eoxc',
-        libraryTarget: 'umd'
-    },
-    module: {
-        loaders: [
-            {test: /\.js$/, exclude: /node_modules/, loader: "babel-loader"},
-            {test: /\.json$/, exclude: /node_modules/, loader: 'json-loader'},
-            //{test: /\.css$/, loaders: 'style-loader!css-loader'},
-            {test: /\.css$/, loaders: ['style', 'css']},
-        ]
-    },
-    plugins: [
-        new webpack.ResolverPlugin(
-            new webpack.ResolverPlugin.DirectoryDescriptionFilePlugin(".bower.json", ["main"])
-        ),
-        /*new webpack.ProvidePlugin({
-            d3: "d3",
-            "window.d3": "d3"
-        })*/
-    ]
+  },
+  resolveLoader: {
+    root: path.join(__dirname, 'node_modules'),
+  },
+  output: {
+    path: './test/apps/dist',
+    filename: '[name].bundle.js',
+    library: 'eoxc',
+    libraryTarget: 'umd',
+  },
+  module: {
+    loaders: [
+      { test: /\.js$/, exclude: /node_modules/, loader: 'babel-loader' },
+      { test: /\.json$/, exclude: /node_modules/, loader: 'json-loader' },
+      { test: /\.coffee$/, exclude: /node_modules/, loader: 'coffee-loader' },
+      // {test: /\.css$/, loaders: 'style-loader!css-loader'},
+      { test: /\.css$/, loaders: ['style', 'css'] },
+      { test: /\.hbs$/, loader: 'handlebars-loader' },
+
+      // for anything that might be included in a css
+      { test: /\.(png|woff|woff2|eot|ttf|svg)(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?limit=100000' },
+    ],
+  },
+  plugins: [
+    new webpack.ResolverPlugin(
+        new webpack.ResolverPlugin.DirectoryDescriptionFilePlugin('.bower.json', ['main'])
+    ),
+  ],
 };
