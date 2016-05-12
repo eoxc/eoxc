@@ -379,19 +379,19 @@ class OpenLayersMapView extends Marionette.ItemView {
    */
   setupControls(selectionStyle) {
     this.drawControls = {
-      pointSelection: new ol.interaction.Draw({ source: this.selectionSource, type: 'Point' }),
-      lineSelection: new ol.interaction.Draw({ source: this.selectionSource, type: 'LineString' }),
-      polygonSelection: new ol.interaction.Draw({ source: this.selectionSource, type: 'Polygon' }),
-      bboxSelection: new ol.interaction.DragBox({ style: selectionStyle }),
+      point: new ol.interaction.Draw({ source: this.selectionSource, type: 'Point' }),
+      line: new ol.interaction.Draw({ source: this.selectionSource, type: 'LineString' }),
+      polygon: new ol.interaction.Draw({ source: this.selectionSource, type: 'Polygon' }),
+      bbox: new ol.interaction.DragBox({ style: selectionStyle }),
     };
 
-    this.drawControls.bboxSelection.on('boxstart', (evt) => {
-      this.drawControls.bboxSelection.boxstart = evt.coordinate;
+    this.drawControls.bbox.on('boxstart', (evt) => {
+      this.drawControls.bbox.boxstart = evt.coordinate;
     }, this);
 
-    this.drawControls.bboxSelection.on('boxend', (evt) => {
+    this.drawControls.bbox.on('boxend', (evt) => {
       const boxend = evt.coordinate;
-      const boxstart = this.drawControls.bboxSelection.boxstart;
+      const boxstart = this.drawControls.bbox.boxstart;
       const polygon = ol.geom.Polygon.fromExtent([
         boxstart[0], boxstart[1], boxend[0], boxend[1],
       ]);
@@ -439,7 +439,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     const toolName = mapModel.get('tool');
     if (toolName) {
       if (toolName === 'bbox') {
-        this.map.addInteraction(this.drawControls.bboxSelection);
+        this.map.addInteraction(this.drawControls.bbox);
       }
     }
 
