@@ -1,0 +1,9 @@
+.layer-list {
+    margin: .3em -.5em 0 -2em;
+    padding: 0;
+}
+
+.sortable-placeholder {
+    display: block;
+    height: 3em;
+}
