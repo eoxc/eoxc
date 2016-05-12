@@ -31,6 +31,7 @@ class MapModel extends Backbone.Model {
 MapModel.prototype.defaults = {
   // the current center and zoom of the map view
   center: [0, 0],
+  bbox: [0, 0, 1, 1],
   zoom: 2,
 
   tool: null,
