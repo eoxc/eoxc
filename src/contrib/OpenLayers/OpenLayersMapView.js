@@ -1,6 +1,8 @@
 import Marionette from 'backbone.marionette';
 import ol from 'openlayers';
+import $ from 'jquery';
 
+require('openlayers/dist/ol.css');
 
 // TODO: move this to a general utils file
 
@@ -63,6 +65,7 @@ class OpenLayersMapView extends Marionette.ItemView {
   onAttach() {
     if (this.map) {
       this.map.setTarget(this.el);
+      $(window).resize(() => this.onResize());
     }
   }
 
@@ -77,10 +80,16 @@ class OpenLayersMapView extends Marionette.ItemView {
       return this;
     }
 
-    this.$el.attr('style', 'width:100%;height:100%;');
+    // TODO: move this to layout containing this view
+    this.$el.css({
+      width: '100%',
+      height: '100%',
+      // 'min-height': '100%',
+      // 'background-color': 'red',
+      position: 'absolute',
+    });
 
     // create the map object
-
     this.map = new ol.Map({
       controls: ol.control.defaults().extend([
         new ol.control.MousePosition({
@@ -113,14 +122,69 @@ class OpenLayersMapView extends Marionette.ItemView {
       overlayLayers: createGroupForCollection(this.overlayLayersCollection),
     };
 
-    // TODO: create vector layer for selections etc
+    this.groups.layers.getLayers().forEach((layer) => {
+      this.applyLayerFilters(layer, this.filtersModel);
+    }, this);
+
+
+    const selectionStyle = new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0.2)',
+      }),
+      stroke: new ol.style.Stroke({
+        color: '#ffcc33',
+        width: 2,
+      }),
+      image: new ol.style.Circle({
+        radius: 7,
+        fill: new ol.style.Fill({
+          color: '#ffcc33',
+        }),
+      }),
+    });
+
+    this.selectionSource = new ol.source.Vector();
+
+    // this.selectionSource.on("change", this.onDone);
+
+    const selectionLayer = new ol.layer.Vector({
+      source: this.selectionSource,
+      style: selectionStyle,
+    });
+
+    // create layer for highlighting features
+
+    const highlightStyle = new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0.2)',
+      }),
+      stroke: new ol.style.Stroke({
+        color: '#ffcc33',
+        width: 2,
+      }),
+      image: new ol.style.Circle({
+        radius: 7,
+        fill: new ol.style.Fill({
+          color: '#ffcc33',
+        }),
+      }),
+    });
+
+    this.highlightSource = new ol.source.Vector();
+
+    const highlightLayer = new ol.layer.Vector({
+      source: this.highlightSource,
+      style: highlightStyle,
+    });
+
+    this.map.addLayer(highlightLayer);
+    this.map.addLayer(selectionLayer);
+
 
     // attach to signals of the collections
 
     this.setupEvents();
-
-
-    this.map.render();
+    this.setupControls(selectionStyle);
 
     return this;
   }
@@ -128,6 +192,8 @@ class OpenLayersMapView extends Marionette.ItemView {
   /**
    * Creates an OpenLayers layer from a given LayerModel.
    *
+   * @param {core/models.LayerModel} layerModel The layerModel to create a layer for.
+   * @returns {ol.Layer} The OpenLayers layer object
    */
   createLayer(layerModel) {
     const params = layerModel.get('display');
@@ -189,15 +255,21 @@ class OpenLayersMapView extends Marionette.ItemView {
         throw new Error('Unsupported view protocol');
     }
     layer.id = layerModel.get('id');
-
-    // TODO: implement
-    this.applyLayerFilters(layer);
-
     return layer;
   }
 
-  applyLayerFilters() {
-
+  applyLayerFilters(layer, filtersModel) {
+    const time = filtersModel.get('time');
+    const isoTime = (time !== null) ?
+        `${getISODateTimeString(time[0])}/${getISODateTimeString(time[1])}` : null;
+    const source = layer.getSource();
+    const params = source.getParams();
+    if (isoTime !== null) {
+      params.time = isoTime;
+    } else {
+      delete params.time;
+    }
+    source.updateParams(params);
   }
 
   /**
@@ -232,7 +304,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.listenTo(this.layersCollection, 'change', (layerModel) =>
       this.onLayerChange(layerModel, this.groups.layers)
     );
-    this.listenTo(this.layersCollection, 'remove', (layerModel, layers) => {});
+    this.listenTo(this.layersCollection, 'remove', (layerModel) =>
+      this.removeLayer(layerModel, this.groups.layers)
+    );
     this.listenTo(this.layersCollection, 'sort', (layers) => this.onLayersSorted(layers));
 
     // setup mapModel signals
@@ -253,6 +327,27 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.map.getView().setRotation(mapModel.get('roll'));
     });
 
+    this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
+      if (!this.isPanning) {
+        this.map.getView().fit(mapModel.get('bbox'), this.map.getSize());
+      }
+    });
+
+    this.listenTo(this.mapModel, 'change:tool', this.onToolChange);
+
+
+    this.listenTo(this.mapModel, 'change:highlightFootprint', (mapModel) => {
+      this.highlightSource.clear();
+      const footprint = mapModel.get('highlightFootprint');
+      if (footprint) {
+        const polygon = new ol.geom.Polygon([footprint]);
+        const feature = new ol.Feature();
+        feature.setGeometry(polygon);
+        this.highlightSource.addFeature(feature);
+      }
+    });
+
+
     // setup filters signals
 
     this.listenTo(this.filtersModel, 'change:time', this.onFiltersTimeChange);
@@ -261,50 +356,108 @@ class OpenLayersMapView extends Marionette.ItemView {
     // setup map events
 
     const self = this;
-    this.map.on('pointerdrag', (evt) => {
+    this.map.on('pointerdrag', () => {
       // TODO: check if the currently selected tool is the panning tool
       // TODO: improve this to allow
       self.isPanning = true;
     });
 
-    this.map.on('moveend', (evt) => {
-      self.isPanning = false;
-      self.isZooming = false;
+    this.map.on('moveend', () => {
       self.mapModel.set({
         center: self.map.getView().getCenter(),
         zoom: self.map.getView().getZoom(),
+        bbox: self.map.getView().calculateExtent(self.map.getSize()),
       });
+      self.isPanning = false;
+      self.isZooming = false;
     });
+  }
+
+  /**
+   * Creates OpenLayers interactions and adds them to the map.
+   *
+   */
+  setupControls(selectionStyle) {
+    this.drawControls = {
+      pointSelection: new ol.interaction.Draw({ source: this.selectionSource, type: 'Point' }),
+      lineSelection: new ol.interaction.Draw({ source: this.selectionSource, type: 'LineString' }),
+      polygonSelection: new ol.interaction.Draw({ source: this.selectionSource, type: 'Polygon' }),
+      bboxSelection: new ol.interaction.DragBox({ style: selectionStyle }),
+    };
+
+    this.drawControls.bboxSelection.on('boxstart', (evt) => {
+      this.drawControls.bboxSelection.boxstart = evt.coordinate;
+    }, this);
+
+    this.drawControls.bboxSelection.on('boxend', (evt) => {
+      const boxend = evt.coordinate;
+      const boxstart = this.drawControls.bboxSelection.boxstart;
+      const polygon = ol.geom.Polygon.fromExtent([
+        boxstart[0], boxstart[1], boxend[0], boxend[1],
+      ]);
+
+      // if (this.selectionType === "single"){
+      //   var features = this.source.getFeatures();
+      //   for (var i in features){
+      //     this.source.removeFeature(features[i]);
+      //   }
+      //   Communicator.mediator.trigger("selection:changed", null);
+      // }
+
+      const feature = new ol.Feature();
+      feature.setGeometry(polygon);
+      this.selectionSource.addFeature(feature);
+    }, this);
   }
 
 
   // collection/model signal handlers
 
-  onLayerChange(layerModel, group) {
-    let layer = this.getLayerOfGroup(layerModel, group);
+  onLayersSorted(layersCollection) {
+    const ids = layersCollection.pluck('id');
+    const layers = this.groups.layers.getLayers();
+
+    this.groups.layers.setLayers(
+      new ol.Collection(layers.getArray().sort((layer) => ids.indexOf(layer.id)))
+    );
   }
 
+  onLayerChange(layerModel, group) {
+    const layer = this.getLayerOfGroup(layerModel, group);
+    if (layerModel.hasChanged('visible')) {
+      layer.setVisible(layerModel.get('visible'));
+    }
+  }
 
   onFiltersTimeChange(filtersModel) {
-    const time = filtersModel.get('time');
     this.layersCollection.forEach((layerModel) => {
-      const source = this.getLayerOfGroup(layerModel, this.groups.layers).getSource();
-      const params = source.getParams();
-      if (time !== null) {
-        params.time = `${getISODateTimeString(time[0])}/${getISODateTimeString(time[1])}`;
-      }
-      else {
-        delete params.time;
-      }
-      source.updateParams(params);
+      this.applyLayerFilters(this.getLayerOfGroup(layerModel, this.groups.layers), filtersModel);
     }, this);
   }
 
+  onToolChange(mapModel) {
+    const toolName = mapModel.get('tool');
+    if (toolName) {
+      if (toolName === 'bbox') {
+        this.map.addInteraction(this.drawControls.bboxSelection);
+      }
+    }
+
+  }
+
   onDestroy() {
-    // TODO: implement
+    // TODO: necessary?
+  }
+
+  onResize() {
+    this.map.updateSize();
   }
 }
 
 OpenLayersMapView.prototype.template = () => '';
+
+OpenLayersMapView.prototype.events = {
+  resize: 'onResize',
+};
 
 export default OpenLayersMapView;
