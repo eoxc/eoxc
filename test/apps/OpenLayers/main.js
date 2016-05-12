@@ -25,8 +25,11 @@ const RootLayout = Marionette.LayoutView.extend({
 
     <div id='map' style='width: 100%; height:100%; margin: 0; padding:0;'></div>
     <div id='timeSlider' style='position: absolute; width: 90%; left: 5%; bottom: 30px'></div>
-    <div id='layers'></div>
-    <div id='tools'></div>
+
+    <div id="windows" style="position: absolute; width: 100%; height: 100%;">
+      <div id='layers'></div>
+      <div id='tools'></div>
+    </div>
   `,
   regions: {
     layers: '#layers',
@@ -45,6 +48,7 @@ const ToolView = Marionette.LayoutView.extend({
   `,
   events: {
     'click .bbox': 'onBBoxClick',
+    'click .download': 'onDownloadClick',
 
   },
   initialize(options) {
@@ -52,6 +56,9 @@ const ToolView = Marionette.LayoutView.extend({
   },
   onBBoxClick() {
     this.mapModel.set('tool', 'bbox');
+  },
+  onDownloadClick() {
+
   },
 });
 
@@ -92,9 +99,9 @@ app.on('start', () => {
   const toolView = new WindowView({
     name: 'Tools',
     icon: 'fa-wrench',
-    width: 'auto',
-    top: '30em',
-    left: '3em',
+    width: '10em',
+    top: '8em',
+    right: '3em',
     view: new ToolView({
       mapModel,
     }),
