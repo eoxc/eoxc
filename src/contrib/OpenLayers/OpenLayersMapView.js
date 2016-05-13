@@ -159,14 +159,8 @@ class OpenLayersMapView extends Marionette.ItemView {
         color: 'rgba(255, 255, 255, 0.2)',
       }),
       stroke: new ol.style.Stroke({
-        color: '#ffcc33',
-        width: 2,
-      }),
-      image: new ol.style.Circle({
-        radius: 7,
-        fill: new ol.style.Fill({
-          color: '#ffcc33',
-        }),
+        color: '#cccccc',
+        width: 1,
       }),
     });
 
@@ -309,6 +303,27 @@ class OpenLayersMapView extends Marionette.ItemView {
     );
     this.listenTo(this.layersCollection, 'sort', (layers) => this.onLayersSorted(layers));
 
+    this.listenTo(this.baseLayersCollection, 'add', (layerModel) =>
+      this.addLayer(layerModel, this.groups.baseLayers)
+    );
+    this.listenTo(this.baseLayersCollection, 'change', (layerModel) =>
+      this.onLayerChange(layerModel, this.groups.baseLayers)
+    );
+    this.listenTo(this.baseLayersCollection, 'remove', (layerModel) =>
+      this.removeLayer(layerModel, this.groups.baseLayers)
+    );
+
+    this.listenTo(this.overlayLayersCollection, 'add', (layerModel) =>
+      this.addLayer(layerModel, this.groups.overlayLayers)
+    );
+    this.listenTo(this.overlayLayersCollection, 'change', (layerModel) =>
+      this.onLayerChange(layerModel, this.groups.overlayLayers)
+    );
+    this.listenTo(this.overlayLayersCollection, 'remove', (layerModel) =>
+      this.removeLayer(layerModel, this.groups.overlayLayers)
+    );
+
+
     // setup mapModel signals
 
     // directly tie the changes to the map
@@ -424,8 +439,10 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   onLayerChange(layerModel, group) {
     const layer = this.getLayerOfGroup(layerModel, group);
-    if (layerModel.hasChanged('visible')) {
-      layer.setVisible(layerModel.get('visible'));
+    if (layerModel.hasChanged('display')) {
+      const display = layerModel.get('display');
+      layer.setVisible(display.visible);
+      layer.setOpacity(display.opacity);
     }
   }
 
@@ -437,12 +454,16 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   onToolChange(mapModel) {
     const toolName = mapModel.get('tool');
-    if (toolName) {
-      if (toolName === 'bbox') {
-        this.map.addInteraction(this.drawControls.bbox);
+    // deactivate all potentially activated tools
+    for (const key in this.drawControls) {
+      if (this.drawControls.hasOwnProperty(key)) {
+        this.map.removeInteraction(this.drawControls[key]);
       }
     }
-
+    // activate the requested tool if it is available
+    if (this.drawControls.hasOwnProperty(toolName)) {
+      this.map.addInteraction(this.drawControls[toolName]);
+    }
   }
 
   onDestroy() {
