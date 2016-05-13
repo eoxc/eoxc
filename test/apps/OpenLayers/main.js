@@ -6,68 +6,33 @@ import MapModel from '../../../src/core/models/MapModel';
 import FiltersModel from '../../../src/core/models/FiltersModel';
 
 import LayerControlLayoutView from '../../../src/core/views/layers/LayerControlLayoutView';
+import LayerOptionsView from '../../../src/core/views/layers/LayerOptionsView';
 
 import OpenLayersMapView from '../../../src/contrib/OpenLayers/OpenLayersMapView';
 import TimeSliderView from '../../../src/core/views/TimeSliderView';
 import WindowView from '../../../src/core/views/WindowView';
 
-import $ from 'jquery';
+import RootLayoutView from './views/RootLayoutView';
+import NavBarView from './views/NavBarView';
+import ToolsView from './views/ToolsView';
 
+import $ from 'jquery';
 
 // require styles
 require('bootstrap/dist/css/bootstrap.min.css');
+require('imports?jQuery=jquery!bootstrap/dist/js/bootstrap.min.js');
 
 const config = require('./config.json');
-
-
-const RootLayout = Marionette.LayoutView.extend({
-  template: () => `
-
-    <div id='map' style='width: 100%; height:100%; margin: 0; padding:0;'></div>
-    <div id='timeSlider' style='position: absolute; width: 90%; left: 5%; bottom: 30px'></div>
-
-    <div id="windows" style="position: absolute; width: 100%; height: 100%;">
-      <div id='layers'></div>
-      <div id='tools'></div>
-    </div>
-  `,
-  regions: {
-    layers: '#layers',
-    tools: '#tools',
-    map: '#map',
-    timeSlider: '#timeSlider',
-  },
-});
-
-const ToolView = Marionette.LayoutView.extend({
-  template: () => `
-    <div class="btn-group-vertical" role="group" aria-label="...">
-      <button class="bbox btn btn-default">BBox</button>
-      <button class="download btn btn-default">Download</button>
-    </div>
-  `,
-  events: {
-    'click .bbox': 'onBBoxClick',
-    'click .download': 'onDownloadClick',
-
-  },
-  initialize(options) {
-    this.mapModel = options.mapModel;
-  },
-  onBBoxClick() {
-    this.mapModel.set('tool', 'bbox');
-  },
-  onDownloadClick() {
-
-  },
-});
 
 
 const app = new Marionette.Application();
 
 app.on('start', () => {
+  const communicator = new Marionette.Controller();
   // set up config
-  const baseLayersCollection = new LayersCollection(config.baseLayers);
+  const baseLayersCollection = new LayersCollection(config.baseLayers, {
+    exclusiveVisibility: true,
+  });
   const layersCollection = new LayersCollection(config.layers);
   const overlayLayersCollection = new LayersCollection(config.overlayLayers);
 
@@ -78,17 +43,22 @@ app.on('start', () => {
 
   // set up layout
 
-  const layout = new RootLayout({ el: $('#app') });
+  const layout = new RootLayoutView({ el: $('#app') });
   layout.render();
 
   // set up views
 
+  const navBarView = new NavBarView({
+    communicator,
+  });
+
   const layerControlLayoutView = new WindowView({
     name: 'Layers',
     icon: 'fa-globe',
-    width: '23.8em',
+    width: '25em',
     top: '8em',
     left: '3em',
+    closed: true,
     view: new LayerControlLayoutView({
       baseLayersCollection,
       layersCollection,
@@ -96,15 +66,39 @@ app.on('start', () => {
     }),
   });
 
-  const toolView = new WindowView({
+  communicator.on('toggle:layers', () => {
+    layerControlLayoutView.toggleOpen();
+  });
+
+  const toolsView = new WindowView({
     name: 'Tools',
     icon: 'fa-wrench',
     width: '10em',
     top: '8em',
     right: '3em',
-    view: new ToolView({
+    closed: true,
+    view: new ToolsView({
       mapModel,
+      communicator,
     }),
+  });
+
+  communicator.on('toggle:tools', () => {
+    toolsView.toggleOpen();
+  });
+
+  // hook up on the layer collections 'show' event
+  layersCollection.on('show', (layerModel) => {
+    const layerOptionsView = new WindowView({
+      name: `${layerModel.get('displayName')} Options`,
+      icon: 'fa-sliders',
+      left: '45%',
+      top: '8em',
+      view: new LayerOptionsView({
+        model: layerModel,
+      }),
+    });
+    layout.showChildView('layerOptions', layerOptionsView);
   });
 
   const mapView = new OpenLayersMapView({
@@ -127,8 +121,9 @@ app.on('start', () => {
 
   // render the views to the regions
 
+  layout.showChildView('header', navBarView);
   layout.showChildView('layers', layerControlLayoutView);
-  layout.showChildView('tools', toolView);
+  layout.showChildView('tools', toolsView);
   layout.showChildView('map', mapView);
   layout.showChildView('timeSlider', timeSliderView);
 });
