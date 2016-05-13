@@ -46,7 +46,11 @@ class TimeSliderView extends Marionette.ItemView {
 
     this.timeSlider = new TimeSlider(this.el, options);
 
-    this.layersCollection.each((layerModel) => this.addLayer(layerModel));
+    this.layersCollection.each((layerModel) => {
+      if (layerModel.get('display.visible')) {
+        this.addLayer(layerModel);
+      }
+    });
 
     this.listenTo(this.filtersModel, 'change:time', this.onModelSelectionChanged);
     this.listenTo(this.layersCollection, 'add', this.onLayerAdded);
@@ -132,8 +136,8 @@ class TimeSliderView extends Marionette.ItemView {
   }
 
   onLayerChanged(layerModel) {
-    if (layerModel.hasChanged('visible')) {
-      if (layerModel.get('visible')) {
+    if (layerModel.hasChanged('display')) {
+      if (layerModel.get('display.visible') && !this.timeSlider.hasDataset(layerModel.get('id'))) {
         this.addLayer(layerModel);
       }
       else {
