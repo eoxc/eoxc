@@ -53,7 +53,7 @@ app.on('start', () => {
   });
 
   const layerControlLayoutView = new WindowView({
-    name: 'Layers',
+    title: 'Layers',
     icon: 'fa-globe',
     width: '25em',
     top: '8em',
@@ -71,7 +71,7 @@ app.on('start', () => {
   });
 
   const toolsView = new WindowView({
-    name: 'Tools',
+    title: 'Tools',
     icon: 'fa-wrench',
     width: '10em',
     top: '8em',
@@ -90,7 +90,7 @@ app.on('start', () => {
   // hook up on the layer collections 'show' event
   layersCollection.on('show', (layerModel) => {
     const layerOptionsView = new WindowView({
-      name: `${layerModel.get('displayName')} Options`,
+      title: `${layerModel.get('displayName')} Options`,
       icon: 'fa-sliders',
       left: '45%',
       top: '8em',
