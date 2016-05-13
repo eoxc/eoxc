@@ -9,12 +9,27 @@ const LayerListItemView = Marionette.ItemView.extend({
   template,
   events: {
     'change .layer-visible': 'onLayerVisibleChange',
+    'click .layer-options': 'onLayerOptionsClick',
   },
+
   initialize(options) {
+    this.singleChoice = options.singleChoice;
+    this.fullDisplay = options.fullDisplay;
+  },
+
+  templateHelpers() {
+    return {
+      singleChoice: this.singleChoice,
+      fullDisplay: this.fullDisplay,
+    };
   },
 
   onLayerVisibleChange() {
-    this.model.set('visible', this.$('.layer-visible').is(':checked'));
+    this.model.set('display.visible', this.$('.layer-visible').is(':checked'));
+  },
+
+  onLayerOptionsClick() {
+    this.model.trigger('show', this.model);
   },
 });
 

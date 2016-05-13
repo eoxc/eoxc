@@ -25,27 +25,18 @@ const LayerControlLayoutView = Marionette.LayoutView.extend({
   },
 
   onShow() {
-    /*this.$el.draggable({
-      handle: '.panel-heading',
-      containment: '#main',
-      scroll: false,
-      start: () => {
-        this.$('.ui-slider').detach();
-        this.$('.fa-adjust').toggleClass('active');
-        // TODO: whats that?
-        // this.$('.fa-adjust').popover('hide');
-      },
-    });*/
-
-    this.showChildView('layers', new LayerListView({
-      collection: this.layersCollection,
-    }));
-    /*this.showChildView('layers', new LayerListView({
-      collection: this.layersCollection,
+    this.showChildView('baseLayers', new LayerListView({
+      collection: this.baseLayersCollection,
+      singleChoice: true,
     }));
     this.showChildView('layers', new LayerListView({
       collection: this.layersCollection,
-    }));*/
+      fullDisplay: true,
+      sortable: true,
+    }));
+    this.showChildView('overlayLayers', new LayerListView({
+      collection: this.overlayLayersCollection,
+    }));
   },
 
   onCloseClick() {

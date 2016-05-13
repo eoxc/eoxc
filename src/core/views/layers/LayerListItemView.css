@@ -1,8 +1,3 @@
-.layercontrol .sortable-layer {
-    margin: .3em -.5em 0 -2em;
-    padding: 0;
-}
-
 .layer-list-item {
     margin: .2em 0 .8em;
     padding: 0 0 0 .6em;
@@ -10,27 +5,39 @@
     list-style-position: inside;
 }
 
-/* from http://stackoverflow.com/a/14226542/746961 */
-
-input[type="checkbox"].layer-visible {
-  display:none;
+.layer-list-item .layer-options {
+  cursor: pointer;
 }
 
-input[type="checkbox"].layer-visible + label span:before {
+/* from http://stackoverflow.com/a/14226542/746961 */
+
+input[type="radio"].layer-visible,
+input[type="checkbox"].layer-visible {
+  display: none;
+}
+
+input[type="radio"].layer-visible + label span:before, input[type="radio"].layer-visible + span:before,
+input[type="checkbox"].layer-visible + label span:before, input[type="checkbox"].layer-visible + span:before {
   font-family: 'FontAwesome';
   font-size: 20px;
 }
 
-input[type="checkbox"].layer-visible + label span:before {
+input[type="radio"].layer-visible + label span:before, input[type="radio"].layer-visible + span:before,
+input[type="checkbox"].layer-visible + label span:before, input[type="checkbox"].layer-visible + span:before {
   content: "\f070"; /* eye-slash */
   color: #b3b3b3;
 }
 
-input[type="checkbox"].layer-visible:checked + label span:before {
+input[type="radio"].layer-visible:checked + label span:before, input[type="radio"].layer-visible:checked + span:before,
+input[type="checkbox"].layer-visible:checked + label span:before, input[type="checkbox"].layer-visible:checked + span:before {
   content: "\f06e"; /* eye */
   color: #555;
 }
 
 .layer-list-item label {
     margin-bottom: 0;
+}
+
+.layer-list-item .checkbox label, .layer-list-item .radio label  {
+  padding-left: 0px;
 }

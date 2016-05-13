@@ -1,5 +1,5 @@
 import Marionette from 'backbone.marionette';
-import $ from 'jquery';
+// import $ from 'jquery';
 require('jquery-ui/sortable');
 
 import LayerListItemView from './LayerListItemView';
@@ -16,28 +16,39 @@ const LayerListView = Marionette.CollectionView.extend({
   },
 
   initialize(options) {
-    // this.collection --> layerCollection
+    this.sortable = options.sortable;
+    this.singleChoice = options.singleChoice;
+    this.fullDisplay = options.fullDisplay;
+  },
+
+  childViewOptions() {
+    return {
+      singleChoice: this.singleChoice,
+      fullDisplay: this.fullDisplay,
+    };
   },
 
   onAttach() {
-    this.$el.sortable({
-      revert: true,
-      // delay: 90,
-      containment: this.$el,
-      axis: 'y',
-      forceHelperSize: true,
-      forcePlaceHolderSize: true,
-      placeholder: 'sortable-placeholder',
-      handle: '.fa-sort',
-      start: () => {
-        this.$('.ui-slider').detach();
-        this.$('.fa-adjust').toggleClass('active');
-        // this.$('.fa-adjust').popover('hide');
-      },
-      stop: (event, ui) => {
-        this.onSortStop(event, ui);
-      },
-    });
+    if (this.sortable) {
+      this.$el.sortable({
+        revert: true,
+        // delay: 90,
+        containment: this.$el,
+        axis: 'y',
+        forceHelperSize: true,
+        forcePlaceHolderSize: true,
+        placeholder: 'sortable-placeholder',
+        handle: '.fa-sort',
+        start: () => {
+          this.$('.ui-slider').detach();
+          this.$('.fa-adjust').toggleClass('active');
+          // this.$('.fa-adjust').popover('hide');
+        },
+        stop: (event, ui) => {
+          this.onSortStop(event, ui);
+        },
+      });
+    }
   },
 
   onSortStop() {
