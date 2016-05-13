@@ -10,7 +10,7 @@ import LayerOptionsView from '../../../src/core/views/layers/LayerOptionsView';
 
 import OpenLayersMapView from '../../../src/contrib/OpenLayers/OpenLayersMapView';
 import TimeSliderView from '../../../src/core/views/TimeSliderView';
-import WindowView from '../../../src/core/views/WindowView';
+import PanelView from '../../../src/core/views/PanelView';
 
 import RootLayoutView from './views/RootLayoutView';
 import NavBarView from './views/NavBarView';
@@ -52,7 +52,7 @@ app.on('start', () => {
     communicator,
   });
 
-  const layerControlLayoutView = new WindowView({
+  const layerControlLayoutView = new PanelView({
     title: 'Layers',
     icon: 'fa-globe',
     width: '25em',
@@ -70,7 +70,7 @@ app.on('start', () => {
     layerControlLayoutView.toggleOpen();
   });
 
-  const toolsView = new WindowView({
+  const toolsView = new PanelView({
     title: 'Tools',
     icon: 'fa-wrench',
     width: '10em',
@@ -89,7 +89,7 @@ app.on('start', () => {
 
   // hook up on the layer collections 'show' event
   layersCollection.on('show', (layerModel) => {
-    const layerOptionsView = new WindowView({
+    const layerOptionsView = new PanelView({
       title: `${layerModel.get('displayName')} Options`,
       icon: 'fa-sliders',
       left: '45%',

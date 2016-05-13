@@ -3,20 +3,20 @@ require('jquery-ui/draggable');
 require('font-awesome-webpack');
 import _ from 'underscore';
 
-const template = require('./WindowView.hbs');
-require('./WindowView.css');
+const template = require('./PanelView.hbs');
+require('./PanelView.css');
 
 /**
-  @class core/views.WindowView
+  @class core/views.PanelView
 */
 
-const WindowView = Marionette.LayoutView.extend(/** @lends core/views.WindowView.prototype */{
+const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView.prototype */{
   template,
 
-  className: 'panel panel-default not-selectable windowed',
+  className: 'panel panel-default not-selectable paneled',
 
   regions: {
-    content: '.window-content',
+    content: '.panel-content',
   },
 
   events: {
@@ -78,7 +78,7 @@ const WindowView = Marionette.LayoutView.extend(/** @lends core/views.WindowView
   },
 
   /**
-    Show the window when it was not visible before.
+    Show the Panel when it was not visible before.
     @instance
    */
   open() {
@@ -87,7 +87,7 @@ const WindowView = Marionette.LayoutView.extend(/** @lends core/views.WindowView
   },
 
   /**
-    Close the window when open before.
+    Close the Panel when open before.
     @instance
    */
   close() {
@@ -96,7 +96,7 @@ const WindowView = Marionette.LayoutView.extend(/** @lends core/views.WindowView
   },
 
   /**
-    Toggle the visibility of the window.
+    Toggle the visibility of the Panel.
     @instance
    */
   toggleOpen() {
@@ -109,4 +109,4 @@ const WindowView = Marionette.LayoutView.extend(/** @lends core/views.WindowView
 });
 
 
-export default WindowView;
+export default PanelView;
