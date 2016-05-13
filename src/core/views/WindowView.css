@@ -2,4 +2,5 @@
     width: 23.8em;
     font-size: .9em;
     position: absolute;
+    z-index: 0;
 }

@@ -16,12 +16,17 @@ const WindowView = Marionette.LayoutView.extend({
     content: '.window-content',
   },
 
+  events: {
+    'click .close': 'close',
+  },
+
   initialize(options) {
     this.style = _.pick(options, 'left', 'right', 'top', 'bottom', 'width', 'height');
     this.view = options.view;
 
     this.name = options.name;
     this.icon = options.icon;
+    this.closed = options.closed;
     this.closeable = typeof options.closeable === 'undefined' ? true : options.closeable;
   },
 
@@ -47,9 +52,37 @@ const WindowView = Marionette.LayoutView.extend({
       },
     });
 
+    this.initialDisplay = this.$el.css('display');
+
+    if (this.closed) {
+      this.close();
+    }
+
     this.showChildView('content', this.view);
   },
 
+  /**
+   * Show the window when it was not visible before.
+   *
+   */
+  open() {
+    this.$el.css('display', this.initialDisplay);
+    this.closed = false;
+  },
+
+  close() {
+    this.$el.css('display', 'none');
+    this.closed = true;
+  },
+
+  toggleOpen() {
+    if (this.closed) {
+      this.open();
+    }
+    else {
+      this.close();
+    }
+  },
 });
 
 
