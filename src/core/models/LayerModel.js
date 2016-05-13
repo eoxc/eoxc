@@ -1,14 +1,38 @@
 import Backbone from 'backbone';
+require('backbone-nested');
 
 /**
  * @memberof core/models
+ * @class
  */
-class LayerModel extends Backbone.Model {
-  initialize() {
-
-  }
+const LayerModel = Backbone.NestedModel.extend(/** @lends LayerModel */{
+  defaults: {
+    id: null,
+    displayName: null,
+    visible: false,
+    displayColor: 'red',
+    display: {
+      protocol: null,
+      url: null,
+      urls: [],
+      id: null,
+      opacity: 1.0,
+      style: 'default',
+      attribution: null,
+    },
+    search: {
+      protocol: null,
+      url: null,
+      id: null,
+    },
+    download: {
+      protocol: null,
+      id: null,
+    },
+  },
 
   validate(attrs) {
+    // TODO: validate attributes
     // if (!attrs.id) {
     //   return 'missing mandatory identifier';
     // }
@@ -18,56 +42,8 @@ class LayerModel extends Backbone.Model {
     // else if (url === null && urls.length === 0) {
     //   return 'missing mandatory url or urls';
     // }
-  }
-
-  /**
-   * Get a compiled hash of display parameters.
-   */
-
-  getDisplayParams() {
-
-  }
-
-  /**
-   * Get a compiled hash of search parameters.
-   */
-
-  getSearchParams() {
-
-  }
-
-  /**
-   * Get a compiled hash of download parameters.
-   */
-
-  getDownloadParams() {
-
-  }
-}
-
-LayerModel.prototype.defaults = {
-  id: null,
-  displayName: null,
-  visible: false,
-  displayColor: 'red',
-  display: {
-    protocol: null,
-    url: null,
-    urls: [],
-    id: null,
-    opacity: 0,
-    style: 'default',
-    attribution: null,
   },
-  search: {
-    protocol: null,
-    url: null,
-    id: null,
-  },
-  download: {
-    protocol: null,
-    id: null,
-  },
-};
+});
+
 
 export default LayerModel;
