@@ -2,35 +2,9 @@ import Marionette from 'backbone.marionette';
 import ol from 'openlayers';
 import $ from 'jquery';
 
+import { getISODateTimeString } from '../../core/util';
+
 require('openlayers/dist/ol.css');
-
-// TODO: move this to a general utils file
-
-function padLeft(str, pad, size) {
-  let out = str;
-  while (out.length < size) {
-    out = pad + str;
-  }
-  return out;
-}
-
-function getDateString(date) {
-  return date.getFullYear() + '-'
-    + padLeft(String(date.getUTCMonth() + 1), '0', 2) + '-'
-    + padLeft(String(date.getUTCDate()), '0', 2);
-}
-
-function getISODateString(date) {
-  return getDateString(date) + 'T';
-}
-
-function getISODateTimeString(date) {
-  return getISODateString(date)
-    + padLeft(String(date.getUTCHours()), '0', 2) + ':'
-    + padLeft(String(date.getUTCMinutes()), '0', 2) + ':'
-    + padLeft(String(date.getUTCSeconds()), '0', 2) + 'Z';
-}
-
 
 /**
  * @memberof contrib/OpenLayers
