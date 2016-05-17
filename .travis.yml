@@ -9,3 +9,7 @@ cache:
 
 install:
   - "npm install"
+
+
+notifications:
+  email: false
