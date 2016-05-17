@@ -6,11 +6,8 @@ import _ from 'underscore';
 const template = require('./PanelView.hbs');
 require('./PanelView.css');
 
-/**
-  @class core/views.PanelView
-*/
 
-const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView.prototype */{
+const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# */{
   template,
 
   className: 'panel panel-default not-selectable paneled',
@@ -24,7 +21,9 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView.p
   },
 
   /**
+    @constructs
     @param {Object} options
+    @param {Object} options.view The subview encapsulated in the panel
     @param {string} options.title The title of the view
     @param {string} [options.icon] The icon classname of the view. e.g.: "fa-globe"
     @param {string} [options.left] Position from the left (CSS property)
@@ -79,7 +78,6 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView.p
 
   /**
     Show the Panel when it was not visible before.
-    @instance
    */
   open() {
     this.$el.css('display', this.initialDisplay);
@@ -88,7 +86,6 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView.p
 
   /**
     Close the Panel when open before.
-    @instance
    */
   close() {
     this.$el.css('display', 'none');
@@ -97,7 +94,6 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView.p
 
   /**
     Toggle the visibility of the Panel.
-    @instance
    */
   toggleOpen() {
     if (this.closed) {

@@ -16,11 +16,9 @@ class FiltersModel extends Backbone.Model {
     if (area) {
       if (area.length !== 4) {
         return 'invalid area specification';
-      }
-      else if (area[0] > area[2]) {
+      } else if (area[0] > area[2]) {
         return 'minX larger than maxX';
-      }
-      else if (area[1] > area[3]) {
+      } else if (area[1] > area[3]) {
         return 'minX larger than maxX';
       }
     }
@@ -29,8 +27,7 @@ class FiltersModel extends Backbone.Model {
       if (Array.isArray(time)) {
         if (time.length !== 2) {
           return 'invalid time span specification';
-        }
-        else if (time[0] > time[1]) {
+        } else if (time[0] > time[1]) {
           return 'min time larger than max time';
         }
       }

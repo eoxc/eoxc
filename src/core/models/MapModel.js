@@ -1,10 +1,9 @@
 import Backbone from 'backbone';
 
 /**
- * @memberof core/models
- *
  * This model is used to store the relevant values for map views (2D or 3D), such as camera options
  *
+ * @memberof core/models
  *
  * @param {Object} attributes The attributes of the model instance
  * @param {Number[]} [attributes.center] The center of the view

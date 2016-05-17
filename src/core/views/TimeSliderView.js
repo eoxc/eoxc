@@ -7,13 +7,27 @@ const EOWCSSource = require('D3.TimeSlider/src/sources/eowcs.coffee');
 
 // require('D3.TimeSlider/build/d3.timeslider.plugins');
 require('D3.TimeSlider/build/d3.timeslider.css');
-require('./TimeSlider.css');
+require('./TimeSliderView.css');
 
-/**
- * @memberof core/views
- */
 
-class TimeSliderView extends Marionette.ItemView {
+const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSliderView# */{
+  template: () => '',
+
+  events: {
+    selectionChanged: 'onSelectionChanged',
+    recordClicked: 'onRecordClicked',
+    recordMouseover: 'onRecordMouseover',
+    recordMouseout: 'onRecordMouseout',
+  },
+
+  /**
+    @constructs
+    @param {Object} options
+    @param {core/models.FiltersModel} options.filtersModel The filters model to store the filters
+    @param {core/models.LayersCollection} options.layersCollection The layers to show on the time slider
+    @param {core/models.MapModel} options.mapModel The map-model
+    @param {Date[]} options.domain The maximum domain to allow panning of th time slider
+  */
   initialize(options) {
     this.filtersModel = options.filtersModel;
     this.layersCollection = options.layersCollection;
@@ -21,12 +35,11 @@ class TimeSliderView extends Marionette.ItemView {
     this.mapModel = options.mapModel;
 
     this.domain = options.domain;
-    this.brush = options.brush;
-  }
+  },
 
   onRender() {
 
-  }
+  },
 
   onAttach() {
     const options = {
@@ -59,7 +72,7 @@ class TimeSliderView extends Marionette.ItemView {
     this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
       this.timeSlider.setRecordFilter(this.createRecordFilter(mapModel.get('bbox')));
     });
-  }
+  },
 
   addLayer(layerModel) {
     // TODO: set the source according to the models search options
@@ -71,7 +84,7 @@ class TimeSliderView extends Marionette.ItemView {
         eoid: layerModel.get('display').id,
       }),
     });
-  }
+  },
 
   createRecordFilter(bbox) {
     return (record) => {
@@ -88,14 +101,14 @@ class TimeSliderView extends Marionette.ItemView {
       }
       return true;
     };
-  }
+  },
 
   // two way binding of time selection
 
   onSelectionChanged(event) {
     const selection = event.originalEvent.detail;
     this.filtersModel.set('time', [selection.start, selection.end]);
-  }
+  },
 
   onRecordClicked(event) {
     const record = event.originalEvent.detail;
@@ -103,14 +116,14 @@ class TimeSliderView extends Marionette.ItemView {
       this.mapModel.set('bbox', record.params.bbox);
       this.filtersModel.set('time', [record.start, record.end]);
     }
-  }
+  },
 
   onRecordMouseover(event) {
     const record = event.originalEvent.detail;
     if (record.params.footprint) {
       this.mapModel.set('highlightFootprint', record.params.footprint);
     }
-  }
+  },
 
   onRecordMouseout(event) {
     const record = event.originalEvent.detail;
@@ -118,43 +131,33 @@ class TimeSliderView extends Marionette.ItemView {
       && record.params.footprint === this.mapModel.get('highlightFootprint')) {
       this.mapModel.set('highlightFootprint', null);
     }
-  }
+  },
 
   onModelSelectionChanged(filtersModel) {
     const selection = filtersModel.get('time');
     this.timeSlider.select(selection[0], selection[1]);
-  }
+  },
 
   // collection events
 
   onLayerAdded(layerModel) {
     this.addLayer(layerModel);
-  }
+  },
 
   onLayerRemoved(layerModel) {
     this.timeSlider.removeDataset(layerModel.get('id'));
-  }
+  },
 
   onLayerChanged(layerModel) {
     if (layerModel.hasChanged('display')) {
       if (layerModel.get('display.visible') && !this.timeSlider.hasDataset(layerModel.get('id'))) {
         this.addLayer(layerModel);
-      }
-      else {
+      } else {
         this.timeSlider.removeDataset(layerModel.get('id'));
       }
     }
-  }
-}
-
-TimeSliderView.prototype.template = () => '';
-
-TimeSliderView.prototype.events = {
-  selectionChanged: 'onSelectionChanged',
-  recordClicked: 'onRecordClicked',
-  recordMouseover: 'onRecordMouseover',
-  recordMouseout: 'onRecordMouseout',
-};
+  },
+});
 
 
 export default TimeSliderView;
