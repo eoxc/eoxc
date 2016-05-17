@@ -1,5 +1,6 @@
 # EOxC client framework
 
+[![Build Status](https://travis-ci.org/eoxc/eoxc.svg?branch=master)](https://travis-ci.org/eoxc/eoxc)
 
 
 ## Setup
