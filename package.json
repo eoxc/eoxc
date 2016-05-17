@@ -12,7 +12,8 @@
     "build-browser-tests": "webpack -d --config webpack.tests.config.js",
     "build-browser-tests:watch": "npm run build-browser-tests -- --watch",
     "dev-server": "webpack-dev-server --content-base test/apps/OpenLayers --watch",
-    "docs": "jsdoc README.md src -d ./docs -r -P package.json -t node_modules/minami"
+    "docs": "node_modules/.bin/jsdoc README.md src -d ./docs -r -P package.json -t node_modules/minami",
+    "lint": "./node_modules/.bin/eslint src"
   },
   "repository": {
     "type": "git",
