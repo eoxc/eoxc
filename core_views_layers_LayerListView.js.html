@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>core/views/layers/LayerListView.js - Documentation</title>
+
+    <script src="scripts/prettify/prettify.js"></script>
+    <script src="scripts/prettify/lang-css.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+<body>
+
+<input type="checkbox" id="nav-trigger" class="nav-trigger" />
+<label for="nav-trigger" class="navicon-button x">
+  <div class="navicon"></div>
+</label>
+
+<label for="nav-trigger" class="overlay"></label>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="contrib_OpenLayers.OpenLayersMapView.html">OpenLayersMapView</a><ul class='methods'><li data-type='method'><a href="contrib_OpenLayers.OpenLayersMapView.html#createLayer">createLayer</a></li><li data-type='method'><a href="contrib_OpenLayers.OpenLayersMapView.html#createMap">createMap</a></li><li data-type='method'><a href="contrib_OpenLayers.OpenLayersMapView.html#initialize">initialize</a></li><li data-type='method'><a href="contrib_OpenLayers.OpenLayersMapView.html#removeLayer">removeLayer</a></li><li data-type='method'><a href="contrib_OpenLayers.OpenLayersMapView.html#setupControls">setupControls</a></li><li data-type='method'><a href="contrib_OpenLayers.OpenLayersMapView.html#setupEvents">setupEvents</a></li></ul></li><li><a href="core_models.FiltersModel.html">FiltersModel</a><ul class='methods'><li data-type='method'><a href="core_models.FiltersModel.html#validate">validate</a></li></ul></li><li><a href="core_models.LayerModel.html">LayerModel</a></li><li><a href="core_models.LayersCollection.html">LayersCollection</a><ul class='methods'><li data-type='method'><a href="core_models.LayersCollection.html#add">add</a></li></ul></li><li><a href="core_models.MapModel.html">MapModel</a></li><li><a href="core_views.PanelView.html">PanelView</a><ul class='methods'><li data-type='method'><a href="core_views.PanelView.html#close">close</a></li><li data-type='method'><a href="core_views.PanelView.html#open">open</a></li><li data-type='method'><a href="core_views.PanelView.html#toggleOpen">toggleOpen</a></li></ul></li><li><a href="core_views.TimeSliderView.html">TimeSliderView</a></li><li><a href="core_views_layers.LayerControlLayoutView.html">LayerControlLayoutView</a></li><li><a href="core_views_layers.LayerListItemView.html">LayerListItemView</a></li><li><a href="core_views_layers.LayerListView.html">LayerListView</a></li><li><a href="core_views_layers.LayerOptionsView.html">LayerOptionsView</a></li></ul><h3>Namespaces</h3><ul><li><a href="contrib_OpenLayers.html">contrib/OpenLayers</a></li><li><a href="core_models.html">core/models</a></li><li><a href="core_util.html">core/util</a><ul class='methods'><li data-type='method'><a href="core_util.html#.exports.getDateString">exports.getDateString</a></li><li data-type='method'><a href="core_util.html#.exports.getISODateString">exports.getISODateString</a></li><li data-type='method'><a href="core_util.html#.exports.getISODateTimeString">exports.getISODateTimeString</a></li><li data-type='method'><a href="core_util.html#.exports.padLeft">exports.padLeft</a></li></ul></li><li><a href="core_views.html">core/views</a></li><li><a href="core_views_layers.html">core/views/layers</a></li></ul>
+</nav>
+
+<div id="main">
+    
+    <h1 class="page-title">core/views/layers/LayerListView.js</h1>
+    
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import Marionette from 'backbone.marionette';
+// import $ from 'jquery';
+require('jquery-ui/sortable');
+
+import LayerListItemView from './LayerListItemView';
+
+require('./LayerListView.css');
+
+
+const LayerListView = Marionette.CollectionView.extend(/** @lends core/views/layers.LayerListView# */{
+  tagName: 'ul',
+  className: 'layer-list',
+  childView: LayerListItemView,
+
+  events: {
+  },
+
+  /**
+    @constructs
+    @param {Object} options
+    @param {core/models.LayersCollection} options.collection The layers to display
+    @param {boolean} options.sortable Whether layers shall be sortable.
+    @param {boolean} options.singleChoive Whether the visibility of the layers
+                                          is mutually exclusive.
+    @param {boolean} options.fullDisplay Whether the layers shall be displayed
+                                         with options, colors, etc.
+   */
+  initialize(options) {
+    this.sortable = options.sortable;
+    this.singleChoice = options.singleChoice;
+    this.fullDisplay = options.fullDisplay;
+  },
+
+  childViewOptions() {
+    return {
+      singleChoice: this.singleChoice,
+      fullDisplay: this.fullDisplay,
+    };
+  },
+
+  onAttach() {
+    if (this.sortable) {
+      this.$el.sortable({
+        revert: true,
+        // delay: 90,
+        containment: this.$el,
+        axis: 'y',
+        forceHelperSize: true,
+        forcePlaceHolderSize: true,
+        placeholder: 'sortable-placeholder',
+        handle: '.fa-sort',
+        start: () => {
+          this.$('.ui-slider').detach();
+          this.$('.fa-adjust').toggleClass('active');
+          // this.$('.fa-adjust').popover('hide');
+        },
+        stop: (event, ui) => {
+          this.onSortStop(event, ui);
+        },
+      });
+    }
+  },
+
+  onSortStop() {
+    // get the new order of the layers from the DOM
+    this.children.map((view) => [
+      view.$('.input-group').attr('id').substr(11),
+      view.$el.index(),
+    ])
+    .forEach((item) => {
+      this.collection.get(item[0]).set('ordinal', item[1], { silent: true });
+    });
+    this.collection.sort();
+  },
+});
+
+
+export default LayerListView;
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue May 17 2016 11:43:46 GMT+0200 (CEST) using the Minami theme.
+</footer>
+
+<script>prettyPrint();</script>
+<script src="scripts/linenumber.js"></script>
+</body>
+</html>
