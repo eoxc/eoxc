@@ -6,7 +6,7 @@ const template = require('./LayerControlLayoutView.hbs');
 import LayerListView from './LayerListView';
 
 
-const LayerControlLayoutView = Marionette.LayoutView.extend({
+const LayerControlLayoutView = Marionette.LayoutView.extend(/** @lends core/views/layers.LayerControlLayoutView# */{
   template,
   regions: {
     baseLayers: '.baseLayers',
@@ -14,10 +14,14 @@ const LayerControlLayoutView = Marionette.LayoutView.extend({
     overlayLayers: '.overlayLayers',
   },
   className: 'layer-control',
-  events: {
-    'click .close': 'onCloseClick',
-  },
 
+  /**
+    @constructs
+    @param {Object} options
+    @param {core/models.LayersCollection} options.layersCollection The background layers
+    @param {core/models.LayersCollection} options.baseLayersCollection The content layers
+    @param {core/models.LayersCollection} options.overlayLayersCollection The overlay layers
+   */
   initialize(options) {
     this.baseLayersCollection = options.baseLayersCollection;
     this.layersCollection = options.layersCollection;
@@ -38,12 +42,6 @@ const LayerControlLayoutView = Marionette.LayoutView.extend({
       collection: this.overlayLayersCollection,
     }));
   },
-
-  onCloseClick() {
-    // TODO: implement
-    // this.close();
-  },
-
 });
 
 

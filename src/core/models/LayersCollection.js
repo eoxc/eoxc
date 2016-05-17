@@ -1,15 +1,17 @@
 import LayerModel from './LayerModel';
 import Backbone from 'backbone';
 
-/**
- * @memberof core/models
- * @class
- */
-
-const LayersCollection = Backbone.Collection.extend(/** @lends LayersCollection */{
+const LayersCollection = Backbone.Collection.extend(/** @lends core/models.LayersCollection# */{
   model: LayerModel,
   comparator: 'ordinal',
 
+  /**
+    @constructs
+    @param {core/models.LayerModel[]|Object[]} models The models of this collection
+    @param {Object} options
+    @param {boolean} options.exclusiveVisibility Whether the visibility of the layers
+                                                 are mutually exclusive.
+   */
   initialize(models, options) {
     if (options && options.exclusiveVisibility) {
       this.listenTo(this, 'change:display', this.onDisplayChange);
@@ -17,8 +19,10 @@ const LayersCollection = Backbone.Collection.extend(/** @lends LayersCollection 
   },
 
   /**
-   * Add a single model or an array of models to the collection. Automtically
-   * sets the 'ordinal' property for sorting.
+    Add a single model or an array of models to the collection. Automtically
+    sets the 'ordinal' property for sorting.
+
+    @param {Object|Object[]} layerDefinition The layer definition(s).
    */
   add(layerDefinition, options) {
     if (Array.isArray(layerDefinition)) {

@@ -7,7 +7,7 @@ import LayerListItemView from './LayerListItemView';
 require('./LayerListView.css');
 
 
-const LayerListView = Marionette.CollectionView.extend({
+const LayerListView = Marionette.CollectionView.extend(/** @lends core/views/layers.LayerListView# */{
   tagName: 'ul',
   className: 'layer-list',
   childView: LayerListItemView,
@@ -15,6 +15,16 @@ const LayerListView = Marionette.CollectionView.extend({
   events: {
   },
 
+  /**
+    @constructs
+    @param {Object} options
+    @param {core/models.LayersCollection} options.collection The layers to display
+    @param {boolean} options.sortable Whether layers shall be sortable.
+    @param {boolean} options.singleChoive Whether the visibility of the layers
+                                          is mutually exclusive.
+    @param {boolean} options.fullDisplay Whether the layers shall be displayed
+                                         with options, colors, etc.
+   */
   initialize(options) {
     this.sortable = options.sortable;
     this.singleChoice = options.singleChoice;

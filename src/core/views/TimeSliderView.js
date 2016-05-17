@@ -24,7 +24,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     @constructs
     @param {Object} options
     @param {core/models.FiltersModel} options.filtersModel The filters model to store the filters
-    @param {core/models.LayersCollection} options.layersCollection The layers to show on the time slider
+    @param {core/models.LayersCollection} options.layersCollection The layers to show
+                                                                   on the time slider
     @param {core/models.MapModel} options.mapModel The map-model
     @param {Date[]} options.domain The maximum domain to allow panning of th time slider
   */
