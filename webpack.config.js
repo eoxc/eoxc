@@ -29,6 +29,7 @@ module.exports = {
       { test: /\.coffee$/, exclude: /node_modules/, loader: 'coffee-loader' },
       // {test: /\.css$/, loaders: 'style-loader!css-loader'},
       { test: /\.css$/, loaders: ['style', 'css'] },
+      { test: /\.less$/, loaders: ['style', 'css', 'less'] },
       { test: /\.hbs$/, loader: 'handlebars-loader' },
 
       // for anything that might be included in a css
