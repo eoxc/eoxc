@@ -38,7 +38,10 @@ app.on('start', () => {
 
   const mapModel = new MapModel();
   const filtersModel = new FiltersModel({
-    time: [new Date('2009-07-01T00:00:00Z'), new Date('2009-09-20T00:00:00Z')],
+    time: [
+      new Date('2006-01-01T00:00:00Z'),
+      new Date('2011-12-31T00:00:00Z'),
+    ],
   });
 
   // set up layout
@@ -114,8 +117,8 @@ app.on('start', () => {
     filtersModel,
     mapModel,
     domain: {
-      start: new Date('2009-07-01T00:00:00Z'),
-      end: new Date('2011-06-10T00:00:00Z'),
+      start: new Date('2006-01-01T00:00:00Z'),
+      end: new Date('2011-12-31T00:00:00Z'),
     },
   });
 

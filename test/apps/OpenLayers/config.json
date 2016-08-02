@@ -61,38 +61,48 @@
         }
     }],
     "layers": [{
-        "id": "cci_MER_FRS_RGB",
-        "displayName": "CCI MER_FRS_RGB",
+        "id": "MERIS_MGVI",
+        "displayName": "MERIS_MGVI",
         "displayColor": "blue",
         "display": {
-            "id": "MER_FRS_RGB",
+            "id": "MERIS_MGVI",
             "visible": false,
             "protocol": "WMS",
             "urls": [
-                "http://ows.eox.at/cci/ows"
+                "http://ows.eox.at/cite/eoxserver/ows"
             ],
             "matrixSet": "WGS84",
             "format": "image/png",
             "projection": "EPSG:4326",
             "style": "default",
             "attribution": ""
+        },
+        "search": {
+            "id": "MERIS_MGVI",
+            "protocol": "EO-WCS",
+            "url": "http://ows.eox.at/cite/eoxserver/ows"
         }
     }, {
-        "id": "ofc_MER_FRS_RGB",
-        "displayName": "OFC MER_FRS_RGB",
-        "displayColor": "green",
+        "id": "MER_FRS_RGB",
+        "displayName": "MER_FRS_RGB",
+        "displayColor": "red",
         "display": {
             "id": "MER_FRS_RGB",
             "visible": true,
             "protocol": "WMS",
             "urls": [
-                "http://ows.eox.at/ofc/ows"
+                "http://ows.eox.at/cite/eoxserver/ows"
             ],
             "matrixSet": "WGS84",
             "format": "image/png",
             "projection": "EPSG:4326",
             "style": "default",
             "attribution": ""
+        },
+        "search": {
+            "id": "MER_FRS_RGB",
+            "protocol": "EO-WCS",
+            "url": "http://ows.eox.at/cite/eoxserver/ows"
         }
     }],
     "overlayLayers": [{

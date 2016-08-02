@@ -336,6 +336,16 @@ class OpenLayersMapView extends Marionette.ItemView {
       }
     });
 
+    this.listenTo(this.mapModel, 'change:highlightBBox', (mapModel) => {
+      this.highlightSource.clear();
+      const bbox = mapModel.get('highlightBBox');
+      if (bbox) {
+        const polygon = ol.geom.Polygon.fromExtent(bbox);
+        const feature = new ol.Feature();
+        feature.setGeometry(polygon);
+        this.highlightSource.addFeature(feature);
+      }
+    });
 
     // setup filters signals
 
