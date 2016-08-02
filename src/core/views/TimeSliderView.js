@@ -8,7 +8,7 @@ const EOWCSSource = require('D3.TimeSlider/src/sources/eowcs.coffee');
 const WPSSource = require('D3.TimeSlider/src/sources/eoxserver-wps.coffee');
 
 // require('D3.TimeSlider/build/d3.timeslider.plugins');
-require('D3.TimeSlider/build/d3.timeslider.css');
+require('D3.TimeSlider/src/d3.timeslider.less');
 require('./TimeSliderView.css');
 
 
@@ -138,8 +138,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     const record = event.originalEvent.detail;
     if (record.params.bbox) {
       this.mapModel.set('bbox', record.params.bbox);
-      this.filtersModel.set('time', [record.start, record.end]);
     }
+    this.filtersModel.set('time', [record.start, record.end]);
   },
 
   onRecordMouseover(event) {
