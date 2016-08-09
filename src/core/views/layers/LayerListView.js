@@ -1,5 +1,4 @@
 import Marionette from 'backbone.marionette';
-// import $ from 'jquery';
 require('jquery-ui/sortable');
 
 import LayerListItemView from './LayerListItemView';
@@ -40,7 +39,7 @@ const LayerListView = Marionette.CollectionView.extend(/** @lends core/views/lay
 
   onAttach() {
     if (this.sortable) {
-      this.$el.sortable({
+      $(this.$el).sortable({
         revert: true,
         // delay: 90,
         containment: this.$el,

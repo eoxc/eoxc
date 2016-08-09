@@ -55,7 +55,7 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
 
   onAttach() {
     this.$el.css(this.style);
-    this.$el.draggable({
+    $(this.$el).draggable({
       handle: '.panel-heading',
       // containment: '',
       scroll: false,

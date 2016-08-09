@@ -1,7 +1,4 @@
 import Marionette from 'backbone.marionette';
-
-require('jquery-ui/draggable');
-
 const template = require('./LayerControlLayoutView.hbs');
 import LayerListView from './LayerListView';
 
