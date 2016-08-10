@@ -7,6 +7,10 @@ const WMSSource = require('D3.TimeSlider/src/sources/wms.coffee');
 const EOWCSSource = require('D3.TimeSlider/src/sources/eowcs.coffee');
 const WPSSource = require('D3.TimeSlider/src/sources/eoxserver-wps.coffee');
 
+import searchEOWCS from '../../search/eowcs';
+import searchOpenSearch from '../../search/opensearch';
+import FiltersModel from '../models/FiltersModel';
+
 // require('D3.TimeSlider/build/d3.timeslider.plugins');
 require('D3.TimeSlider/src/d3.timeslider.less');
 require('./TimeSliderView.css');
@@ -87,10 +91,40 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         });
         break;
       case 'EO-WCS':
-        source = new EOWCSSource({
-          url: layerModel.get('search').url || layerModel.get('search').urls[0],
-          eoid: layerModel.get('search').id,
-        });
+        // source = new EOWCSSource({
+        //   url: layerModel.get('search').url || layerModel.get('search').urls[0],
+        //   eoid: layerModel.get('search').id,
+        // });
+
+        source = (start, end, params, callback) => {
+          const filtersModel = new FiltersModel({ time: [start, end] });
+          searchEOWCS(layerModel, filtersModel).then(records => {
+            callback(records.map(
+              record => [record.properties.startTime, record.properties.endTime, record]
+            ));
+          });
+        };
+        break;
+      case 'OpenSearch':
+        source = (start, end, params, callback) => {
+          const filtersModel = new FiltersModel({ time: [start, end] });
+          searchOpenSearch(layerModel, filtersModel, 'application/vnd.geo+json').then(records => {
+            callback(records.map(record => {
+              let startTime = null;
+              let endTime = null;
+              if (record.properties) {
+                // TODO: other property names than begin_time/end_time
+                if (record.properties.begin_time) {
+                  startTime = new Date(record.properties.begin_time);
+                }
+                if (record.properties.end_time) {
+                  endTime = new Date(record.properties.end_time);
+                }
+              }
+              return [startTime, endTime, record];
+            }));
+          });
+        };
         break;
       case 'WMS':
         source = new WMSSource({
@@ -144,22 +178,12 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onRecordMouseover(event) {
     const record = event.originalEvent.detail;
-    if (record.params.footprint) {
-      this.mapModel.set('highlightFootprint', record.params.footprint);
-    } else if (record.params.bbox) {
-      this.mapModel.set('highlightBBox', record.params.bbox);
-    }
+    this.mapModel.highlight(record.params);
   },
 
   onRecordMouseout(event) {
     const record = event.originalEvent.detail;
-    if (record.params.footprint
-      && record.params.footprint === this.mapModel.get('highlightFootprint')) {
-      this.mapModel.set('highlightFootprint', null);
-    } else if (record.params.bbox
-      && record.params.bbox === this.mapModel.get('highlightBBox')) {
-      this.mapModel.set('highlightBBox', null);
-    }
+    this.mapModel.unHighlight(record.params);
   },
 
   onModelSelectionChanged(filtersModel) {
