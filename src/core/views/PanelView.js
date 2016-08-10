@@ -102,6 +102,10 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
       this.close();
     }
   },
+
+  getView() {
+    return this.view;
+  },
 });
 
 
