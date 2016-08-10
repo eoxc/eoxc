@@ -325,25 +325,24 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.listenTo(this.mapModel, 'change:tool', this.onToolChange);
 
 
-    this.listenTo(this.mapModel, 'change:highlightFootprint', (mapModel) => {
+    this.listenTo(this.mapModel, 'change:highlightFeature', (mapModel) => {
       this.highlightSource.clear();
-      const footprint = mapModel.get('highlightFootprint');
-      if (footprint) {
-        const polygon = new ol.geom.Polygon([footprint]);
-        const feature = new ol.Feature();
-        feature.setGeometry(polygon);
-        this.highlightSource.addFeature(feature);
-      }
-    });
+      const feature = mapModel.get('highlightFeature');
+      let geometry = null;
 
-    this.listenTo(this.mapModel, 'change:highlightBBox', (mapModel) => {
-      this.highlightSource.clear();
-      const bbox = mapModel.get('highlightBBox');
-      if (bbox) {
-        const polygon = ol.geom.Polygon.fromExtent(bbox);
-        const feature = new ol.Feature();
-        feature.setGeometry(polygon);
-        this.highlightSource.addFeature(feature);
+      if (feature) {
+        if (feature.geometry) {
+          const format = new ol.format.GeoJSON();
+          geometry = format.readGeometry(feature.geometry);
+        } else if (feature.bbox) {
+          geometry = ol.geom.Polygon.fromExtent(feature.bbox);
+        }
+
+        if (geometry) {
+          const olFeature = new ol.Feature();
+          olFeature.setGeometry(geometry);
+          this.highlightSource.addFeature(olFeature);
+        }
       }
     });
 

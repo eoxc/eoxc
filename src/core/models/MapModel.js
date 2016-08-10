@@ -25,6 +25,17 @@ class MapModel extends Backbone.Model {
     }
     return null;
   }
+
+  highlight(feature) {
+    this.set('highlightFeature', feature);
+  }
+
+  unHighlight(feature) {
+    const currentFeature = this.get('highlightFeature');
+    if (currentFeature && currentFeature.id === feature.id) {
+      this.set('highlightFeature', null);
+    }
+  }
 }
 
 MapModel.prototype.defaults = {
@@ -45,6 +56,8 @@ MapModel.prototype.defaults = {
   roll: 0,
 
   displayMode: null, // one of 'map', 'columbus', 'globe'
+
+  highlightFeature: null,
 };
 
 export default MapModel;
