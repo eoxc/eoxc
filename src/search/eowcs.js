@@ -22,6 +22,33 @@ function convertFilters(filtersModel) {
   return parameters;
 }
 
+function prepareRecords(records) {
+  return records.map(coverage => {
+    const bounds = coverage.bounds;
+    const bbox = [bounds.lower[1], bounds.lower[0], bounds.upper[1], bounds.upper[0]];
+
+    const geometry = {
+      type: 'MultiPolygon',
+      coordinates: [[[]]],
+    };
+    for (let i = 0; i < coverage.footprint.length; i += 2) {
+      const lon = coverage.footprint[i + 1];
+      const lat = coverage.footprint[i];
+      geometry.coordinates[0][0].push([lon, lat]);
+    }
+
+    return {
+      id: coverage.coverageId,
+      bbox,
+      properties: {
+        startTime: new Date(coverage.timePeriod[0]),
+        endTime: new Date(coverage.timePeriod[1]),
+      },
+      geometry,
+    };
+  });
+}
+
 export default function search(layerModel, filtersModel) {
   const parameters = convertFilters(filtersModel);
   const url = describeEOCoverageSetURL(
@@ -33,20 +60,6 @@ export default function search(layerModel, filtersModel) {
     .then(response => {
       const eoCoverageSet = parse(response, { throwOnException: true });
       const coverageDescriptions = eoCoverageSet.coverageDescriptions || [];
-      return coverageDescriptions.map(coverage => {
-        const bounds = coverage.bounds;
-        const bbox = [bounds.lower[1], bounds.lower[0], bounds.upper[1], bounds.upper[0]];
-
-        // TODO: parse additional stuff like footprint etc.
-
-        return {
-          id: coverage.coverageId,
-          bbox,
-          properties: {
-            startTime: new Date(coverage.timePeriod[0]),
-            endTime: new Date(coverage.timePeriod[1]),
-          }
-        };
-      });
+      return prepareRecords(coverageDescriptions);
     });
 }

@@ -1,0 +1,10 @@
+<!-- Nav tabs -->
+<ul class="nav nav-tabs" role="tablist">
+  {{#each nameIds}}
+    <li role="presentation" {{#if @first}}class="active"{{/if}}>
+      <a href="#search-results-{{this.id}}" aria-controls="search-results-{{this.id}}" role="tab" data-toggle="tab">{{this.name}}</a>
+    </li>
+  {{/each}}
+</ul>
+
+<div class="tab-content"></div>

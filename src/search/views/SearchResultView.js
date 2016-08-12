@@ -1,9 +1,24 @@
 import Marionette from 'backbone.marionette';
 import SearchResultListView from './SearchResultListView';
+const template = require('./SearchResultView.hbs');
 
+const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultView# */{
+  template,
+  templateHelpers() {
+    return {
+      nameIds: this.collection.map(model => {
+        const layerModel = model.get('searchCollection').layerModel;
+        return { id: layerModel.get('id'), name: layerModel.get('displayName') };
+      }),
+    };
+  },
 
-const SearchResultView = Marionette.CollectionView.extend(/** @lends search/views/layers.SearchResultView# */{
   childView: SearchResultListView,
+  childViewContainer: '.tab-content',
+
+  childEvents: {
+    'collection:reset': 'onChildCollectionReset',
+  },
 
   initialize(options) {
     this.mapModel = options.mapModel;
@@ -16,6 +31,11 @@ const SearchResultView = Marionette.CollectionView.extend(/** @lends search/view
       mapModel: this.mapModel,
     };
     return new ChildViewClass(options);
+  },
+
+  onChildCollectionReset(childView, collection) {
+    const $a = this.$(`a[href='#search-results-${collection.layerModel.get('id')}']`);
+    $a.text(`${$a.text()} (${collection.length})`);
   },
 });
 

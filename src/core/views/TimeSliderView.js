@@ -91,11 +91,6 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         });
         break;
       case 'EO-WCS':
-        // source = new EOWCSSource({
-        //   url: layerModel.get('search').url || layerModel.get('search').urls[0],
-        //   eoid: layerModel.get('search').id,
-        // });
-
         source = (start, end, params, callback) => {
           const filtersModel = new FiltersModel({ time: [start, end] });
           searchEOWCS(layerModel, filtersModel).then(records => {
@@ -108,21 +103,31 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       case 'OpenSearch':
         source = (start, end, params, callback) => {
           const filtersModel = new FiltersModel({ time: [start, end] });
-          searchOpenSearch(layerModel, filtersModel, 'application/vnd.geo+json').then(records => {
+          searchOpenSearch(layerModel, filtersModel).then(records => {
             callback(records.map(record => {
-              let startTime = null;
-              let endTime = null;
-              if (record.properties) {
+              let time = null;
+              const properties = record.properties;
+              if (record.time) {
+                time = record.time;
+              } else if (properties) {
                 // TODO: other property names than begin_time/end_time
-                if (record.properties.begin_time) {
-                  startTime = new Date(record.properties.begin_time);
-                }
-                if (record.properties.end_time) {
-                  endTime = new Date(record.properties.end_time);
+                if (properties.begin_time && properties.end_time) {
+                  time = [new Date(properties.begin_time), new Date(properties.end_time)];
+                } else if (properties.time) {
+                  if (Array.isArray(properties.time)) {
+                    time = properties.time;
+                  } else {
+                    time = [properties.time];
+                  }
                 }
               }
-              return [startTime, endTime, record];
-            }));
+
+              if (time === null) {
+                return null;
+              }
+
+              return [...time, record];
+            }).filter(item => item !== null));
           });
         };
         break;

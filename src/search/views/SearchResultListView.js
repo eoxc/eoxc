@@ -3,11 +3,27 @@ import Marionette from 'backbone.marionette';
 const template = require('./SearchResultListView.hbs');
 import SearchResultItemView from './SearchResultItemView';
 
+const FetchingView = Marionette.ItemView.extend({
+  template: () => `<i>Fetching.</i>`,
+});
+
+
+const EmptyView = Marionette.ItemView.extend({
+  template: () => `<i>No records matched the search.</i>`,
+});
+
 
 const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultListView# */{
   template,
   childView: SearchResultItemView,
   childViewContainer: 'ul',
+
+  getEmptyView() {
+    if (this.finished) {
+      return EmptyView;
+    }
+    return FetchingView;
+  },
 
   childEvents: {
     'item:clicked': 'onItemClicked',
@@ -15,8 +31,13 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     'item:hover:end': 'onItemHoverEnd',
   },
 
+  collectionEvents: {
+    reset: 'onCollectionReset',
+  },
+
   initialize(options) {
     this.mapModel = options.mapModel;
+    this.finished = false;
   },
 
   templateHelpers() {
@@ -26,6 +47,16 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     }
   },
 
+  onRender() {
+    this.$el.attr({
+      role: 'tabpanel',
+      id: `search-results-${this.collection.layerModel.get('id')}`,
+      'class': 'tab-pane',
+    });
+    if (this.model.collection.indexOf(this.model) === 0) {
+      this.$el.addClass('active');
+    }
+  },
 
   onItemClicked(childView) {
 
@@ -37,6 +68,11 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   onItemHoverEnd(childView) {
     this.mapModel.unHighlight(childView.model.attributes);
+  },
+
+  onCollectionReset() {
+    this.finished = true;
+    this.trigger('collection:reset', this.collection);
   },
 });
 
