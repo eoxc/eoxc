@@ -1,10 +1,16 @@
-<!-- Nav tabs -->
-<ul class="nav nav-tabs" role="tablist">
-  {{#each nameIds}}
-    <li role="presentation" {{#if @first}}class="active"{{/if}}>
-      <a href="#search-results-{{this.id}}" aria-controls="search-results-{{this.id}}" role="tab" data-toggle="tab">{{this.name}}</a>
-    </li>
-  {{/each}}
-</ul>
 
-<div class="tab-content"></div>
+
+<div class="result-contents" style="height: auto; overflow-y: scroll; overflow-x: ellipsis"></div>
+<div class="input-group">
+  <div class="input-group-btn">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action <span class="caret"></span></button>
+    <ul class="dropdown-menu">
+      <li><a href="#">Action</a></li>
+      <li><a href="#">Another action</a></li>
+      <li><a href="#">Something else here</a></li>
+      <li role="separator" class="divider"></li>
+      <li><a href="#">Separated link</a></li>
+    </ul>
+  </div>
+  <input type="text" class="form-control" aria-label="...">
+</div>

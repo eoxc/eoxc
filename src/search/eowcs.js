@@ -4,8 +4,12 @@ import { pushParseFunctions, parse } from 'libcoverage/src/parse';
 
 pushParseFunctions(parseFunctions);
 
-function convertFilters(filtersModel) {
-  const parameters = {};
+function convertFilters(filtersModel, options) {
+  const parameters = {
+    sections: ['CoverageDescriptions'],
+    count: options.itemsPerPage,
+  };
+
   const time = filtersModel.get('time');
   if (time) {
     if (Array.isArray(time)) {
@@ -49,8 +53,8 @@ function prepareRecords(records) {
   });
 }
 
-export default function search(layerModel, filtersModel) {
-  const parameters = convertFilters(filtersModel);
+export default function search(layerModel, filtersModel, options = {}) {
+  const parameters = convertFilters(filtersModel, options);
   const url = describeEOCoverageSetURL(
     layerModel.get('search.url'), layerModel.get('search.id'), parameters
   );
@@ -60,6 +64,11 @@ export default function search(layerModel, filtersModel) {
     .then(response => {
       const eoCoverageSet = parse(response, { throwOnException: true });
       const coverageDescriptions = eoCoverageSet.coverageDescriptions || [];
-      return prepareRecords(coverageDescriptions);
+      const records = prepareRecords(coverageDescriptions);
+      return {
+        itemsPerPage: eoCoverageSet.numberReturned,
+        totalResults: eoCoverageSet.numberMatched,
+        records,
+      };
     });
 }

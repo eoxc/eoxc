@@ -1,6 +1,9 @@
 import { discover } from 'opensearch';
 
-function convertFilters(filtersModel) {
+function convertFilters(filtersModel, options, service) {
+  const description = service.getDescription();
+  const url = description.getUrl(null, options.mimeType || null);
+
   const parameters = {};
 
   const time = filtersModel.get('time');
@@ -19,23 +22,29 @@ function convertFilters(filtersModel) {
     parameters['geo:box'] = area;
   }
 
+  if (options.hasOwnProperty('itemsPerPage') && url.hasParameter('count')) {
+    parameters.count = options.itemsPerPage;
+  }
+
+  if (options.hasOwnProperty('page')) {
+    if (url.hasParameter('startPage')) {
+      // TODO: 0 or 1 based page numbers?
+      parameters.startPage = options.page;
+    } else if (url.hasParameter('startIndex') && options.hasOwnProperty('itemsPerPage')) {
+      // TODO: 0 or 1 based indices?
+      parameters.startIndex = options.page * options.itemsPerPage;
+    }
+  }
+
   return parameters;
-}
-
-function prepareRecords(records) {
-  return records.map(record => {
-
-
-    return record;
-  });
 }
 
 // cached services
 const services = {};
 
-export default function search(layerModel, filtersModel, mimeType) {
+export default function search(layerModel, filtersModel, options = {}) {
   const url = layerModel.get('search.url');
-  const parameters = convertFilters(filtersModel);
+
 
   // see if we already have a service Promise cached
   if (!services[url]) {
@@ -43,6 +52,8 @@ export default function search(layerModel, filtersModel, mimeType) {
     services[url] = discover(url);
   }
   return services[url]
-    .then(service => service.search(parameters, mimeType))
-    .then(prepareRecords);
+    .then(service => {
+      const parameters = convertFilters(filtersModel, options, service);
+      return service.search(parameters, options.mimeType);
+    });
 }

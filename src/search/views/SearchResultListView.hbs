@@ -1,1 +1,36 @@
-<ul id="result-list-{{layerId}}" class="list-unstyled"></ul>
+<div class="panel panel-default">
+  <div class="panel-heading" role="tab">
+    <h4 class="panel-title">
+      <a role="button" data-toggle="collapse" href="#collapse-{{layerId}}" aria-expanded="true">
+        {{layerName}} {{#if isSearching}}<i class="fa fa-circle-o-notch fa-spin"></i>{{else}}{{#if hasError}}<i class="fa fa-exclamation text-danger"></i>{{else}}({{totalResults}}){{/if}}{{/if}}
+        {{#if isSearching}}<span class="caret"></span>{{/if}}
+      </a>
+    </h4>
+  </div>
+  <div id="collapse-{{layerId}}" class="panel-collapse collapse in" role="tabpanel">
+    <div class="panel-body">
+      <ul id="result-list-{{layerId}}" class="result-list list-unstyled"></ul>
+    </div>
+    {{#if showPagination}}
+    <div class="panel-footer">
+      <nav aria-label="Page navigation">
+        <ul class="pagination" style="margin:0;">
+          <li>
+            <a href="#" aria-label="Previous" data-page="">
+              <span aria-hidden="true">&laquo;</span>
+            </a>
+          </li>
+          {{#each pages}}
+            <li {{#if this.current}}class="active"{{/if}}><a href="#" data-page="{{this.number}}">{{this.showNumber}}</a></li>
+          {{/each}}
+          <li>
+            <a href="#" aria-label="Next">
+              <span aria-hidden="true">&raquo;</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    {{/if}}
+  </div>
+</div>

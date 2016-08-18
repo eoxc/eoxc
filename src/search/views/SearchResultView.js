@@ -4,38 +4,32 @@ const template = require('./SearchResultView.hbs');
 
 const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultView# */{
   template,
-  templateHelpers() {
-    return {
-      nameIds: this.collection.map(model => {
-        const layerModel = model.get('searchCollection').layerModel;
-        return { id: layerModel.get('id'), name: layerModel.get('displayName') };
-      }),
-    };
-  },
-
   childView: SearchResultListView,
-  childViewContainer: '.tab-content',
+
+  childViewContainer: '.result-contents',
 
   childEvents: {
     'collection:reset': 'onChildCollectionReset',
+    'item:clicked': 'onResultItemClicked',
   },
 
   initialize(options) {
     this.mapModel = options.mapModel;
+    this.onResultItemClicked = options.onResultItemClicked;
   },
 
   buildChildView(child, ChildViewClass) {
     const options = {
       model: child,
-      collection: child.get('searchCollection'),
+      collection: child.get('results'),
       mapModel: this.mapModel,
     };
     return new ChildViewClass(options);
   },
 
   onChildCollectionReset(childView, collection) {
-    const $a = this.$(`a[href='#search-results-${collection.layerModel.get('id')}']`);
-    $a.text(`${$a.text()} (${collection.length})`);
+    const $a = this.$(`a[href='#search-results-${childView.model.get('layerModel').get('id')}']`);
+    $a.text(`${childView.model.get('layerModel').get('displayName')} (${collection.length})`);
   },
 });
 
