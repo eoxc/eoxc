@@ -66,11 +66,15 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
     this.timeSlider = new TimeSlider(this.el, options);
 
-    this.layersCollection.each((layerModel) => {
-      if (layerModel.get('display.visible')) {
-        this.addLayer(layerModel);
-      }
-    });
+    const visibleLayers = this.layersCollection.filter(
+      layerModel => layerModel.get('display.visible')
+    );
+
+    if (visibleLayers.length > 0) {
+      visibleLayers.forEach(layerModel => this.addLayer(layerModel));
+    } else {
+      this.$el.css('display', 'none');
+    }
 
     this.listenTo(this.filtersModel, 'change:time', this.onModelSelectionChanged);
     this.listenTo(this.layersCollection, 'add', this.onLayerAdded);
@@ -82,6 +86,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   addLayer(layerModel) {
+    this.$el.fadeIn();
     let source;
     switch (layerModel.get('search').protocol) {
       case 'EOxServer-WPS':
@@ -93,8 +98,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       case 'EO-WCS':
         source = (start, end, params, callback) => {
           const filtersModel = new FiltersModel({ time: [start, end] });
-          searchEOWCS(layerModel, filtersModel).then(records => {
-            callback(records.map(
+          searchEOWCS(layerModel, filtersModel).then(result => {
+            callback(result.records.map(
               record => [record.properties.startTime, record.properties.endTime, record]
             ));
           });
@@ -103,8 +108,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       case 'OpenSearch':
         source = (start, end, params, callback) => {
           const filtersModel = new FiltersModel({ time: [start, end] });
-          searchOpenSearch(layerModel, filtersModel).then(records => {
-            callback(records.map(record => {
+          searchOpenSearch(layerModel, filtersModel).then(result => {
+            callback(result.records.map(record => {
               let time = null;
               const properties = record.properties;
               if (record.time) {
@@ -147,6 +152,14 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       color: layerModel.get('displayColor'),
       source,
     });
+  },
+
+  removeLayer(layerModel) {
+    this.timeSlider.removeDataset(layerModel.get('id'));
+    const visibleLayers = this.layersCollection.filter(m => m.get('display.visible'));
+    if (visibleLayers.length === 0) {
+      this.$el.fadeOut();
+    }
   },
 
   createRecordFilter(bbox) {
@@ -203,7 +216,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   onLayerRemoved(layerModel) {
-    this.timeSlider.removeDataset(layerModel.get('id'));
+    this.removeLayer(layerModel);
   },
 
   onLayerChanged(layerModel) {
@@ -211,7 +224,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       if (layerModel.get('display.visible') && !this.timeSlider.hasDataset(layerModel.get('id'))) {
         this.addLayer(layerModel);
       } else {
-        this.timeSlider.removeDataset(layerModel.get('id'));
+        this.removeLayer(layerModel);
       }
     }
   },

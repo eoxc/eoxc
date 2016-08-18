@@ -41,3 +41,7 @@ input[type="checkbox"].layer-visible:checked + label span:before, input[type="ch
 .layer-list-item .checkbox label, .layer-list-item .radio label  {
   padding-left: 0px;
 }
+
+.display-name {
+  text-overflow: ellipsis;
+}
