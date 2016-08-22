@@ -6,9 +6,9 @@ const LayerModel = Backbone.NestedModel.extend(/** @lends core/models.LayerModel
   defaults: {
     id: null,
     displayName: null,
-    visible: false,
     displayColor: 'red',
     display: {
+      visible: false,
       protocol: null,
       url: null,
       urls: [],
