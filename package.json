@@ -72,7 +72,7 @@
     "jquery": "^2.2.3",
     "jquery-ui": "^1.10.5",
     "less": "^2.7.1",
-    "libcoverage": "^0.1.8",
+    "libcoverage": "^0.1.9",
     "openlayers": "^3.15.1",
     "opensearch-browser": "^0.0.1"
   }
