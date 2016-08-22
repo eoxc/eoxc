@@ -85,16 +85,12 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   initialize(options) {
     this.mapModel = options.mapModel;
     this.finished = false;
+    this.listenTo(this.model.get('layerModel'), 'change:display.visible', this.onLayerVisibleChange);
   },
 
   onRender() {
-    this.$el.attr({
-      role: 'tabpanel',
-      id: `search-results-${this.model.get('layerModel').get('id')}`,
-      class: 'tab-pane',
-    });
-    if (this.model.collection.indexOf(this.model) === 0) {
-      this.$el.addClass('active');
+    if (!this.model.get('layerModel').get('display.visible')) {
+      this.$el.hide();
     }
   },
 
@@ -121,6 +117,14 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   onPageClicked(event) {
     this.model.searchPage(event.currentTarget.dataset.page);
+  },
+
+  onLayerVisibleChange() {
+    if (this.model.get('layerModel').get('display.visible')) {
+      this.$el.show('fast');
+    } else {
+      this.$el.hide('fast');
+    }
   },
 });
 

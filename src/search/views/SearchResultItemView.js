@@ -7,9 +7,13 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
   template,
   tagName: 'li',
   triggers: {
-    click: 'item:clicked',
+    'click a': 'item:clicked',
     mouseover: 'item:hover',
     mouseout: 'item:hover:end',
+  },
+
+  events: {
+    'click input': 'onChecked',
   },
 
   initialize(options) {
@@ -19,6 +23,10 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
   onClicked() {
     // TODO: show
     //alert(`clicked ${this.model.get('id')}`);
+  },
+
+  onChecked() {
+    this.model.set('selectedForDownload', this.$('input[type="checkbox"]').is(':checked'));
   },
 
   onHover() {

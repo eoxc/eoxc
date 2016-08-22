@@ -3,7 +3,7 @@
     <h4 class="panel-title">
       <a role="button" data-toggle="collapse" href="#collapse-{{layerId}}" aria-expanded="true">
         {{layerName}} {{#if isSearching}}<i class="fa fa-circle-o-notch fa-spin"></i>{{else}}{{#if hasError}}<i class="fa fa-exclamation text-danger"></i>{{else}}({{totalResults}}){{/if}}{{/if}}
-        {{#if isSearching}}<span class="caret"></span>{{/if}}
+        {{#if isSearching}}{{else}}<span class="caret"></span>{{/if}}
       </a>
     </h4>
   </div>

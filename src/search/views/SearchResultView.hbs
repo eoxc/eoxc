@@ -1,16 +1,15 @@
-
-
-<div class="result-contents" style="height: auto; overflow-y: scroll; overflow-x: ellipsis"></div>
-<div class="input-group">
-  <div class="input-group-btn">
-    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Action <span class="caret"></span></button>
-    <ul class="dropdown-menu">
-      <li><a href="#">Action</a></li>
-      <li><a href="#">Another action</a></li>
-      <li><a href="#">Something else here</a></li>
-      <li role="separator" class="divider"></li>
-      <li><a href="#">Separated link</a></li>
-    </ul>
+<div class="result-contents"></div>
+<div class="row">
+  <div class="input-group download-control">
+    <span class="input-group-addon">Format:</span>
+    <select class="form-control">
+      <option selected>native format</option>
+      <option value="image/tiff">TIFF</option>
+      <option value="image/png">PNG</option>
+    </select>
+    <span class="input-group-btn">
+      <button class="btn btn-default" type="button" id="start-download">Download</button>
+    </span>
   </div>
-  <input type="text" class="form-control" aria-label="...">
 </div>
+<div id="download-elemements" style="display: none;"></div>
