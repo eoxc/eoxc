@@ -65,13 +65,14 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     // create the map object
     this.map = new ol.Map({
-      controls: ol.control.defaults().extend([
-        new ol.control.MousePosition({
-          coordinateFormat: ol.coordinate.createStringXY(4),
-          projection: 'EPSG:4326',
-          undefinedHTML: '&nbsp;',
-        }),
-      ]),
+      controls: [
+        new ol.control.Attribution,
+        // new ol.control.MousePosition({
+        //   coordinateFormat: ol.coordinate.createStringXY(4),
+        //   projection: 'EPSG:4326',
+        //   undefinedHTML: '&nbsp;',
+        // }),
+      ],
       renderer: options.mapRenderer || 'canvas',
       view: new ol.View({
         projection: ol.proj.get('EPSG:4326'),
