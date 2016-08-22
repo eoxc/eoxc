@@ -1,4 +1,4 @@
-import { discover } from 'opensearch';
+import { discover } from 'opensearch-browser';
 
 function convertFilters(filtersModel, options, service) {
   const description = service.getDescription();
