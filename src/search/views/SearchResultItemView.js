@@ -1,7 +1,7 @@
 import Marionette from 'backbone.marionette';
 
 const template = require('./SearchResultItemView.hbs');
-
+require('./SearchResultItemView.css');
 
 const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/layers.SearchResultItemView# */{
   template,
@@ -20,17 +20,15 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
     this.mapModel = options.mapModel;
   },
 
-  onClicked() {
-    // TODO: show
-    //alert(`clicked ${this.model.get('id')}`);
+  templateHelpers() {
+    return {
+      thumbnailUrl: this.model.getThumbnailUrl(),
+      // browseUrl: this.model.getBrowseUrl(),
+    };
   },
 
   onChecked() {
     this.model.set('selectedForDownload', this.$('input[type="checkbox"]').is(':checked'));
-  },
-
-  onHover() {
-
   },
 });
 

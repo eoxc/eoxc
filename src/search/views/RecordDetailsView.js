@@ -5,14 +5,14 @@ const template = require('./RecordDetailsView.hbs');
 
 const RecordDetailsView = Marionette.ItemView.extend(/** @lends search/views/layers.RecordDetailsView# */{
   template,
-  tagName: 'li',
   triggers: {
   },
 
-  onClicked() {
-  },
-
-  onHover() {
+  templateHelpers() {
+    return {
+      thumbnailUrl: this.model.getThumbnailUrl(),
+      browseUrl: this.model.getBrowseUrl(),
+    };
   },
 });
 
