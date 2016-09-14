@@ -347,10 +347,21 @@ class OpenLayersMapView extends Marionette.ItemView {
       }
     });
 
+    this.listenTo(this.mapModel, 'show', (featureOrExtent) => {
+      let geometry = null;
+      if (Array.isArray(featureOrExtent) && featureOrExtent.length === 4) {
+        geometry = featureOrExtent;
+      } else {
+        const format = new ol.format.GeoJSON();
+        geometry = format.readGeometry(featureOrExtent.geometry);
+      }
+      this.map.getView().fit(geometry, this.map.getSize());
+    });
+
     // setup filters signals
 
     this.listenTo(this.filtersModel, 'change:time', this.onFiltersTimeChange);
-
+    this.listenTo(this.filtersModel, 'change:area', this.onFiltersAreaChange);
 
     // setup map events
 
@@ -381,32 +392,49 @@ class OpenLayersMapView extends Marionette.ItemView {
       point: new ol.interaction.Draw({ source: this.selectionSource, type: 'Point' }),
       line: new ol.interaction.Draw({ source: this.selectionSource, type: 'LineString' }),
       polygon: new ol.interaction.Draw({ source: this.selectionSource, type: 'Polygon' }),
-      bbox: new ol.interaction.DragBox({ style: selectionStyle }),
+      // bbox: new ol.interaction.DragBox({ style: selectionStyle }),
+      bbox: new ol.interaction.Draw({
+        source: this.selectionSource,
+        type: 'LineString',
+        geometryFunction: (coordinates, geometry) => {
+          const geom = geometry || new ol.geom.Polygon(null);
+          const start = coordinates[0];
+          const end = coordinates[1];
+          geom.setCoordinates([
+            [start, [start[0], end[1]], end, [end[0], start[1]], start],
+          ]);
+          return geom;
+        },
+        maxPoints: 2,
+      }),
     };
 
-    this.drawControls.bbox.on('boxstart', (evt) => {
-      this.drawControls.bbox.boxstart = evt.coordinate;
-    }, this);
+    // this.drawControls.bbox.on('boxstart', (evt) => {
+    //   this.drawControls.bbox.boxstart = evt.coordinate;
+    // }, this);
+    //
+    // this.drawControls.bbox.on('boxend', (evt) => {
+    //   this.selectionSource.clear();
+    //   const boxend = evt.coordinate;
+    //   const boxstart = this.drawControls.bbox.boxstart;
+    //   this.filtersModel.set('area', [
+    //     boxstart[0], boxstart[1], boxend[0], boxend[1],
+    //   ]);
+    //   setTimeout(() => this.mapModel.set('tool', null));
+    // }, this);
 
-    this.drawControls.bbox.on('boxend', (evt) => {
-      const boxend = evt.coordinate;
-      const boxstart = this.drawControls.bbox.boxstart;
-      const polygon = ol.geom.Polygon.fromExtent([
-        boxstart[0], boxstart[1], boxend[0], boxend[1],
-      ]);
-
-      // if (this.selectionType === "single"){
-      //   var features = this.source.getFeatures();
-      //   for (var i in features){
-      //     this.source.removeFeature(features[i]);
-      //   }
-      //   Communicator.mediator.trigger("selection:changed", null);
-      // }
-
-      const feature = new ol.Feature();
-      feature.setGeometry(polygon);
-      this.selectionSource.addFeature(feature);
-    }, this);
+    const format = new ol.format.GeoJSON();
+    for (var key in this.drawControls) {
+      if (this.drawControls.hasOwnProperty(key)) {
+        const control = this.drawControls[key];
+        control.on('drawend', (event) => {
+          this.selectionSource.clear();
+          this.filtersModel.set('area', format.writeFeatureObject(event.feature));
+          // to avoid a zoom-in on a final double click
+          setTimeout(() => this.mapModel.set('tool', null));
+        });
+      }
+    }
   }
 
 
@@ -434,6 +462,26 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.layersCollection.forEach((layerModel) => {
       this.applyLayerFilters(this.getLayerOfGroup(layerModel, this.groups.layers), filtersModel);
     }, this);
+  }
+
+  onFiltersAreaChange(filtersModel) {
+    this.selectionSource.clear();
+    const area = filtersModel.get('area');
+    let feature = null;
+
+    if (Array.isArray(area)) {
+      const polygon = ol.geom.Polygon.fromExtent([
+        area[0], area[1], area[2], area[3],
+      ]);
+      feature = new ol.Feature();
+      feature.setGeometry(polygon);
+    } else if (area && typeof area === 'object') {
+      const format = new ol.format.GeoJSON();
+      feature = format.readFeature(area);
+    }
+    if (feature) {
+      this.selectionSource.addFeature(feature);
+    }
   }
 
   onToolChange(mapModel) {

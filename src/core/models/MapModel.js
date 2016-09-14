@@ -36,6 +36,10 @@ class MapModel extends Backbone.Model {
       this.set('highlightFeature', null);
     }
   }
+
+  show(featureOrExtent) {
+    this.trigger('show', featureOrExtent);
+  }
 }
 
 MapModel.prototype.defaults = {
