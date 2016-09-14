@@ -19,7 +19,17 @@ function convertFilters(filtersModel, options, service) {
 
   const area = filtersModel.get('area');
   if (area) {
-    parameters['geo:box'] = area;
+    if (Array.isArray(area)) {
+      parameters['geo:box'] = area;
+    } else if (area.geometry) {
+      const geometry = area.geometry;
+      if (geometry.type === 'Point') {
+        parameters['geo:lon'] = geometry.coordinates[0];
+        parameters['geo:lat'] = geometry.coordinates[1];
+      } else {
+        parameters['geo:geometry'] = geometry;
+      }
+    }
   }
 
   if (options.hasOwnProperty('itemsPerPage') && url.hasParameter('count')) {
@@ -54,6 +64,6 @@ export default function search(layerModel, filtersModel, options = {}) {
   return services[url]
     .then(service => {
       const parameters = convertFilters(filtersModel, options, service);
-      return service.search(parameters, options.mimeType);
+      return service.search(parameters, options.mimeType, 'POST');
     });
 }
