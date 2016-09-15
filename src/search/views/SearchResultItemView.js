@@ -6,6 +6,7 @@ require('./SearchResultItemView.css');
 const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/layers.SearchResultItemView# */{
   template,
   tagName: 'li',
+  className: 'result-list-item',
   triggers: {
     'click a': 'item:clicked',
     mouseover: 'item:hover',
