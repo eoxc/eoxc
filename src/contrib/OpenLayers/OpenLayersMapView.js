@@ -403,6 +403,7 @@ class OpenLayersMapView extends Marionette.ItemView {
           geom.setCoordinates([
             [start, [start[0], end[1]], end, [end[0], start[1]], start],
           ]);
+          geom.isBox = true;
           return geom;
         },
         maxPoints: 2,
@@ -429,7 +430,13 @@ class OpenLayersMapView extends Marionette.ItemView {
         const control = this.drawControls[key];
         control.on('drawend', (event) => {
           this.selectionSource.clear();
-          this.filtersModel.set('area', format.writeFeatureObject(event.feature));
+          let geom;
+          if (event.feature.getGeometry().isBox) {
+            geom = event.feature.getGeometry().getExtent();
+          } else {
+            geom = format.writeFeatureObject(event.feature);
+          }
+          this.filtersModel.set('area', geom);
           // to avoid a zoom-in on a final double click
           setTimeout(() => this.mapModel.set('tool', null));
         });
