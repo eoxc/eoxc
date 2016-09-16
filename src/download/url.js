@@ -18,6 +18,6 @@ export default function (recordModel) {
   }
 
   return $(`
-    <form method="get" action="${url}" target="iframe-download-post">${inputs}</form>
+    <form method="get" action="${url}" target="_blank">${inputs}</form>
   `);
 }
