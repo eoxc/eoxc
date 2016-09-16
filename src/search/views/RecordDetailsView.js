@@ -15,6 +15,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     return {
       thumbnailUrl: this.model.getThumbnailUrl(),
       browseUrl: this.model.getBrowseUrl(),
+      description: this.model.get('properties').summary || this.model.get('properties').content,
     };
   },
 
@@ -35,7 +36,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
       //   this.mapView.onResize();
       // });
     }
-  }
+  },
 });
 
 export default RecordDetailsView;
