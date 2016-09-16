@@ -15,6 +15,7 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
 
   events: {
     'click .close': 'close',
+    'shown.bs.modal': 'onModalShown',
   },
 
   initialize(options) {
@@ -37,6 +38,12 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
     this.initialDisplay = this.$el.css('display');
     this.$el.modal('show');
     this.showChildView('content', this.view);
+  },
+
+  onModalShown() {
+    if (this.view.onModalShown) {
+      this.view.onModalShown();
+    }
   },
 
   /**
