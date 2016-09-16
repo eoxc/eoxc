@@ -20,7 +20,8 @@ class SearchModel extends Backbone.Model {
       totalResults: undefined,
       isSearching: false,
       hasError: false,
-      //results: new Backbone.Collection(),
+      // results: new Backbone.Collection(),
+      downloadSelection: new Backbone.Collection,
     };
   }
 

@@ -54,6 +54,13 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   childView: SearchResultItemView,
   childViewContainer: 'ul.result-list',
 
+  buildChildView(child, ChildViewClass) {
+    return new ChildViewClass({
+      model: child,
+      downloadSelectionCollection: this.downloadSelectionCollection,
+    });
+  },
+
   getEmptyView() {
     if (this.model.get('isSearching')) {
       return FetchingView;
@@ -69,6 +76,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   childEvents: {
     'item:clicked': 'onItemClicked',
+    'item:info': 'onItemInfo',
     'item:hover': 'onItemHover',
     'item:hover:end': 'onItemHoverEnd',
   },
@@ -84,6 +92,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   initialize(options) {
     this.mapModel = options.mapModel;
+    this.downloadSelectionCollection = options.downloadSelectionCollection;
     this.finished = false;
     this.listenTo(this.model.get('layerModel'), 'change:display.visible', this.onLayerVisibleChange);
   },
@@ -96,6 +105,10 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   onItemClicked(childView) {
     this.trigger('item:clicked', childView.model);
+  },
+
+  onItemInfo(childView) {
+    this.trigger('item:info', childView.model, this.model.get('layerModel'));
   },
 
   onItemHover(childView) {

@@ -1,9 +1,25 @@
 .result-list-item {
   width: 100px;
   position: relative;
+  padding: 0 !important;
   border: 1px solid transparent;
   border-color: #ddd;
   border-radius: 2px;
+  text-align: center;
+}
+
+.result-list-item:hover {
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+
+.result-list-item.selected-for-download {
+  border-color: red !important;
+}
+
+.result-list-item a {
+  display: block;
+  height: 100px;
 }
 
 .result-list-item img {
@@ -17,4 +33,15 @@
   position: absolute;
   bottom: 10px;
   right: 10px;
+}
+
+.result-list-item button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+}
+
+.result-list-item:hover button {
+  display: block;
 }
