@@ -77,8 +77,14 @@ export default function download(layerModel, filtersModel, recordModel, options)
     }
   );
 
-  return $(template({
-    url: layerModel.get('download.url'),
-    xml,
-  }));
+  // return $(template({
+  //   url: layerModel.get('download.url'),
+  //   xml,
+  // }));
+
+  return $(`
+    <form method="post" action="${layerModel.get('download.url')}" target="iframe-download-post" enctype="text/plain">
+        <input type="hidden" name='<?xml version' value='"1.0"?>${xml}'></input>
+    </form>
+  `);
 }

@@ -1,8 +1,8 @@
-import Backbone from 'backbone';
 import Marionette from 'backbone.marionette';
 import SearchResultListView from './SearchResultListView';
 
 import downloadEOWCS from '../../download/eowcs';
+import downloadURL from '../../download/url';
 
 require('./SearchResultView.css');
 const template = require('./SearchResultView.hbs');
@@ -59,15 +59,20 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     let downloadForms = [];
 
     visibleSearchModels.forEach(searchModel => {
-      const newDownloadForms = searchModel.get('results')
-        .filter(recordModel => recordModel.get('selectedForDownload'))
-        .map(recordModel => downloadEOWCS(
-            searchModel.get('layerModel'),
-            this.filtersModel,
-            recordModel,
-            options
-          )
-        );
+      const newDownloadForms = searchModel.get('downloadSelection')
+        .map(recordModel => {
+          const layerModel = searchModel.get('layerModel');
+          if (layerModel.get('download.protocol') === 'EO-WCS') {
+            return downloadEOWCS(
+              layerModel,
+              this.filtersModel,
+              recordModel,
+              options
+            );
+          }
+          // TODO: other download implementations
+          return downloadURL(recordModel);
+        });
       downloadForms = downloadForms.concat(newDownloadForms);
     });
 
