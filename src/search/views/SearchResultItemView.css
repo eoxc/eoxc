@@ -1,6 +1,9 @@
 .result-list-item {
   width: 100px;
   position: relative;
+  border: 1px solid transparent;
+  border-color: #ddd;
+  border-radius: 2px;
 }
 
 .result-list-item img {
