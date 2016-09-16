@@ -3,8 +3,11 @@ import Marionette from 'backbone.marionette';
 const template = require('./RecordDetailsView.hbs');
 
 
-const RecordDetailsView = Marionette.ItemView.extend(/** @lends search/views/layers.RecordDetailsView# */{
+const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/layers.RecordDetailsView# */{
   template,
+  regions: {
+    map: '.record-details-map',
+  },
   triggers: {
   },
 
@@ -14,6 +17,25 @@ const RecordDetailsView = Marionette.ItemView.extend(/** @lends search/views/lay
       browseUrl: this.model.getBrowseUrl(),
     };
   },
+
+  initialize(options) {
+    this.mapView = options.mapView;
+    this.mapModel = options.mapModel;
+  },
+
+  onAttach() {
+
+  },
+
+  onModalShown() {
+    if (this.mapView) {
+      this.showChildView('map', this.mapView);
+      this.mapModel.show(this.model.attributes);
+      // setTimeout(() => {
+      //   this.mapView.onResize();
+      // });
+    }
+  }
 });
 
 export default RecordDetailsView;
