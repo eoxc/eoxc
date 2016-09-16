@@ -1,21 +1,25 @@
 .result-contents {
-  overflow-y: scroll;
+  overflow-y: hidden;
   overflow-x: hidden;
   height: 100%;
-  padding-bottom: 20px;
+  padding-bottom: 40px;
 }
 
 .download-control {
   position: absolute !important;
   bottom: 0;
   z-index: 10;
-
   right: -5px;
   padding: 5px;
+  margin: 6px;
 }
 
 .form-control {
   min-width: 0;
   width: auto;
   display: inline;
+}
+
+.panel-footer {
+  padding: 5px !important;
 }

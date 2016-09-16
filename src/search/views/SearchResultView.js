@@ -72,7 +72,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     });
 
     // actually start the download
-    const $downloadElements = this.$('#download-elemements');
+    const $downloadElements = this.$('#download-elements');
     downloadForms.forEach(($form, index) => {
       $downloadElements.append($form);
       setTimeout(() => {

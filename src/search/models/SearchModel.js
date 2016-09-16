@@ -15,7 +15,7 @@ import EOWCSCollection from './EOWCSCollection';
 class SearchModel extends Backbone.Model {
   defaults() {
     return {
-      defaultPageSize: 10,
+      defaultPageSize: 9,
       currentPage: 0,
       totalResults: undefined,
       isSearching: false,

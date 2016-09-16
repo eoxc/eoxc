@@ -1,10 +1,15 @@
+.result-list {
+  margin: -5px 0 0 -5px;
+}
+
 .result-list-item {
-  width: 100px;
+  width: 112px;
   position: relative;
-  padding: 0 !important;
+  padding: 5px !important;
+  margin: 5px 0 0 5px;
   border: 1px solid transparent;
   border-color: #ddd;
-  border-radius: 2px;
+  border-radius: 4px;
   text-align: center;
 }
 
