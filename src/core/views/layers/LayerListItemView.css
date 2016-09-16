@@ -22,26 +22,47 @@ input[type="checkbox"].layer-visible + label span:before, input[type="checkbox"]
   font-size: 20px;
 }
 
-input[type="radio"].layer-visible + label span:before, input[type="radio"].layer-visible + span:before,
 input[type="checkbox"].layer-visible + label span:before, input[type="checkbox"].layer-visible + span:before {
   content: "\f070"; /* eye-slash */
   color: #b3b3b3;
 }
 
-input[type="radio"].layer-visible:checked + label span:before, input[type="radio"].layer-visible:checked + span:before,
 input[type="checkbox"].layer-visible:checked + label span:before, input[type="checkbox"].layer-visible:checked + span:before {
   content: "\f06e"; /* eye */
   color: #555;
+}
+
+.layer-list-item .radio label span:before {
+  -webkit-border-radius:100%;
+  -moz-border-radius:100%;
+  -o-border-radius:100%;
+  border-radius:100%;
+  padding: 3px;
+}
+
+input[type="radio"].layer-visible + label span:before, input[type="radio"].layer-visible + span:before {
+  content: "\f070"; /*  */
+  color: #b3b3b3;
+  border: 1px solid #b3b3b3;
+}
+
+input[type="radio"].layer-visible:checked + label span:before, input[type="radio"].layer-visible:checked + span:before {
+  content: "\f06e"; /*  */
+  color: #555;
+  border: 1px solid #555;
 }
 
 .layer-list-item label {
     margin-bottom: 0;
 }
 
-.layer-list-item .checkbox label, .layer-list-item .radio label  {
-  padding-left: 0px;
+.layer-list-item .checkbox label {
+  padding-left: 13px;
 }
 
+.layer-list-item .radio label {
+  padding-left: 9px;
+}
 .display-name {
   text-overflow: ellipsis;
 }
