@@ -9,6 +9,14 @@ const template = require('./SearchResultView.hbs');
 
 const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultView# */{
   template,
+  templateHelpers() {
+    return {
+      showDownloadOptions: this.collection.any(searchModel => (
+        searchModel.get('layerModel').get('download.protocol') === 'EO-WCS'
+      )),
+    };
+  },
+
   childView: SearchResultListView,
 
   childViewContainer: '.result-contents',
@@ -29,6 +37,11 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     this.onResultItemClicked = options.onResultItemClicked;
     this.onResultItemInfo = options.onResultItemInfo;
     this.onDownload = options.onDownload;
+    this.collection.each(searchModel => {
+      this.listenTo(
+        searchModel.get('downloadSelection'), 'reset update', this.onDownloadSelectionChange
+      );
+    });
   },
 
   buildChildView(child, ChildViewClass) {
@@ -56,7 +69,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
       outputCRS: 'EPSG:4326', // TODO:
     };
 
-    let downloadForms = [];
+    let donwloadList = [];
 
     visibleSearchModels.forEach(searchModel => {
       const newDownloadForms = searchModel.get('downloadSelection')
@@ -73,17 +86,28 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
           // TODO: other download implementations
           return downloadURL(recordModel);
         });
-      downloadForms = downloadForms.concat(newDownloadForms);
+      donwloadList = donwloadList.concat(newDownloadForms);
     });
 
     // actually start the download
     const $downloadElements = this.$('#download-elements');
-    downloadForms.forEach(($form, index) => {
-      $downloadElements.append($form);
+    donwloadList.forEach(($element, index) => {
+      $downloadElements.append($element);
       setTimeout(() => {
-        $form.submit();
+        $downloadElements.append($element);
+        if ($element.is('form')) {
+          $element.submit();
+        }
       }, index * 1000);
     });
+  },
+
+  onDownloadSelectionChange() {
+    const totalCount = this.collection.reduce((count, searchModel) => (
+      count + searchModel.get('downloadSelection').length
+    ), 0);
+
+    this.$('#start-download').prop('disabled', totalCount === 0);
   },
 });
 
