@@ -1,6 +1,7 @@
 import Marionette from 'backbone.marionette';
 
 const template = require('./RecordDetailsView.hbs');
+require('./RecordDetailsView.css');
 
 
 const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/layers.RecordDetailsView# */{
@@ -25,17 +26,8 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   },
 
   onAttach() {
-
-  },
-
-  onModalShown() {
-    if (this.mapView) {
-      this.showChildView('map', this.mapView);
-      this.mapModel.show(this.model.attributes);
-      // setTimeout(() => {
-      //   this.mapView.onResize();
-      // });
-    }
+    this.showChildView('map', this.mapView);
+    this.mapModel.show(this.model.attributes);
   },
 });
 

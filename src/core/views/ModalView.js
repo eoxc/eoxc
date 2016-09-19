@@ -37,13 +37,11 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
   onAttach() {
     this.initialDisplay = this.$el.css('display');
     this.$el.modal('show');
-    this.showChildView('content', this.view);
+
   },
 
   onModalShown() {
-    if (this.view.onModalShown) {
-      this.view.onModalShown();
-    }
+    this.showChildView('content', this.view);
   },
 
   /**
