@@ -27,26 +27,49 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     // const pageSize = this.model.get('itemsPerPage') || this.model.get('defaultPageSize');
     const pageSize = this.model.get('defaultPageSize');
 
+    let prevPage = null;
+    let nextPage = null;
+    let firstPage = null;
+    let lastPage = null;
+
     if (typeof totalResults === 'undefined') {
       // don't know page size
     } else {
       const totalPages = Math.ceil(totalResults / pageSize);
+
+      if (currentPage > 0) {
+        firstPage = { number: 0 };
+      }
+      if (currentPage < totalPages) {
+        lastPage = { number: totalPages - 1 };
+      }
+
       for (let i = -3; i <= 3; ++i) {
         if ((currentPage + i) >= 0 && (currentPage + i) < totalPages) {
-          pages.push({
+          const page = {
             showNumber: currentPage + i + 1,
             number: currentPage + i,
             current: i === 0,
-          });
+          };
+          if (i === -1) {
+            prevPage = page;
+          } else if (i === 1) {
+            nextPage = page;
+          }
+          pages.push(page);
         }
       }
     }
     return {
       layerName: this.model.get('layerModel').get('displayName'),
       layerId: this.model.get('layerModel').get('id'),
-      showPagination: (!this.model.get('isSearching') && !this.model.get('hasError')),
-      showLeftArrow: true,
-      showRightArrow: true,
+      showPagination: (!this.model.get('isSearching')
+                      && !this.model.get('hasError'))
+                      && pages.length > 1,
+      firstPage,
+      lastPage,
+      prevPage,
+      nextPage,
       pages,
     };
   },
