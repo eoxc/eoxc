@@ -112,6 +112,8 @@ class SearchModel extends Backbone.Model {
       currentPage: 0,
     });
 
+    this.get('downloadSelection').reset([]);
+
     if (this.automaticSearch) {
       this.search();
     }
