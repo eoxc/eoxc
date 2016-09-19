@@ -60,7 +60,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       height: '100%',
       // 'min-height': '100%',
       // 'background-color': 'red',
-      position: 'absolute',
+      // position: 'absolute',
     });
 
     // create the map object
@@ -216,8 +216,12 @@ class OpenLayersMapView extends Marionette.ItemView {
             },
             url: params.url || params.urls[0],
             wrapX: true,
+            attributions: [
+              new ol.Attribution({
+                html: params.attribution,
+              }),
+            ],
           }),
-          attribution: params.attribution,
         });
         break;
       default:
