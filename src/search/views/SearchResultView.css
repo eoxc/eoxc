@@ -2,17 +2,11 @@
   overflow-y: hidden;
   overflow-x: hidden;
   height: 100%;
-  padding-bottom: 40px;
 }
 
 .download-control {
-  position: absolute !important;
-  bottom: 0;
-  z-index: 10;
-  right: -5px;
-  padding: 5px;
-  margin: 6px;
   width: 100%;
+  margin-bottom: 5px;
 }
 
 .form-control {
