@@ -103,6 +103,27 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.selectionSource = new ol.source.Vector();
 
+    const selectionStyle = new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0.2)',
+      }),
+      stroke: new ol.style.Stroke({
+        color: '#ffcc33',
+        width: 2,
+      }),
+      image: new ol.style.Circle({
+        radius: 7,
+        fill: new ol.style.Fill({
+          color: '#ffcc33',
+        }),
+      }),
+    });
+
+    const selectionLayer = new ol.layer.Vector({
+      source: this.selectionSource,
+      style: selectionStyle,
+    });
+
     // create layer for highlighting features
 
     const highlightStyle = new ol.style.Style({
@@ -123,6 +144,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     this.map.addLayer(highlightLayer);
+    this.map.addLayer(selectionLayer);
 
     // attach to signals of the collections
 
