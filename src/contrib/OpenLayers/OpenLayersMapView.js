@@ -101,31 +101,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.applyLayerFilters(layer, this.filtersModel);
     }, this);
 
-
-    const selectionStyle = new ol.style.Style({
-      fill: new ol.style.Fill({
-        color: 'rgba(255, 255, 255, 0.2)',
-      }),
-      stroke: new ol.style.Stroke({
-        color: '#ffcc33',
-        width: 2,
-      }),
-      image: new ol.style.Circle({
-        radius: 7,
-        fill: new ol.style.Fill({
-          color: '#ffcc33',
-        }),
-      }),
-    });
-
     this.selectionSource = new ol.source.Vector();
-
-    // this.selectionSource.on("change", this.onDone);
-
-    const selectionLayer = new ol.layer.Vector({
-      source: this.selectionSource,
-      style: selectionStyle,
-    });
 
     // create layer for highlighting features
 
@@ -147,13 +123,11 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     this.map.addLayer(highlightLayer);
-    this.map.addLayer(selectionLayer);
-
 
     // attach to signals of the collections
 
     this.setupEvents();
-    this.setupControls(selectionStyle);
+    this.setupControls();
 
     return this;
   }
@@ -391,12 +365,11 @@ class OpenLayersMapView extends Marionette.ItemView {
    * Creates OpenLayers interactions and adds them to the map.
    *
    */
-  setupControls(selectionStyle) {
+  setupControls() {
     this.drawControls = {
       point: new ol.interaction.Draw({ source: this.selectionSource, type: 'Point' }),
       line: new ol.interaction.Draw({ source: this.selectionSource, type: 'LineString' }),
       polygon: new ol.interaction.Draw({ source: this.selectionSource, type: 'Polygon' }),
-      // bbox: new ol.interaction.DragBox({ style: selectionStyle }),
       bbox: new ol.interaction.Draw({
         source: this.selectionSource,
         type: 'LineString',
