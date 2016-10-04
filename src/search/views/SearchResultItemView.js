@@ -43,9 +43,8 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
     this.onSelectedForDownloadChange();
   },
 
-  onChecked() {
-    // this.model.set('selectedForDownload', this.$('input[type="checkbox"]').is(':checked'));
-    // this.model.set('selectedForDownload', !this.model.get('selectedForDownload'));
+  onChecked(event) {
+    event.preventDefault();
     if (!this.isSelectedForDownload()) {
       this.downloadSelectionCollection.add(this.model);
     } else {
