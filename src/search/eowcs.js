@@ -21,7 +21,11 @@ function convertFilters(filtersModel, options) {
 
   const area = filtersModel.get('area');
   if (area) {
-    parameters.bbox = area;
+    if (Array.isArray(area)) {
+      parameters.bbox = area;
+    } else if (typeof array === 'object') {
+      // TODO: points
+    }
   }
   return parameters;
 }

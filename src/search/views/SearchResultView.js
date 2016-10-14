@@ -1,8 +1,7 @@
 import Marionette from 'backbone.marionette';
 import SearchResultListView from './SearchResultListView';
 
-import downloadEOWCS from '../../download/eowcs';
-import downloadURL from '../../download/url';
+import download from '../../download/';
 
 require('./SearchResultView.css');
 const template = require('./SearchResultView.hbs');
@@ -69,36 +68,23 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
       outputCRS: 'EPSG:4326', // TODO:
     };
 
-    let donwloadList = [];
+    let index = 0;
+    const $downloadElements = this.$('#download-elements');
 
     visibleSearchModels.forEach(searchModel => {
-      const newDownloadForms = searchModel.get('downloadSelection')
-        .map(recordModel => {
-          const layerModel = searchModel.get('layerModel');
-          if (layerModel.get('download.protocol') === 'EO-WCS') {
-            return downloadEOWCS(
-              layerModel,
+      searchModel.get('downloadSelection')
+        .forEach(recordModel => {
+          setTimeout(() => {
+            download(
+              searchModel.get('layerModel'),
               this.filtersModel,
               recordModel,
-              options
+              options,
+              $downloadElements
             );
-          }
-          // TODO: other download implementations
-          return downloadURL(recordModel);
+          }, index * 1000);
+          index++;
         });
-      donwloadList = donwloadList.concat(newDownloadForms);
-    });
-
-    // actually start the download
-    const $downloadElements = this.$('#download-elements');
-    donwloadList.forEach(($element, index) => {
-      $downloadElements.append($element);
-      setTimeout(() => {
-        $downloadElements.append($element);
-        if ($element.is('form')) {
-          $element.submit();
-        }
-      }, index * 1000);
     });
   },
 
