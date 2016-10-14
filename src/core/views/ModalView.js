@@ -13,9 +13,18 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
     content: '.modal-body',
   },
 
-  events: {
-    'click .close': 'close',
-    'shown.bs.modal': 'onModalShown',
+  events() {
+    const baseEvents = {
+      'click .close': 'close',
+      'shown.bs.modal': 'onModalShown',
+    };
+
+    const buttons = this.options.buttons || [];
+    for (let i = 0; i < buttons.length; ++i) {
+      baseEvents[`click .modal-footer button:eq(${i})`] = buttons[i][1];
+    }
+
+    return baseEvents;
   },
 
   initialize(options) {
@@ -24,6 +33,7 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
     this.icon = options.icon;
     this.closed = options.closed;
     this.closeable = typeof options.closeable === 'undefined' ? true : options.closeable;
+    this.buttonDescs = options.buttons || [];
   },
 
   templateHelpers() {
@@ -31,13 +41,14 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
       title: this.title,
       icon: this.icon,
       closeable: this.closeable,
+      hasButtons: this.buttonDescs.length > 0,
+      buttons: this.buttonDescs.map(buttonDesc => buttonDesc[0]),
     };
   },
 
   onAttach() {
     this.initialDisplay = this.$el.css('display');
     this.$el.modal('show');
-
   },
 
   onModalShown() {
