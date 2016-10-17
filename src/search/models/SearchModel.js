@@ -1,7 +1,6 @@
 import Backbone from 'backbone';
 
-import searchEOWCS from '../eowcs';
-import searchOpenSearch from '../opensearch';
+import search from '../';
 
 import OpenSearchCollection from './OpenSearchCollection';
 import EOWCSCollection from './EOWCSCollection';
@@ -40,6 +39,7 @@ class SearchModel extends Backbone.Model {
 
     this.listenTo(this.get('results'), 'reset', this.onSearchCollectionReset);
     this.listenTo(this.get('filtersModel'), 'change', this.onFiltersModelChange);
+    this.listenTo(this.get('mapModel'), 'change bbox', this.onMapBBOXChange);
 
     this.automaticSearch = options.automaticSearch;
     if (this.automaticSearch) {
@@ -50,26 +50,13 @@ class SearchModel extends Backbone.Model {
   search() {
     const layerModel = this.get('layerModel');
     const filtersModel = this.get('filtersModel');
+    const mapModel = this.get('mapModel');
     let request = null;
-    switch (layerModel.get('search.protocol')) {
-      case 'EO-WCS':
-        request = searchEOWCS(
-          layerModel, filtersModel, {
-            itemsPerPage: this.get('itemsPerPage') || this.get('defaultPageSize'),
-          }
-        );
-        break;
-      case 'OpenSearch':
-        request = searchOpenSearch(
-          layerModel, filtersModel, {
-            itemsPerPage: this.get('defaultPageSize'),
-            page: this.get('currentPage'),
-          }
-        );
-        break;
-      default:
-        throw new Error(`Unsupported search protocol '${layerModel.get('search.protocol')}'.`);
-    }
+
+    request = search(layerModel, filtersModel, mapModel, {
+      itemsPerPage: this.get('defaultPageSize'),
+      page: this.get('currentPage'),
+    });
 
     this.set({
       isSearching: true,
@@ -115,6 +102,12 @@ class SearchModel extends Backbone.Model {
     this.get('downloadSelection').reset([]);
 
     if (this.automaticSearch) {
+      this.search();
+    }
+  }
+
+  onMapBBOXChange() {
+    if (this.automaticSearch && !this.get('filtersModel').get('area')) {
       this.search();
     }
   }

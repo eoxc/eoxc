@@ -4,7 +4,7 @@ import { pushParseFunctions, parse } from 'libcoverage/src/parse';
 
 pushParseFunctions(parseFunctions);
 
-function convertFilters(filtersModel, options) {
+function convertFilters(filtersModel, mapModel, options) {
   const parameters = {
     sections: ['CoverageDescriptions'],
     count: options.itemsPerPage,
@@ -26,6 +26,9 @@ function convertFilters(filtersModel, options) {
     } else if (typeof array === 'object') {
       // TODO: points
     }
+  } else if (mapModel) {
+    // use the maps BBox by default
+    parameters.bbox = mapModel.get('bbox');
   }
   return parameters;
 }
@@ -57,8 +60,8 @@ function prepareRecords(records) {
   });
 }
 
-export default function search(layerModel, filtersModel, options = {}) {
-  const parameters = convertFilters(filtersModel, options);
+export default function search(layerModel, filtersModel, mapModel, options = {}) {
+  const parameters = convertFilters(filtersModel, mapModel, options);
   const url = describeEOCoverageSetURL(
     layerModel.get('search.url'), layerModel.get('search.id'), parameters
   );

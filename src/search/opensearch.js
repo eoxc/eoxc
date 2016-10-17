@@ -1,6 +1,6 @@
 import { discover } from 'opensearch-browser';
 
-function convertFilters(filtersModel, options, service) {
+function convertFilters(filtersModel, mapModel, options, service) {
   const description = service.getDescription();
   const url = description.getUrl(null, options.mimeType || null);
 
@@ -30,6 +30,9 @@ function convertFilters(filtersModel, options, service) {
         parameters['geo:geometry'] = geometry;
       }
     }
+  } else if (mapModel) {
+    // use the maps BBox by default
+    parameters['geo:box'] = mapModel.get('bbox');
   }
 
   if (options.hasOwnProperty('itemsPerPage') && url.hasParameter('count')) {
@@ -52,7 +55,7 @@ function convertFilters(filtersModel, options, service) {
 // cached services
 const services = {};
 
-export default function search(layerModel, filtersModel, options = {}) {
+export default function search(layerModel, filtersModel, mapModel, options = {}) {
   const url = layerModel.get('search.url');
 
 
@@ -63,7 +66,7 @@ export default function search(layerModel, filtersModel, options = {}) {
   }
   return services[url]
     .then(service => {
-      const parameters = convertFilters(filtersModel, options, service);
+      const parameters = convertFilters(filtersModel, mapModel, options, service);
       return service.search(parameters, options.mimeType, 'POST');
     });
 }
