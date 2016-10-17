@@ -39,7 +39,7 @@ class SearchModel extends Backbone.Model {
 
     this.listenTo(this.get('results'), 'reset', this.onSearchCollectionReset);
     this.listenTo(this.get('filtersModel'), 'change', this.onFiltersModelChange);
-    this.listenTo(this.get('mapModel'), 'change bbox', this.onMapBBOXChange);
+    this.listenTo(this.get('mapModel'), 'change:bbox', this.onMapBBOXChange);
 
     this.automaticSearch = options.automaticSearch;
     if (this.automaticSearch) {
