@@ -169,9 +169,17 @@ class OpenLayersMapView extends Marionette.ItemView {
     const size = ol.extent.getWidth(projectionExtent) / 256;
     const resolutions = new Array(18);
     const matrixIds = new Array(18);
+
     for (let z = 0; z < 18; ++z) {
       // generate resolutions and matrixIds arrays for this WMTS
       resolutions[z] = size / Math.pow(2, z + 1);
+
+      if (params.matrixIdPrefix) {
+        z = params.matrixIdPrefix + z;
+      }
+      if (params.matrixIdPostfix) {
+        z = z + params.matrixIdPostfix;
+      }
       matrixIds[z] = z;
     }
 
