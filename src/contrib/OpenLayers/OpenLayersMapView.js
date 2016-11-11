@@ -382,10 +382,24 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     this.map.on('moveend', () => {
+      const bbox = self.map.getView().calculateExtent(self.map.getSize());
+      // wrap minX and maxX to fit -180, 180
+      if (bbox[2] - bbox[0] > 360) {
+        bbox[0] = -180;
+        bbox[2] = 180;
+      }
+      for (let i = 0; i <= 2; i += 2) {
+        while (bbox[i] > 180) {
+          bbox[i] -= 360;
+        }
+        while (bbox[i] < -180) {
+          bbox[i] += 360;
+        }
+      }
       self.mapModel.set({
         center: self.map.getView().getCenter(),
         zoom: self.map.getView().getZoom(),
-        bbox: self.map.getView().calculateExtent(self.map.getSize()),
+        bbox,
       });
       self.isPanning = false;
       self.isZooming = false;
