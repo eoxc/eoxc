@@ -1,6 +1,6 @@
 import Backbone from 'backbone';
 
-import search from '../';
+import { search } from '../';
 
 import OpenSearchCollection from './OpenSearchCollection';
 import EOWCSCollection from './EOWCSCollection';
@@ -41,21 +41,40 @@ class SearchModel extends Backbone.Model {
     this.listenTo(this.get('filtersModel'), 'change', this.onFiltersModelChange);
     this.listenTo(this.get('mapModel'), 'change:bbox', this.onMapBBOXChange);
 
+    this.pages = [];
+
     this.automaticSearch = options.automaticSearch;
     if (this.automaticSearch) {
-      this.search();
+      this.search(true);
     }
   }
 
-  search() {
+  search(reset) {
+    if (reset) {
+      this.set({
+        itemsPerPage: undefined,
+        totalResults: undefined,
+        currentPage: 0,
+      });
+      this.get('downloadSelection').reset([]);
+      this.pages = [];
+    }
+
     const layerModel = this.get('layerModel');
     const filtersModel = this.get('filtersModel');
     const mapModel = this.get('mapModel');
     let request = null;
 
+    const page = this.get('currentPage');
+
+    if (this.pages[page]) {
+      const records = this.pages[page];
+      this.get('results').reset(records);
+      return Promise.resolve(records);
+    }
     request = search(layerModel, filtersModel, mapModel, {
       itemsPerPage: this.get('defaultPageSize'),
-      page: this.get('currentPage'),
+      page,
     });
 
     this.set({
@@ -71,6 +90,8 @@ class SearchModel extends Backbone.Model {
         isSearching: false,
       });
       this.get('results').reset(result.records);
+      this.pages[page] = result.records;
+      return result.records;
     }).catch((error) => {
       this.set({
         isSearching: false,
@@ -84,7 +105,7 @@ class SearchModel extends Backbone.Model {
   searchPage(page) {
     this.set('currentPage', parseInt(page, 10));
     if (this.automaticSearch) {
-      this.search();
+      this.search(false);
     }
   }
 
@@ -93,22 +114,14 @@ class SearchModel extends Backbone.Model {
   }
 
   onFiltersModelChange() {
-    this.set({
-      itemsPerPage: undefined,
-      totalResults: undefined,
-      currentPage: 0,
-    });
-
-    this.get('downloadSelection').reset([]);
-
     if (this.automaticSearch) {
-      this.search();
+      this.search(true);
     }
   }
 
   onMapBBOXChange() {
     if (this.automaticSearch && !this.get('filtersModel').get('area')) {
-      this.search();
+      this.search(true);
     }
   }
 }
