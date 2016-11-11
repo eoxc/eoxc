@@ -7,14 +7,22 @@ const WMSSource = require('D3.TimeSlider/src/sources/wms.coffee');
 const EOWCSSource = require('D3.TimeSlider/src/sources/eowcs.coffee');
 const WPSSource = require('D3.TimeSlider/src/sources/eoxserver-wps.coffee');
 
-import searchEOWCS from '../../search/eowcs';
-import searchOpenSearch from '../../search/opensearch';
+import { searchAllRecords } from '../../search';
 import FiltersModel from '../models/FiltersModel';
 
 // require('D3.TimeSlider/build/d3.timeslider.plugins');
 require('D3.TimeSlider/src/d3.timeslider.less');
 require('./TimeSliderView.css');
 
+
+function intersects(a, b) {
+  // adapted from http://gamedev.stackexchange.com/a/913/50029
+  return !(a[0] > b[2]
+    || a[2] < b[0]
+    || a[3] < b[1]
+    || a[1] > b[3]
+  );
+}
 
 const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSliderView# */{
   template: () => '',
@@ -96,19 +104,10 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         });
         break;
       case 'EO-WCS':
-        source = (start, end, params, callback) => {
-          const filtersModel = new FiltersModel({ time: [start, end] });
-          searchEOWCS(layerModel, filtersModel).then(result => {
-            callback(result.records.map(
-              record => [record.properties.startTime, record.properties.endTime, record]
-            ));
-          });
-        };
-        break;
       case 'OpenSearch':
         source = (start, end, params, callback) => {
           const filtersModel = new FiltersModel({ time: [start, end] });
-          searchOpenSearch(layerModel, filtersModel).then(result => {
+          searchAllRecords(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' }).then(result => {
             callback(result.records.map(record => {
               let time = null;
               const properties = record.properties;
@@ -166,14 +165,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     return (record) => {
       const params = record[2];
       if (params && params.bbox) {
-        const a = bbox;
-        const b = params.bbox;
-        // adapted from http://gamedev.stackexchange.com/a/913/50029
-        return !(a[0] > b[2]
-          || a[2] < b[0]
-          || a[3] < b[1]
-          || a[1] > b[3]
-        );
+        if (bbox[0] < bbox[2]) {
+          return intersects(bbox, params.bbox);
+        }
+        return intersects([-180, bbox[1], bbox[2], bbox[2]], params.bbox)
+          | intersects([bbox[0], bbox[1], 180, bbox[2]], params.bbox);
       }
       return true;
     };
