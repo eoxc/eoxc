@@ -55,18 +55,78 @@ function convertFilters(filtersModel, mapModel, options, service) {
 // cached services
 const services = {};
 
-export default function search(layerModel, filtersModel, mapModel, options = {}) {
-  const url = layerModel.get('search.url');
-
-
-  // see if we already have a service Promise cached
+function getService(url) {
   if (!services[url]) {
     // add a new promise
     services[url] = discover(url);
   }
-  return services[url]
+  return services[url];
+}
+
+export function search(layerModel, filtersModel, mapModel, options = {}) {
+  const url = layerModel.get('search.url');
+  const method = layerModel.get('search.method');
+  const format = layerModel.get('search.format');
+
+  return getService(url)
     .then(service => {
       const parameters = convertFilters(filtersModel, mapModel, options, service);
-      return service.search(parameters, options.mimeType, 'POST');
+      return service.search(parameters, options.mimeType || format, method || 'GET');
     });
+}
+
+export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
+  const url = layerModel.get('search.url');
+  const method = layerModel.get('search.method');
+  const format = layerModel.get('search.format');
+
+  return getService(url)
+    .then(service => {
+      const parameters = convertFilters(filtersModel, mapModel, options, service);
+      const description = service.getDescription();
+      const urlObj = description.getUrl(null, options.mimeType || null);
+      if (urlObj.hasParameter('count')) {
+        parameters.count = 0;
+      }
+
+      return service.search(parameters, options.mimeType || format, method || 'GET')
+        .then(result => {
+          const numPages = Math.ceil(result.totalResults / 50);
+          const promises = [];
+          for (let i = 0; i < numPages; ++i) {
+            const newOptions = Object.assign({}, options, {
+              itemsPerPage: 50,
+              page: i,
+            });
+            const innerParameters = convertFilters(filtersModel, mapModel, newOptions, service);
+            promises.push(
+              service.search(innerParameters, options.mimeType || format, method || 'GET')
+            );
+          }
+          return Promise.all(promises)
+            .then(results => ({
+              totalResults: result.totalResults,
+              startIndex: 0,
+              itemsPerPage: result.totalResults,
+              records: [].concat.apply([], results.map(r => r.records)),
+            }));
+        });
+    });
+
+}
+
+export function getParameters(layerModel) {
+  const url = layerModel.get('search.url');
+  const method = layerModel.get('search.method');
+  const format = layerModel.get('search.format');
+
+  return getService(url)
+    // .then(service => {
+    //   console.log(service.getDescription().getUrls());
+    // });
+    .then(service => service
+      .getDescription()
+      .getUrl(null, format, method)
+      .parameters
+    );
 }

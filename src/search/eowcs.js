@@ -60,7 +60,7 @@ function prepareRecords(records) {
   });
 }
 
-export default function search(layerModel, filtersModel, mapModel, options = {}) {
+export function search(layerModel, filtersModel, mapModel, options = {}) {
   const parameters = convertFilters(filtersModel, mapModel, options);
   const url = describeEOCoverageSetURL(
     layerModel.get('search.url'), layerModel.get('search.id'), parameters
@@ -78,4 +78,8 @@ export default function search(layerModel, filtersModel, mapModel, options = {})
         records,
       };
     });
+}
+
+export function getParameters() {
+  return Promise.resolve([]);
 }
