@@ -1,0 +1,12 @@
+.panel-body::-webkit-scrollbar {
+    display: none;
+}
+
+.panel-result-list {
+  overflow: hidden;
+}
+
+.panel-result-list .panel-body {
+  /*max-height: 400px;
+  overflow: auto;*/
+}

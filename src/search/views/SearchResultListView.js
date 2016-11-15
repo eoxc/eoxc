@@ -1,6 +1,7 @@
 import Marionette from 'backbone.marionette';
 
-const template = require('./SearchResultListView.hbs');
+import template from './SearchResultListView.hbs';
+import './SearchResultListView.css';
 import SearchResultItemView from './SearchResultItemView';
 
 const FetchingView = Marionette.ItemView.extend({
@@ -95,6 +96,9 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   events: {
     'click [data-page]': 'onPageClicked',
+    'scroll .panel-body': 'onScroll',
+    'scroll .panel-collapse': 'onScroll',
+    'scroll .result-list': 'onScroll',
   },
 
   childEvents: {
@@ -124,6 +128,13 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     if (!this.model.get('layerModel').get('display.visible')) {
       this.$el.hide();
     }
+    // this does not work with the usual events dict for some reason...
+    this.$('.panel-body').bind('scroll', (...args) => this.onScroll(...args));
+  },
+
+  onBeforeDetach() {
+    // this does not work with the usual events dict for some reason...
+    this.$('.panel-body').unbind('scroll');
   },
 
   onItemClicked(childView) {
@@ -153,6 +164,10 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   onPageClicked(event) {
     this.model.searchPage(event.currentTarget.dataset.page);
+  },
+
+  onScroll(event) {
+    console.log(event);
   },
 
   onLayerVisibleChange() {
