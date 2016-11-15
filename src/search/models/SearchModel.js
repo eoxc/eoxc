@@ -1,4 +1,5 @@
 import Backbone from 'backbone';
+import debounce from 'debounce';
 
 import { search } from '../';
 
@@ -43,6 +44,8 @@ class SearchModel extends Backbone.Model {
 
     this.pages = [];
 
+    this.doSearchDebounced = debounce((...args) => this.doSearch(...args), 250);
+
     this.automaticSearch = options.automaticSearch;
     if (this.automaticSearch) {
       this.search(true);
@@ -63,16 +66,18 @@ class SearchModel extends Backbone.Model {
     const layerModel = this.get('layerModel');
     const filtersModel = this.get('filtersModel');
     const mapModel = this.get('mapModel');
-    let request = null;
 
     const page = this.get('currentPage');
 
     if (this.pages[page]) {
       const records = this.pages[page];
       this.get('results').reset(records);
-      return Promise.resolve(records);
     }
-    request = search(layerModel, filtersModel, mapModel, {
+    this.doSearchDebounced(layerModel, filtersModel, mapModel, page);
+  }
+
+  doSearch(layerModel, filtersModel, mapModel, page) {
+    const request = search(layerModel, filtersModel, mapModel, {
       itemsPerPage: this.get('defaultPageSize'),
       page,
     });
@@ -89,9 +94,14 @@ class SearchModel extends Backbone.Model {
         itemsPerPage: result.itemsPerPage,
         isSearching: false,
       });
-      this.get('results').reset(result.records);
+
       this.pages[page] = result.records;
-      return result.records;
+      // const allRecords = [];
+      // const offset = result.startIndex % result.itemsPerPage;
+      // for (let i = 0; i < result.totalResults; ++i) {
+      //   allRecords[i] =
+      // }
+      this.get('results').reset(result.records);
     }).catch((error) => {
       this.set({
         isSearching: false,

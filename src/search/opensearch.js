@@ -1,8 +1,8 @@
 import { discover } from 'opensearch-browser';
 
-function convertFilters(filtersModel, mapModel, options, service) {
+function convertFilters(filtersModel, mapModel, options, format, service) {
   const description = service.getDescription();
-  const url = description.getUrl(null, options.mimeType || null);
+  const url = description.getUrl(null, format || null);
 
   const parameters = {};
 
@@ -42,10 +42,10 @@ function convertFilters(filtersModel, mapModel, options, service) {
   if (options.hasOwnProperty('page')) {
     if (url.hasParameter('startPage')) {
       // TODO: 0 or 1 based page numbers?
-      parameters.startPage = options.page;
+      parameters.startPage = options.page + url.pageOffset;
     } else if (url.hasParameter('startIndex') && options.hasOwnProperty('itemsPerPage')) {
       // TODO: 0 or 1 based indices?
-      parameters.startIndex = options.page * options.itemsPerPage;
+      parameters.startIndex = options.page * options.itemsPerPage + url.indexOffset;
     }
   }
 
@@ -66,30 +66,30 @@ function getService(url) {
 export function search(layerModel, filtersModel, mapModel, options = {}) {
   const url = layerModel.get('search.url');
   const method = layerModel.get('search.method');
-  const format = layerModel.get('search.format');
+  const format = options.mimeType || layerModel.get('search.format') || null;
 
   return getService(url)
     .then(service => {
-      const parameters = convertFilters(filtersModel, mapModel, options, service);
-      return service.search(parameters, options.mimeType || format, method || 'GET');
+      const parameters = convertFilters(filtersModel, mapModel, options, format, service);
+      return service.search(parameters, format, method || 'GET');
     });
 }
 
 export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
   const url = layerModel.get('search.url');
   const method = layerModel.get('search.method');
-  const format = layerModel.get('search.format');
+  const format = options.mimeType || layerModel.get('search.format') || null;
 
   return getService(url)
     .then(service => {
-      const parameters = convertFilters(filtersModel, mapModel, options, service);
+      const parameters = convertFilters(filtersModel, mapModel, options, format, service);
       const description = service.getDescription();
-      const urlObj = description.getUrl(null, options.mimeType || null);
+      const urlObj = description.getUrl(null, format);
       if (urlObj.hasParameter('count')) {
         parameters.count = 0;
       }
 
-      return service.search(parameters, options.mimeType || format, method || 'GET')
+      return service.search(parameters, format, method || 'GET')
         .then(result => {
           const numPages = Math.ceil(result.totalResults / 50);
           const promises = [];
@@ -98,7 +98,9 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
               itemsPerPage: 50,
               page: i,
             });
-            const innerParameters = convertFilters(filtersModel, mapModel, newOptions, service);
+            const innerParameters = convertFilters(
+              filtersModel, mapModel, newOptions, format, service
+            );
             promises.push(
               service.search(innerParameters, options.mimeType || format, method || 'GET')
             );
@@ -112,7 +114,6 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
             }));
         });
     });
-
 }
 
 export function getParameters(layerModel) {
