@@ -388,6 +388,9 @@ class OpenLayersMapView extends Marionette.ItemView {
         bbox[0] = -180;
         bbox[2] = 180;
       }
+      bbox[1] = Math.max(bbox[1], -90);
+      bbox[3] = Math.min(bbox[3], 90);
+
       for (let i = 0; i <= 2; i += 2) {
         while (bbox[i] > 180) {
           bbox[i] -= 360;
