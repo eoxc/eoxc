@@ -32,6 +32,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     recordClicked: 'onRecordClicked',
     recordMouseover: 'onRecordMouseover',
     recordMouseout: 'onRecordMouseout',
+    binClicked: 'onBinClicked',
+    binMouseover: 'onBinMouseover',
+    binMouseout: 'onBinMouseout',
   },
 
   /**
@@ -50,6 +53,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.mapModel = options.mapModel;
 
     this.domain = options.domain;
+    this.constrainTimeDomain = options.constrainTimeDomain;
+    this.displayInterval = options.displayInterval;
+    this.selectableInterval = options.selectableInterval;
   },
 
   onRender() {
@@ -62,6 +68,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       debounce: 300,
       ticksize: 8,
       datasets: [],
+      constrain: true,
+      displayLimit: this.displayInterval,
+      selectionLimit: this.selectableInterval,
       recordFilter: this.createRecordFilter(this.mapModel.get('bbox')),
     };
     const time = this.filtersModel.get('time');
@@ -150,6 +159,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       id: layerModel.get('id'),
       color: layerModel.get('displayColor'),
       source,
+      histogramThreshold: layerModel.get('search.histogramThreshold'),
     });
   },
 
@@ -198,6 +208,37 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   onRecordMouseout(event) {
     const record = event.originalEvent.detail;
     this.mapModel.unHighlight(record.params);
+  },
+
+  onBinClicked(event) {
+    const detail = event.originalEvent.detail;
+    const combinedBbox = detail.bin.filter(record => record[2] && record[2].bbox)
+      .map(record => record[2].bbox)
+      .reduce((lastBbox, thisBbox) => {
+        if (!lastBbox) {
+          return thisBbox;
+        }
+        return [
+          Math.min(lastBbox[0], thisBbox[0]),
+          Math.min(lastBbox[1], thisBbox[1]),
+          Math.max(lastBbox[2], thisBbox[2]),
+          Math.max(lastBbox[3], thisBbox[3]),
+        ];
+      }, null);
+    if (combinedBbox) {
+      this.mapModel.set('bbox', combinedBbox);
+    }
+    this.filtersModel.set('time', [detail.start, detail.end]);
+  },
+
+  onBinMouseover(event) {
+    const bin = event.originalEvent.detail.bin.map(record => record[2]);
+    this.currentBin = bin;
+    this.mapModel.highlight(bin);
+  },
+
+  onBinMouseout() {
+    this.mapModel.unHighlight(this.currentBin);
   },
 
   onModelSelectionChanged(filtersModel) {
