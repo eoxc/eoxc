@@ -25,6 +25,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.mapModel = options.mapModel;
     this.filtersModel = options.filtersModel;
 
+    this.highlightFillColor = options.highlightFillColor;
+    this.highlightStrokeColor = options.highlightStrokeColor;
+
     this.map = undefined;
 
     this.isPanning = false;
@@ -128,10 +131,10 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     const highlightStyle = new ol.style.Style({
       fill: new ol.style.Fill({
-        color: 'rgba(255, 255, 255, 0.2)',
+        color: this.highlightFillColor || 'rgba(255, 255, 255, 0.2)',
       }),
       stroke: new ol.style.Stroke({
-        color: '#cccccc',
+        color: this.highlightStrokeColor || '#cccccc',
         width: 1,
       }),
     });
@@ -337,21 +340,28 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.listenTo(this.mapModel, 'change:highlightFeature', (mapModel) => {
       this.highlightSource.clear();
-      const feature = mapModel.get('highlightFeature');
-      let geometry = null;
+      let features = mapModel.get('highlightFeature');
 
-      if (feature) {
-        if (feature.geometry) {
-          const format = new ol.format.GeoJSON();
-          geometry = format.readGeometry(feature.geometry);
-        } else if (feature.bbox) {
-          geometry = ol.geom.Polygon.fromExtent(feature.bbox);
-        }
+      if (!Array.isArray(features)) {
+        features = [features];
+      }
 
-        if (geometry) {
-          const olFeature = new ol.Feature();
-          olFeature.setGeometry(geometry);
-          this.highlightSource.addFeature(olFeature);
+      for (let i = 0; i < features.length; ++i) {
+        const feature = features[i];
+        if (feature) {
+          let geometry = null;
+          if (feature.geometry) {
+            const format = new ol.format.GeoJSON();
+            geometry = format.readGeometry(feature.geometry);
+          } else if (feature.bbox) {
+            geometry = ol.geom.Polygon.fromExtent(feature.bbox);
+          }
+
+          if (geometry) {
+            const olFeature = new ol.Feature();
+            olFeature.setGeometry(geometry);
+            this.highlightSource.addFeature(olFeature);
+          }
         }
       }
     });
