@@ -22,6 +22,7 @@ class SearchModel extends Backbone.Model {
       hasError: false,
       // results: new Backbone.Collection(),
       downloadSelection: new Backbone.Collection,
+      searchState: 0,
     };
   }
 
@@ -82,12 +83,19 @@ class SearchModel extends Backbone.Model {
       page,
     });
 
+    const searchState = this.get('searchState') + 1;
+
     this.set({
       isSearching: true,
       hasError: false,
+      searchState,
     });
 
     return request.then((result) => {
+      if (searchState !== this.get('searchState')) {
+        // abort when the search is not the current one
+        return;
+      }
       this.set({
         totalResults: result.totalResults,
         startIndex: result.startIndex,
@@ -103,6 +111,10 @@ class SearchModel extends Backbone.Model {
       // }
       this.get('results').reset(result.records);
     }).catch((error) => {
+      if (searchState !== this.get('searchState')) {
+        console.log("not setting error:", searchState, this.get('searchState'));
+        return
+      }
       this.set({
         isSearching: false,
         hasError: true,
