@@ -331,7 +331,11 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
       if (!this.isPanning) {
-        this.map.getView().fit(mapModel.get('bbox'), this.map.getSize());
+        const bbox = mapModel.get('bbox');
+        while (bbox[2] < bbox[0]) {
+          bbox[2] += 360;
+        }
+        this.map.getView().fit(bbox, this.map.getSize());
       }
     });
 
