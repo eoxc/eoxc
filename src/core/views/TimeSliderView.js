@@ -53,6 +53,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.mapModel = options.mapModel;
 
     this.domain = options.domain;
+    this.display = options.display;
     this.constrainTimeDomain = options.constrainTimeDomain;
     this.displayInterval = options.displayInterval;
     this.selectableInterval = options.selectableInterval;
@@ -69,6 +70,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     );
     const options = {
       domain: this.domain,
+      display: this.display;
       debounce: 300,
       ticksize: 8,
       datasets: [],
