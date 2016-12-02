@@ -49,7 +49,21 @@ function convertFilters(filtersModel, mapModel, options, format, service) {
     }
   }
 
+  Object.keys(filtersModel.attributes).forEach((key) => {
+    if (url.hasParameter(key)) {
+      parameters[key] = filtersModel.get(key);
+    }
+  });
+
   return parameters;
+}
+
+function getMaxPageSize(urlObj) {
+  const param = urlObj._parametersByType.count;
+  if (param) {
+    return param.maxInclusive ? param.maxInclusive : param.maxExclusive - 1;
+  }
+  return null;
 }
 
 // cached services
@@ -85,17 +99,19 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
       const parameters = convertFilters(filtersModel, mapModel, options, format, service);
       const description = service.getDescription();
       const urlObj = description.getUrl(null, format);
+      const maxPageSize = getMaxPageSize(urlObj) || 50;
+
       if (urlObj.hasParameter('count')) {
-        parameters.count = 0;
+        parameters.count = 1;
       }
 
       return service.search(parameters, format, method || 'GET')
         .then(result => {
-          const numPages = Math.ceil(result.totalResults / 50);
+          const numPages = Math.ceil(result.totalResults / maxPageSize);
           const promises = [];
           for (let i = 0; i < numPages; ++i) {
             const newOptions = Object.assign({}, options, {
-              itemsPerPage: 50,
+              itemsPerPage: maxPageSize,
               page: i,
             });
             const innerParameters = convertFilters(
