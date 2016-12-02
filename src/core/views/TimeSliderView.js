@@ -56,6 +56,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.constrainTimeDomain = options.constrainTimeDomain;
     this.displayInterval = options.displayInterval;
     this.selectableInterval = options.selectableInterval;
+    this.maxTooltips = options.maxTooltips;
   },
 
   onRender() {
@@ -63,6 +64,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   onAttach() {
+    const tooltipFormatter = (record) => (
+      record[2].id || `${record[0].toISOString() - record[1].toISOString()}`
+    );
     const options = {
       domain: this.domain,
       debounce: 300,
@@ -72,6 +76,20 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       displayLimit: this.displayInterval,
       selectionLimit: this.selectableInterval,
       recordFilter: this.createRecordFilter(this.mapModel.get('bbox')),
+      tooltipFormatter,
+      binTooltipFormatter: (bin) => {
+        let records = bin;
+        let more = 0;
+        if (this.maxTooltips && bin.length > this.maxTooltips) {
+          records = bin.slice(0, this.maxTooltips);
+          more = bin.length - this.maxTooltips;
+        }
+        const tooltip = records.map(tooltipFormatter).join('<br/>');
+        if (more) {
+          return `${tooltip}<br/> + ${more} more`;
+        }
+        return tooltip;
+      },
     };
     const time = this.filtersModel.get('time');
     if (time !== null) {
