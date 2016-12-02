@@ -40,12 +40,12 @@ function convertFilters(filtersModel, mapModel, options, format, service) {
   }
 
   if (options.hasOwnProperty('page')) {
-    if (url.hasParameter('startPage')) {
-      // TODO: 0 or 1 based page numbers?
-      parameters.startPage = options.page + url.pageOffset;
-    } else if (url.hasParameter('startIndex') && options.hasOwnProperty('itemsPerPage')) {
+    if (url.hasParameter('startIndex') && options.hasOwnProperty('itemsPerPage')) {
       // TODO: 0 or 1 based indices?
       parameters.startIndex = options.page * options.itemsPerPage + url.indexOffset;
+    } else if (url.hasParameter('startPage')) {
+      // TODO: 0 or 1 based page numbers?
+      parameters.startPage = options.page + url.pageOffset;
     }
   }
 
