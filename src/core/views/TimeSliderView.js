@@ -70,7 +70,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     );
     const options = {
       domain: this.domain,
-      display: this.display;
+      display: this.display,
       debounce: 300,
       ticksize: 8,
       datasets: [],
