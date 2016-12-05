@@ -65,7 +65,7 @@
     "backbone.marionette": "^2.4.5",
     "bootstrap": "^3.3.6",
     "d3": "^3.5.17",
-    "D3.TimeSlider": "^1.0.0",
+    "D3.TimeSlider": "^1.0.1",
     "eslint-config-airbnb": "^8.0.0",
     "font-awesome": "^4.6.1",
     "font-awesome-webpack": "0.0.4",
@@ -74,6 +74,6 @@
     "less": "^2.7.1",
     "libcoverage": "^0.1.9",
     "openlayers": "^3.15.1",
-    "opensearch-browser": "~0.0.7"
+    "opensearch-browser": "0.0.12"
   }
 }
