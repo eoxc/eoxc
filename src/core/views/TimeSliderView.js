@@ -74,7 +74,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       debounce: 300,
       ticksize: 8,
       datasets: [],
-      constrain: true,
+      constrain: this.constrainTimeDomain,
       displayLimit: this.displayInterval,
       selectionLimit: this.selectableInterval,
       recordFilter: this.createRecordFilter(this.mapModel.get('bbox')),
@@ -180,6 +180,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       color: layerModel.get('displayColor'),
       source,
       histogramThreshold: layerModel.get('search.histogramThreshold'),
+      cacheRecords: true,
+      cacheIdField: 'id',
     });
   },
 
