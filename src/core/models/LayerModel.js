@@ -21,6 +21,10 @@ const LayerModel = Backbone.NestedModel.extend(/** @lends core/models.LayerModel
       protocol: null,
       url: null,
       id: null,
+      format: null,
+      method: 'GET',
+      histogramThreshold: undefined,
+      histogramBinCount: undefined,
     },
     download: {
       protocol: null,

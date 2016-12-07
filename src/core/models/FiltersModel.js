@@ -34,6 +34,10 @@ class FiltersModel extends Backbone.Model {
     }
     return null;
   }
+
+  show(time) {
+    this.trigger('show:time', time || this.get('time'));
+  }
 }
 
 /**

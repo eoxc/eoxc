@@ -118,6 +118,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     }
 
     this.listenTo(this.filtersModel, 'change:time', this.onModelSelectionChanged);
+    this.listenTo(this.filtersModel, 'show:time', (time) => {
+      this.timeSlider.center(...time);
+    });
     this.listenTo(this.layersCollection, 'add', this.onLayerAdded);
     this.listenTo(this.layersCollection, 'remove', this.onLayerRemoved);
     this.listenTo(this.layersCollection, 'change', this.onLayerChanged);
@@ -125,7 +128,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       this.timeSlider.setRecordFilter(this.createRecordFilter(mapModel.get('bbox')));
     });
     this.listenTo(this.highlightModel, 'change:highlightFeature', (highlightModel, feature) => {
-      console.log("timesliderview", feature);
+      // console.log("timesliderview", feature);
     });
   },
 
@@ -187,6 +190,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       color: layerModel.get('displayColor'),
       source,
       histogramThreshold: layerModel.get('search.histogramThreshold'),
+      histogramBinCount: layerModel.get('search.histogramBinCount'),
       cacheRecords: true,
       cacheIdField: 'id',
       cluster: true,
