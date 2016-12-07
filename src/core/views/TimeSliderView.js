@@ -32,9 +32,12 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     recordClicked: 'onRecordClicked',
     recordMouseover: 'onRecordMouseover',
     recordMouseout: 'onRecordMouseout',
-    binClicked: 'onBinClicked',
-    binMouseover: 'onBinMouseover',
-    binMouseout: 'onBinMouseout',
+    binClicked: 'onRecordsClicked',
+    binMouseover: 'onRecordsMouseover',
+    binMouseout: 'onRecordsMouseout',
+    clusterClicked: 'onRecordsClicked',
+    clusterMouseover: 'onRecordsMouseover',
+    clusterMouseout: 'onRecordsMouseout',
   },
 
   /**
@@ -182,6 +185,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       histogramThreshold: layerModel.get('search.histogramThreshold'),
       cacheRecords: true,
       cacheIdField: 'id',
+      cluster: true,
     });
   },
 
@@ -232,9 +236,10 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.mapModel.unHighlight(record.params);
   },
 
-  onBinClicked(event) {
+  onRecordsClicked(event) {
     const detail = event.originalEvent.detail;
-    const combinedBbox = detail.bin.filter(record => record[2] && record[2].bbox)
+    const records = detail.bin || detail.records;
+    const combinedBbox = records.filter(record => record[2] && record[2].bbox)
       .map(record => record[2].bbox)
       .reduce((lastBbox, thisBbox) => {
         if (!lastBbox) {
@@ -253,13 +258,14 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.filtersModel.set('time', [detail.start, detail.end]);
   },
 
-  onBinMouseover(event) {
-    const bin = event.originalEvent.detail.bin.map(record => record[2]);
+  onRecordsMouseover(event) {
+    const detail = event.originalEvent.detail;
+    const bin = (detail.bin || detail.records).map(record => record[2]);
     this.currentBin = bin;
     this.mapModel.highlight(bin);
   },
 
-  onBinMouseout() {
+  onRecordsMouseout() {
     this.mapModel.unHighlight(this.currentBin);
   },
 
