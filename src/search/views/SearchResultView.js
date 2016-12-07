@@ -31,8 +31,8 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
   },
 
   initialize(options) {
-    this.mapModel = options.mapModel;
     this.filtersModel = options.filtersModel;
+    this.highlightModel = options.highlightModel;
     this.onResultItemClicked = options.onResultItemClicked;
     this.onResultItemInfo = options.onResultItemInfo;
     this.onDownload = options.onDownload;
@@ -47,7 +47,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     const options = {
       model: child,
       collection: child.get('results'),
-      mapModel: this.mapModel,
+      highlightModel: this.highlightModel,
       downloadSelectionCollection: child.get('downloadSelection'),
     };
     return new ChildViewClass(options);

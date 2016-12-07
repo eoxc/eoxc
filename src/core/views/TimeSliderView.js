@@ -54,6 +54,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.layersCollection = options.layersCollection;
 
     this.mapModel = options.mapModel;
+    this.highlightModel = options.highlightModel;
 
     this.domain = options.domain;
     this.display = options.display;
@@ -122,6 +123,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.listenTo(this.layersCollection, 'change', this.onLayerChanged);
     this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
       this.timeSlider.setRecordFilter(this.createRecordFilter(mapModel.get('bbox')));
+    });
+    this.listenTo(this.highlightModel, 'change:highlightFeature', (highlightModel, feature) => {
+      console.log("timesliderview", feature);
     });
   },
 
@@ -228,12 +232,12 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onRecordMouseover(event) {
     const record = event.originalEvent.detail;
-    this.mapModel.highlight(record.params);
+    this.highlightModel.highlight(record.params);
   },
 
   onRecordMouseout(event) {
     const record = event.originalEvent.detail;
-    this.mapModel.unHighlight(record.params);
+    this.highlightModel.unHighlight(record.params);
   },
 
   onRecordsClicked(event) {
@@ -262,11 +266,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     const detail = event.originalEvent.detail;
     const bin = (detail.bin || detail.records).map(record => record[2]);
     this.currentBin = bin;
-    this.mapModel.highlight(bin);
+    this.highlightModel.highlight(bin);
   },
 
   onRecordsMouseout() {
-    this.mapModel.unHighlight(this.currentBin);
+    this.highlightModel.unHighlight(this.currentBin);
   },
 
   onModelSelectionChanged(filtersModel) {

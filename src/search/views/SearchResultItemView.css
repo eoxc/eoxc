@@ -13,7 +13,7 @@
   text-align: center;
 }
 
-.result-list-item:hover {
+.result-list-item:hover, .result-list-item.highlighted {
   background-color: #e6e6e6;
   border-color: #adadad;
 }

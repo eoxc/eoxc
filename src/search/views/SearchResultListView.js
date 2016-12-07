@@ -81,6 +81,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   buildChildView(child, ChildViewClass) {
     return new ChildViewClass({
       model: child,
+      highlightModel: this.highlightModel,
       downloadSelectionCollection: this.downloadSelectionCollection,
     });
   },
@@ -118,7 +119,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   initialize(options) {
-    this.mapModel = options.mapModel;
+    this.highlightModel = options.highlightModel;
     this.downloadSelectionCollection = options.downloadSelectionCollection;
     this.finished = false;
     this.listenTo(this.model.get('layerModel'), 'change:display.visible', this.onLayerVisibleChange);
@@ -146,11 +147,11 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   onItemHover(childView) {
-    this.mapModel.highlight(childView.model.attributes);
+    this.highlightModel.highlight(childView.model.attributes);
   },
 
   onItemHoverEnd(childView) {
-    this.mapModel.unHighlight(childView.model.attributes);
+    this.highlightModel.unHighlight(childView.model.attributes);
   },
 
   onCollectionReset() {

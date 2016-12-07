@@ -24,6 +24,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.mapModel = options.mapModel;
     this.filtersModel = options.filtersModel;
+    this.highlightModel = options.highlightModel;
 
     this.highlightFillColor = options.highlightFillColor;
     this.highlightStrokeColor = options.highlightStrokeColor;
@@ -342,7 +343,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.listenTo(this.mapModel, 'change:tool', this.onToolChange);
 
 
-    this.listenTo(this.mapModel, 'change:highlightFeature', (mapModel) => {
+    this.listenTo(this.highlightModel, 'change:highlightFeature', (mapModel) => {
       this.highlightSource.clear();
       let features = mapModel.get('highlightFeature');
 

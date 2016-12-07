@@ -25,6 +25,7 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
 
   initialize(options) {
     this.downloadSelectionCollection = options.downloadSelectionCollection;
+    this.highlightModel = options.highlightModel;
     this.listenTo(this.downloadSelectionCollection, 'update', this.onSelectedForDownloadChange);
   },
 
@@ -41,6 +42,21 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
 
   onRender() {
     this.onSelectedForDownloadChange();
+  },
+
+  onAttach() {
+    this.listenTo(this.highlightModel, 'change:highlightFeature', (model, feature) => {
+      let isHighlighted = false;
+      if (feature) {
+        const id = this.model.get('id');
+        if (Array.isArray(feature)) {
+          isHighlighted = !!feature.find(f => f.id === id);
+        } else {
+          isHighlighted = (id === feature.id);
+        }
+      }
+      this.$el.toggleClass('highlighted', isHighlighted);
+    });
   },
 
   onChecked(event) {
