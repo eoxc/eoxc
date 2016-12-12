@@ -118,8 +118,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     }
 
     this.listenTo(this.filtersModel, 'change:time', this.onModelSelectionChanged);
-    this.listenTo(this.filtersModel, 'show:time', (time) => {
-      this.timeSlider.center(...time);
+    this.listenTo(this.filtersModel, 'show:time', (timeFilter) => {
+      this.timeSlider.center(...timeFilter);
     });
     this.listenTo(this.layersCollection, 'add', this.onLayerAdded);
     this.listenTo(this.layersCollection, 'remove', this.onLayerRemoved);
