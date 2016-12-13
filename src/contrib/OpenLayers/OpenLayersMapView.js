@@ -150,6 +150,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.map.addLayer(highlightLayer);
     this.map.addLayer(selectionLayer);
 
+    this.onHighlightChange(this.highlightModel);
+
     // attach to signals of the collections
 
     this.setupEvents();
@@ -343,33 +345,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.listenTo(this.mapModel, 'change:tool', this.onToolChange);
 
 
-    this.listenTo(this.highlightModel, 'change:highlightFeature', (mapModel) => {
-      this.highlightSource.clear();
-      let features = mapModel.get('highlightFeature');
-
-      if (!Array.isArray(features)) {
-        features = [features];
-      }
-
-      for (let i = 0; i < features.length; ++i) {
-        const feature = features[i];
-        if (feature) {
-          let geometry = null;
-          if (feature.geometry) {
-            const format = new ol.format.GeoJSON();
-            geometry = format.readGeometry(feature.geometry);
-          } else if (feature.bbox) {
-            geometry = ol.geom.Polygon.fromExtent(feature.bbox);
-          }
-
-          if (geometry) {
-            const olFeature = new ol.Feature();
-            olFeature.setGeometry(geometry);
-            this.highlightSource.addFeature(olFeature);
-          }
-        }
-      }
-    });
+    this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightChange);
 
     this.listenTo(this.mapModel, 'show', (featureOrExtent) => {
       let geometry = null;
@@ -542,6 +518,34 @@ class OpenLayersMapView extends Marionette.ItemView {
     // activate the requested tool if it is available
     if (this.drawControls.hasOwnProperty(toolName)) {
       this.map.addInteraction(this.drawControls[toolName]);
+    }
+  }
+
+  onHighlightChange(highlightModel) {
+    this.highlightSource.clear();
+    let features = highlightModel.get('highlightFeature');
+
+    if (!Array.isArray(features)) {
+      features = [features];
+    }
+
+    for (let i = 0; i < features.length; ++i) {
+      const feature = features[i];
+      if (feature) {
+        let geometry = null;
+        if (feature.geometry) {
+          const format = new ol.format.GeoJSON();
+          geometry = format.readGeometry(feature.geometry);
+        } else if (feature.bbox) {
+          geometry = ol.geom.Polygon.fromExtent(feature.bbox);
+        }
+
+        if (geometry) {
+          const olFeature = new ol.Feature();
+          olFeature.setGeometry(geometry);
+          this.highlightSource.addFeature(olFeature);
+        }
+      }
     }
   }
 
