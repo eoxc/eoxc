@@ -1,5 +1,24 @@
 import { discover } from 'opensearch-browser';
 
+function prepareBox(bbox) {
+  bbox[1] = Math.max(bbox[1], -90);
+  bbox[3] = Math.min(bbox[3], 90);
+
+  for (let i = 0; i <= 2; i += 2) {
+    while (bbox[i] > 180) {
+      bbox[i] -= 360;
+    }
+    while (bbox[i] < -180) {
+      bbox[i] += 360;
+    }
+  }
+  return bbox;
+}
+
+/**
+ * Convert a filters model, map model, and options to an OpenSearch parameters
+ * object
+ */
 function convertFilters(filtersModel, mapModel, options, format, service) {
   const description = service.getDescription();
   const url = description.getUrl(null, format || null);
@@ -20,7 +39,7 @@ function convertFilters(filtersModel, mapModel, options, format, service) {
   const area = filtersModel.get('area');
   if (area) {
     if (Array.isArray(area)) {
-      parameters['geo:box'] = area;
+      parameters['geo:box'] = prepareBox(area);
     } else if (area.geometry) {
       const geometry = area.geometry;
       if (geometry.type === 'Point') {
@@ -32,7 +51,7 @@ function convertFilters(filtersModel, mapModel, options, format, service) {
     }
   } else if (mapModel) {
     // use the maps BBox by default
-    parameters['geo:box'] = mapModel.get('bbox');
+    parameters['geo:box'] = prepareBox(mapModel.get('bbox'));
   }
 
   if (options.hasOwnProperty('itemsPerPage') && url.hasParameter('count')) {
@@ -41,10 +60,8 @@ function convertFilters(filtersModel, mapModel, options, format, service) {
 
   if (options.hasOwnProperty('page')) {
     if (url.hasParameter('startIndex') && options.hasOwnProperty('itemsPerPage')) {
-      // TODO: 0 or 1 based indices?
       parameters.startIndex = options.page * options.itemsPerPage + url.indexOffset;
     } else if (url.hasParameter('startPage')) {
-      // TODO: 0 or 1 based page numbers?
       parameters.startPage = options.page + url.pageOffset;
     }
   }
@@ -59,11 +76,35 @@ function convertFilters(filtersModel, mapModel, options, format, service) {
 }
 
 function getMaxPageSize(urlObj) {
-  const param = urlObj._parametersByType.count;
+  const param = urlObj.getParameter('count');
   if (param) {
     return param.maxInclusive ? param.maxInclusive : param.maxExclusive - 1;
   }
   return null;
+}
+
+function prepareRecords(records) {
+  return records.map(record => {
+    if (record.geometry && record.geometry.type === "Polygon") {
+      for (let ringIndex = 0; ringIndex < record.geometry.coordinates.length; ++ringIndex) {
+        const ring = record.geometry.coordinates[ringIndex];
+        let last = null;
+        for (let i = 0; i < ring.length; ++i) {
+          const current = ring[i];
+          if (last) {
+            if (current[0] - last[0] < -180) {
+              current[0] += 360;
+            }
+            if (current[0] - last[0] > 180) {
+              current[0] -= 360;
+            }
+          }
+          last = current;
+        }
+      }
+    }
+    return record;
+  });
 }
 
 // cached services
@@ -85,8 +126,12 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
   return getService(url)
     .then(service => {
       const parameters = convertFilters(filtersModel, mapModel, options, format, service);
-      return service.search(parameters, format, method || 'GET');
-    });
+      return service.search(parameters, format, method || 'GET')
+    })
+    .then(result => {
+      result.records = prepareRecords(result.records);
+      return result;
+    })
 }
 
 export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
@@ -97,37 +142,15 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
   return getService(url)
     .then(service => {
       const parameters = convertFilters(filtersModel, mapModel, options, format, service);
-      const description = service.getDescription();
-      const urlObj = description.getUrl(null, format);
-      const maxPageSize = getMaxPageSize(urlObj) || 50;
-
-      if (urlObj.hasParameter('count')) {
-        parameters.count = 1;
-      }
-
-      return service.search(parameters, format, method || 'GET')
-        .then(result => {
-          const numPages = Math.ceil(result.totalResults / maxPageSize);
-          const promises = [];
-          for (let i = 0; i < numPages; ++i) {
-            const newOptions = Object.assign({}, options, {
-              itemsPerPage: maxPageSize,
-              page: i,
-            });
-            const innerParameters = convertFilters(
-              filtersModel, mapModel, newOptions, format, service
-            );
-            promises.push(
-              service.search(innerParameters, options.mimeType || format, method || 'GET')
-            );
-          }
-          return Promise.all(promises)
-            .then(results => ({
-              totalResults: result.totalResults,
-              startIndex: 0,
-              itemsPerPage: result.totalResults,
-              records: [].concat.apply([], results.map(r => r.records)),
-            }));
+      const paginator = service.getPaginator(parameters, format, method);
+      return paginator.fetchAllRecords()
+        .then(records => {
+          return {
+            totalResults: records.length,
+            itemsPerPage: records.length,
+            startIndex: 0,
+            records: prepareRecords(records),
+          };
         });
     });
 }
