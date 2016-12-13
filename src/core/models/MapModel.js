@@ -26,17 +26,6 @@ class MapModel extends Backbone.Model {
     return null;
   }
 
-  highlight(feature) {
-    this.set('highlightFeature', feature);
-  }
-
-  unHighlight(feature) {
-    const currentFeature = this.get('highlightFeature');
-    if (currentFeature && currentFeature.id === feature.id) {
-      this.set('highlightFeature', null);
-    }
-  }
-
   show(featureOrExtent) {
     this.trigger('show', featureOrExtent);
   }

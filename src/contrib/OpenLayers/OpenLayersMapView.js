@@ -313,7 +313,6 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.removeLayer(layerModel, this.groups.overlayLayers)
     );
 
-
     // setup mapModel signals
 
     // directly tie the changes to the map
@@ -332,28 +331,17 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.map.getView().setRotation(mapModel.get('roll'));
     });
 
-    this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
-      if (!this.isPanning) {
-        const bbox = mapModel.get('bbox');
-        while (bbox[2] < bbox[0]) {
-          bbox[2] += 360;
-        }
-        this.map.getView().fit(bbox, this.map.getSize());
-      }
-    });
-
     this.listenTo(this.mapModel, 'change:tool', this.onToolChange);
-
 
     this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightChange);
 
-    this.listenTo(this.mapModel, 'show', (featureOrExtent) => {
+    this.listenTo(this.mapModel, 'show', (feature) => {
       let geometry = null;
-      if (Array.isArray(featureOrExtent) && featureOrExtent.length === 4) {
-        geometry = featureOrExtent;
+      if (feature.bbox) {
+        geometry = feature.bbox;
       } else {
         const format = new ol.format.GeoJSON();
-        geometry = format.readGeometry(featureOrExtent.geometry);
+        geometry = format.readGeometry(feature.geometry);
       }
       this.map.getView().fit(geometry, this.map.getSize());
     });
@@ -390,6 +378,7 @@ class OpenLayersMapView extends Marionette.ItemView {
           bbox[i] += 360;
         }
       }
+
       self.mapModel.set({
         center: self.map.getView().getCenter(),
         zoom: self.map.getView().getZoom(),
