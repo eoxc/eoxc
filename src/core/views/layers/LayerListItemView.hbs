@@ -5,14 +5,13 @@
     </span>
     <span class="form-control display-name">
       {{# if link}}
-        <a href="{{link}}">{{displayName}}</a>
+        <a href="{{link}}" target="_blank">{{displayName}}</a>
       {{else}}
-      {{displayName}}
+        {{displayName}}
       {{/if}}
     </span>
     <span class="input-group-addon">
         <i class="fa fa-sort"></i>
-<!--        <i class="fa fa-sliders layer-options"></i>-->
         <i class="fa fa-square" style="color: {{displayColor}}"></i>
     </span>
 </div>
