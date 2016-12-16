@@ -228,8 +228,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onRecordClicked(event) {
     const record = event.originalEvent.detail;
-    if (record.params.bbox) {
-      this.mapModel.set('bbox', record.params.bbox);
+    if (record.params) {
+      this.mapModel.show(record.params);
     }
     this.filtersModel.set('time', [record.start, record.end]);
   },
@@ -261,7 +261,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         ];
       }, null);
     if (combinedBbox) {
-      this.mapModel.set('bbox', combinedBbox);
+      this.mapModel.show({ bbox: combinedBbox });
     }
     this.filtersModel.set('time', [detail.start, detail.end]);
   },

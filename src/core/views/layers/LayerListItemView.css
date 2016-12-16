@@ -66,3 +66,7 @@ input[type="radio"].layer-visible:checked + label span:before, input[type="radio
 .display-name {
   text-overflow: ellipsis;
 }
+
+.layer-list-item .form-control {
+  height: unset !important;
+}

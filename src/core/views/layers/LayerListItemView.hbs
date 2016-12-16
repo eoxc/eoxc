@@ -3,10 +3,15 @@
     <span class="input-group-addon">
         <input type="checkbox" id="{{id}}-visible" class="layer-visible" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
     </span>
-    <span class="form-control display-name">{{displayName}}</span>
+    <span class="form-control display-name">
+      {{# if link}}
+        <a href="{{link}}" target="_blank">{{displayName}}</a>
+      {{else}}
+        {{displayName}}
+      {{/if}}
+    </span>
     <span class="input-group-addon">
         <i class="fa fa-sort"></i>
-<!--        <i class="fa fa-sliders layer-options"></i>-->
         <i class="fa fa-square" style="color: {{displayColor}}"></i>
     </span>
 </div>
