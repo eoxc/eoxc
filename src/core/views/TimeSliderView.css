@@ -1,7 +1,7 @@
 svg.timeslider {
   opacity: .8;
   border: 1px solid black;
-  height: 4em;
+  height: 6em;
   box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.39);
   font: 400 12px Arial;
 }
