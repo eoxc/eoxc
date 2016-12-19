@@ -83,7 +83,9 @@ class OpenLayersMapView extends Marionette.ItemView {
         projection: ol.proj.get('EPSG:4326'),
         center: this.mapModel.get('center') || [0, 0],
         zoom: this.mapModel.get('zoom') || 2,
+        enableRotation: false,
       }),
+      logo: false,
     });
 
     // create layer groups for base, normal and overlay layers
