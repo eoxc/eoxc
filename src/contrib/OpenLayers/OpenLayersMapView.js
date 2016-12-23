@@ -71,6 +71,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.map = new ol.Map({
       controls: [
         new ol.control.Attribution,
+        new ol.control.Zoom,
         // new ol.control.MousePosition({
         //   coordinateFormat: ol.coordinate.createStringXY(4),
         //   projection: 'EPSG:4326',
@@ -82,7 +83,9 @@ class OpenLayersMapView extends Marionette.ItemView {
         projection: ol.proj.get('EPSG:4326'),
         center: this.mapModel.get('center') || [0, 0],
         zoom: this.mapModel.get('zoom') || 2,
+        enableRotation: false,
       }),
+      logo: false,
     });
 
     // create layer groups for base, normal and overlay layers
@@ -343,7 +346,7 @@ class OpenLayersMapView extends Marionette.ItemView {
         const format = new ol.format.GeoJSON();
         geometry = format.readGeometry(feature.geometry);
       }
-      this.map.getView().fit(geometry, this.map.getSize());
+      this.map.getView().fit(geometry, this.map.getSize(), { duration: 250 });
     });
 
     // setup filters signals
