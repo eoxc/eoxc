@@ -7,7 +7,7 @@ const WMSSource = require('D3.TimeSlider/src/sources/wms.coffee');
 const EOWCSSource = require('D3.TimeSlider/src/sources/eowcs.coffee');
 const WPSSource = require('D3.TimeSlider/src/sources/eoxserver-wps.coffee');
 
-import { searchAllRecords } from '../../search';
+import { searchAllRecords, getCount } from '../../search';
 import FiltersModel from '../models/FiltersModel';
 
 // require('D3.TimeSlider/build/d3.timeslider.plugins');
@@ -38,6 +38,10 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     clusterClicked: 'onRecordsClicked',
     clusterMouseover: 'onRecordsMouseover',
     clusterMouseout: 'onRecordsMouseout',
+    bucketClicked: 'onBucketClicked',
+    // not required at the moment
+    // bucketMouseover: 'onBucketMouseover',
+    // bucketMouseout: 'onBucketMouseout',
   },
 
   /**
@@ -135,6 +139,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   addLayer(layerModel) {
     this.$el.fadeIn();
     let source;
+    let bucketSource;
     switch (layerModel.get('search').protocol) {
       case 'EOxServer-WPS':
         source = new WPSSource({
@@ -173,6 +178,12 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
             }).filter(item => item !== null));
           });
         };
+
+        bucketSource = (start, end, params, callback) => {
+          const filtersModel = new FiltersModel({ time: [start, end] });
+          getCount(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' })
+            .then(count => callback(count));
+        };
         break;
       case 'WMS':
         source = new WMSSource({
@@ -189,6 +200,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       id: layerModel.get('id'),
       color: layerModel.get('displayColor'),
       source,
+      bucket: true,
+      bucketSource,
       histogramThreshold: layerModel.get('search.histogramThreshold'),
       histogramBinCount: layerModel.get('search.histogramBinCount'),
       cacheRecords: true,
@@ -275,6 +288,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onRecordsMouseout() {
     this.highlightModel.unHighlight(this.currentBin);
+  },
+
+  onBucketClicked(event) {
+    const detail = event.originalEvent.detail;
+    this.filtersModel.set('time', [detail.start, detail.end]);
   },
 
   onModelSelectionChanged(filtersModel) {
