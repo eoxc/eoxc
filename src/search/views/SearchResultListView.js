@@ -123,6 +123,14 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     this.downloadSelectionCollection = options.downloadSelectionCollection;
     this.finished = false;
     this.listenTo(this.model.get('layerModel'), 'change:display.visible', this.onLayerVisibleChange);
+    this.previousCollapsed = false;
+  },
+
+  onBeforeRender(){
+    const $collPanel = this.$('#collapse-'+this.model.get('layerModel').get('id'));
+    if($collPanel.length){
+      this.previousCollapsed = !$collPanel.hasClass('in');
+    }
   },
 
   onRender() {
@@ -131,7 +139,12 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     }
     // this does not work with the usual events dict for some reason...
     this.$('.panel-body').bind('scroll', (...args) => this.onScroll(...args));
+
+    if(this.previousCollapsed){
+      this.$('#collapse-'+this.model.get('layerModel').get('id')).removeClass('in');
+    }
   },
+
 
   onBeforeDetach() {
     // this does not work with the usual events dict for some reason...
