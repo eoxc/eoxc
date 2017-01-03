@@ -22,6 +22,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.layersCollection = options.layersCollection;
     this.overlayLayersCollection = options.overlayLayersCollection;
 
+    this.searchCollection = options.searchCollection;
+
     this.mapModel = options.mapModel;
     this.filtersModel = options.filtersModel;
     this.highlightModel = options.highlightModel;
@@ -130,6 +132,27 @@ class OpenLayersMapView extends Marionette.ItemView {
       source: this.selectionSource,
       style: selectionStyle,
     });
+
+    // create layer to display footprints of search results
+
+    const searchStyle = new ol.style.Style({
+      fill: new ol.style.Fill({
+        color: 'rgba(255, 255, 255, 0.2)',
+      }),
+      stroke: new ol.style.Stroke({
+        color: '#cccccc',
+        width: 1,
+      }),
+    });
+
+    this.searchSource = new ol.source.Vector();
+
+    const searchLayer = new ol.layer.Vector({
+      source: this.searchSource,
+      style: searchStyle,
+    });
+
+    this.map.addLayer(searchLayer);
 
     // create layer for highlighting features
 
@@ -349,6 +372,14 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.map.getView().fit(geometry, this.map.getSize(), { duration: 250 });
     });
 
+    this.searchCollection.forEach(searchModel => {
+      this.listenTo(searchModel.get('results'), 'reset', () => {
+        this.searchSource.clear();
+        const olFeatures = this.createMapFeatures(searchModel.get('results').toJSON());
+        this.searchSource.addFeatures(olFeatures);
+      });
+    });
+
     // setup filters signals
 
     this.listenTo(this.filtersModel, 'change:time', this.onFiltersTimeChange);
@@ -389,6 +420,11 @@ class OpenLayersMapView extends Marionette.ItemView {
       });
       self.isPanning = false;
       self.isZooming = false;
+    });
+
+    this.map.on('pointermove', (event) => {
+      const features = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
+      this.highlightModel.highlight(features.map(feature => feature.orig));
     });
   }
 
@@ -515,30 +551,37 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   onHighlightChange(highlightModel) {
     this.highlightSource.clear();
-    let features = highlightModel.get('highlightFeature');
+    const features = highlightModel.get('highlightFeature');
+    this.highlightSource.addFeatures(this.createMapFeatures(features));
+  }
 
+  /* helper to create OL features */
+  createMapFeatures(features) {
     if (!Array.isArray(features)) {
       features = [features];
     }
 
-    for (let i = 0; i < features.length; ++i) {
-      const feature = features[i];
-      if (feature) {
-        let geometry = null;
-        if (feature.geometry) {
-          const format = new ol.format.GeoJSON();
-          geometry = format.readGeometry(feature.geometry);
-        } else if (feature.bbox) {
-          geometry = ol.geom.Polygon.fromExtent(feature.bbox);
-        }
+    return features
+      .map(feature => {
+        if (feature) {
+          let geometry = null;
+          if (feature.geometry) {
+            const format = new ol.format.GeoJSON();
+            geometry = format.readGeometry(feature.geometry);
+          } else if (feature.bbox) {
+            geometry = ol.geom.Polygon.fromExtent(feature.bbox);
+          }
 
-        if (geometry) {
-          const olFeature = new ol.Feature();
-          olFeature.setGeometry(geometry);
-          this.highlightSource.addFeature(olFeature);
+          if (geometry) {
+            const olFeature = new ol.Feature();
+            olFeature.setGeometry(geometry);
+            olFeature.orig = feature;
+            return olFeature;
+          }
         }
-      }
-    }
+        return null;
+      })
+      .filter(olFeature => olFeature);
   }
 
   onDestroy() {
