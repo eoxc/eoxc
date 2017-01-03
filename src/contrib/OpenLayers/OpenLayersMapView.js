@@ -280,6 +280,9 @@ class OpenLayersMapView extends Marionette.ItemView {
       delete params.time;
     }
     source.updateParams(params);
+
+    // Workaround to make sure tiles are reloaded when parameters change
+    source.setTileLoadFunction(source.getTileLoadFunction());
   }
 
   /**
