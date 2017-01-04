@@ -11,72 +11,16 @@
     <div class="panel-body">
       <ul id="result-list-{{layerId}}" class="result-list list-inline list-unstyled"></ul>
     </div>
-    {{#if showPagination}}
+
     <div class="panel-footer">
-      <nav aria-label="Page navigation">
-        <ul class="pagination pagination-sm" style="margin:0;">
-          {{#if firstPage}}
-            <li>
-              <a href="#" aria-label="First" data-page="{{firstPage.number}}">
-                <span aria-hidden="true">&laquo;</span>
-              </a>
-            </li>
-          {{else}}
-            <li class="disabled">
-              <a aria-label="First">
-                <span aria-hidden="true">&laquo;</span>
-              </a>
-            </li>
-          {{/if}}
-          {{#if prevPage}}
-            <li>
-              <a href="#" aria-label="Previous" data-page="{{prevPage.number}}">
-                <span aria-hidden="true">&lsaquo;</span>
-              </a>
-            </li>
-          {{else}}
-            <li class="disabled">
-              <a aria-label="Previous">
-                <span aria-hidden="true">&lsaquo;</span>
-              </a>
-            </li>
-          {{/if}}
-          {{#each pages}}
-            <li {{#if this.current}}class="active"{{/if}}>
-              <a {{#if this.current}}{{else}}href="#" data-page="{{this.number}}"{{/if}}>
-                {{this.showNumber}}
-              </a>
-            </li>
-          {{/each}}
-          {{#if nextPage}}
-            <li>
-              <a href="#" aria-label="Next" data-page="{{nextPage.number}}">
-                <span aria-hidden="true">&rsaquo;</span>
-              </a>
-            </li>
-          {{else}}
-            <li class="disabled">
-              <a aria-label="Next">
-                <span aria-hidden="true">&rsaquo;</span>
-              </a>
-            </li>
-          {{/if}}
-          {{#if lastPage}}
-            <li>
-              <a href="#" aria-label="Last" data-page="{{lastPage.number}}">
-                <span aria-hidden="true">&raquo;</span>
-              </a>
-            </li>
-          {{else}}
-            <li class="disabled">
-              <a aria-label="Last">
-                <span aria-hidden="true">&raquo;</span>
-              </a>
-            </li>
-          {{/if}}
-        </ul>
-      </nav>
+        Showing {{hasLoaded}} records.
+      {{#if isSearching}}
+        <button class="btn btn-default" disabled="disabled">Loading {{nextPageSize}} more...</button>
+      {{else}}
+        {{#if hasNextPage}}
+          <button class="btn btn-default btn-load-more">Load {{nextPageSize}} more</button>
+        {{/if}}
+      {{/if}}
     </div>
-    {{/if}}
   </div>
 </div>

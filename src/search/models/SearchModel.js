@@ -23,6 +23,8 @@ class SearchModel extends Backbone.Model {
       // results: new Backbone.Collection(),
       downloadSelection: new Backbone.Collection,
       searchState: 0,
+
+      hasLoaded: 0,
     };
   }
 
@@ -59,6 +61,7 @@ class SearchModel extends Backbone.Model {
         itemsPerPage: undefined,
         totalResults: undefined,
         currentPage: 0,
+        hasLoaded: 0,
       });
       this.get('downloadSelection').reset([]);
       this.pages = [];
@@ -89,6 +92,7 @@ class SearchModel extends Backbone.Model {
       isSearching: true,
       hasError: false,
       searchState,
+      hasLoaded: 0,
     });
 
     return request.then((result) => {
@@ -101,6 +105,7 @@ class SearchModel extends Backbone.Model {
         startIndex: result.startIndex,
         itemsPerPage: result.itemsPerPage,
         isSearching: false,
+        hasLoaded: result.records.length,
       });
 
       this.pages[page] = result.records;
@@ -115,6 +120,42 @@ class SearchModel extends Backbone.Model {
         console.log("not setting error:", searchState, this.get('searchState'));
         return
       }
+      this.set({
+        isSearching: false,
+        hasError: true,
+      });
+      this.get('results').reset([]);
+      this.trigger('search:error', error);
+    });
+  }
+
+  searchMore() {
+    const layerModel = this.get('layerModel');
+    const filtersModel = this.get('filtersModel');
+    const mapModel = this.get('mapModel');
+
+    const page = this.get('currentPage') + 1;
+    const request = search(layerModel, filtersModel, mapModel, {
+      itemsPerPage: this.get('defaultPageSize'),
+      page,
+    });
+
+    this.set({
+      isSearching: true,
+      hasError: false,
+      currentPage: page,
+    });
+
+    return request.then((result) => {
+      this.set({
+        totalResults: result.totalResults,
+        startIndex: result.startIndex,
+        itemsPerPage: result.itemsPerPage,
+        isSearching: false,
+        hasLoaded: this.get('hasLoaded') + result.records.length,
+      });
+      this.get('results').add(result.records);
+    }).catch((error) => {
       this.set({
         isSearching: false,
         hasError: true,

@@ -19,59 +19,22 @@ const EmptyView = Marionette.ItemView.extend({
 const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultListView# */{
   template,
   templateHelpers() {
-    const pages = [];
-
     const totalResults = this.model.get('totalResults');
-    const currentPage = this.model.get('currentPage');
+    const itemsPerPage = this.model.get('itemsPerPage');
+    const hasLoaded = this.model.get('hasLoaded');
+    let hasNextPage = false;
+    let nextPageSize = false;
 
-    // this is messed up on some OpenSearch servers
-    // const pageSize = this.model.get('itemsPerPage') || this.model.get('defaultPageSize');
-    const pageSize = this.model.get('defaultPageSize');
-
-    let prevPage = null;
-    let nextPage = null;
-    let firstPage = null;
-    let lastPage = null;
-
-    if (typeof totalResults === 'undefined') {
-      // don't know page size
-    } else {
-      const totalPages = Math.ceil(totalResults / pageSize);
-
-      if (currentPage > 0) {
-        firstPage = { number: 0 };
-      }
-      if (currentPage < totalPages) {
-        lastPage = { number: totalPages - 1 };
-      }
-
-      for (let i = -3; i <= 3; ++i) {
-        if ((currentPage + i) >= 0 && (currentPage + i) < totalPages) {
-          const page = {
-            showNumber: currentPage + i + 1,
-            number: currentPage + i,
-            current: i === 0,
-          };
-          if (i === -1) {
-            prevPage = page;
-          } else if (i === 1) {
-            nextPage = page;
-          }
-          pages.push(page);
-        }
-      }
+    if (totalResults) {
+      hasNextPage = hasLoaded < totalResults;
+      nextPageSize = Math.min(itemsPerPage, totalResults - hasLoaded);
     }
+
     return {
       layerName: this.model.get('layerModel').get('displayName'),
       layerId: this.model.get('layerModel').get('id'),
-      showPagination: (!this.model.get('isSearching')
-                      && !this.model.get('hasError'))
-                      && pages.length > 1,
-      firstPage,
-      lastPage,
-      prevPage,
-      nextPage,
-      pages,
+      hasNextPage,
+      nextPageSize,
     };
   },
 
@@ -96,10 +59,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   events: {
-    'click [data-page]': 'onPageClicked',
-    'scroll .panel-body': 'onScroll',
-    'scroll .panel-collapse': 'onScroll',
-    'scroll .result-list': 'onScroll',
+    'click .btn-load-more': 'onLoadMoreClicked',
   },
 
   childEvents: {
@@ -122,15 +82,19 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     this.highlightModel = options.highlightModel;
     this.downloadSelectionCollection = options.downloadSelectionCollection;
     this.finished = false;
-    this.listenTo(this.model.get('layerModel'), 'change:display.visible', this.onLayerVisibleChange);
+    this.listenTo(
+      this.model.get('layerModel'), 'change:display.visible', this.onLayerVisibleChange
+    );
     this.previousCollapsed = false;
+    this.scrollPos = 0;
   },
 
-  onBeforeRender(){
-    const $collPanel = this.$('#collapse-'+this.model.get('layerModel').get('id'));
-    if($collPanel.length){
+  onBeforeRender() {
+    const $collPanel = this.$(`#collapse-${this.model.get('layerModel').get('id')}`);
+    if ($collPanel.length) {
       this.previousCollapsed = !$collPanel.hasClass('in');
     }
+    this.scrollPos = $collPanel.scrollTop();
   },
 
   onRender() {
@@ -138,17 +102,17 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
       this.$el.hide();
     }
     // this does not work with the usual events dict for some reason...
-    this.$('.panel-body').bind('scroll', (...args) => this.onScroll(...args));
-
-    if(this.previousCollapsed){
-      this.$('#collapse-'+this.model.get('layerModel').get('id')).removeClass('in');
+    // this.$('.panel-body').bind('scroll', (...args) => this.onScroll(...args));
+    const $collPanel = this.$(`#collapse-${this.model.get('layerModel').get('id')}`);
+    if (this.previousCollapsed) {
+      $collPanel.removeClass('in');
     }
+    $collPanel.scrollTop(this.scrollPos);
   },
-
 
   onBeforeDetach() {
     // this does not work with the usual events dict for some reason...
-    this.$('.panel-body').unbind('scroll');
+    // this.$('.panel-body').unbind('scroll');
   },
 
   onItemClicked(childView) {
@@ -178,6 +142,10 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   onPageClicked(event) {
     this.model.searchPage(event.currentTarget.dataset.page);
+  },
+
+  onLoadMoreClicked() {
+    this.model.searchMore();
   },
 
   onScroll(event) {

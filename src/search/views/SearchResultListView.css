@@ -1,9 +1,11 @@
-.panel-body::-webkit-scrollbar {
+/*.panel-body::-webkit-scrollbar {
     display: none;
-}
+}*/
 
 .panel-result-list {
-  overflow: hidden;
+  /*overflow: hidden;*/
+  max-height: 500px;
+  overflow: scroll;
 }
 
 .panel-result-list .panel-body {
