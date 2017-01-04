@@ -375,13 +375,20 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.map.getView().fit(geometry, this.map.getSize(), { duration: 250 });
     });
 
-    this.searchCollection.forEach(searchModel => {
-      this.listenTo(searchModel.get('results'), 'reset', () => {
-        this.searchSource.clear();
-        const olFeatures = this.createMapFeatures(searchModel.get('results').toJSON());
-        this.searchSource.addFeatures(olFeatures);
+    if (this.searchCollection) {
+      this.searchCollection.forEach(searchModel => {
+        this.listenTo(searchModel.get('results'), 'reset', () => {
+          this.searchSource.clear();
+          const olFeatures = this.createMapFeatures(searchModel.get('results').toJSON());
+          this.searchSource.addFeatures(olFeatures);
+        });
+
+        this.listenTo(searchModel.get('results'), 'add', (model) => {
+          const olFeatures = this.createMapFeatures(model.attributes);
+          this.searchSource.addFeatures(olFeatures);
+        });
       });
-    });
+    }
 
     // setup filters signals
 
