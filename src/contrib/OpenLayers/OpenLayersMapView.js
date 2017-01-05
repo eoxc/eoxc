@@ -3,8 +3,28 @@ import ol from 'openlayers';
 import $ from 'jquery';
 
 import { getISODateTimeString } from '../../core/util';
+import { createMap, createVectorLayer } from './utils';
 
-require('openlayers/dist/ol.css');
+import 'openlayers/dist/ol.css';
+
+const Collection = ol.Collection;
+const Group = ol.layer.Group;
+const getProjection = ol.proj.get;
+const getExtentWidth = ol.extent.getWidth;
+const getExtentTopLeft = ol.extent.getTopLeft;
+
+const WMTSSource = ol.source.WMTS;
+const WMSTileSource = ol.source.TileWMS;
+const WMTSTileGrid = ol.tilegrid.WMTS;
+const TileLayer = ol.layer.Tile;
+const Attribution = ol.Attribution;
+
+const GeoJSON = ol.format.GeoJSON;
+
+const Draw = ol.interaction.Draw;
+
+const Polygon = ol.geom.Polygon;
+const Feature = ol.Feature;
 
 /**
  * @memberof contrib/OpenLayers
@@ -70,30 +90,16 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     // create the map object
-    this.map = new ol.Map({
-      controls: [
-        new ol.control.Attribution,
-        new ol.control.Zoom,
-        // new ol.control.MousePosition({
-        //   coordinateFormat: ol.coordinate.createStringXY(4),
-        //   projection: 'EPSG:4326',
-        //   undefinedHTML: '&nbsp;',
-        // }),
-      ],
-      renderer: options.mapRenderer || 'canvas',
-      view: new ol.View({
-        projection: ol.proj.get('EPSG:4326'),
-        center: this.mapModel.get('center') || [0, 0],
-        zoom: this.mapModel.get('zoom') || 2,
-        enableRotation: false,
-      }),
-      logo: false,
-    });
+    this.map = createMap(
+      this.mapModel.get('center') || [0, 0],
+      this.mapModel.get('zoom') || 2,
+      options.mapRenderer || 'canvas'
+    );
 
     // create layer groups for base, normal and overlay layers
 
     const createGroupForCollection = (collection) => {
-      const group = new ol.layer.Group({
+      const group = new Group({
         layers: collection.map(layerModel => this.createLayer(layerModel)),
       });
       this.map.addLayer(group);
@@ -110,76 +116,31 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.applyLayerFilters(layer, this.filtersModel);
     }, this);
 
-    this.selectionSource = new ol.source.Vector();
-
-    const selectionStyle = new ol.style.Style({
-      fill: new ol.style.Fill({
-        color: 'rgba(255, 255, 255, 0.2)',
-      }),
-      stroke: new ol.style.Stroke({
-        color: '#ffcc33',
-        width: 2,
-      }),
-      image: new ol.style.Circle({
-        radius: 7,
-        fill: new ol.style.Fill({
-          color: '#ffcc33',
-        }),
-      }),
-    });
-
-    const selectionLayer = new ol.layer.Vector({
-      source: this.selectionSource,
-      style: selectionStyle,
-    });
-
     // create layer to display footprints of search results
-
-    const searchStyle = new ol.style.Style({
-      fill: new ol.style.Fill({
-        color: 'rgba(255, 255, 255, 0.2)',
-      }),
-      stroke: new ol.style.Stroke({
-        color: '#cccccc',
-        width: 1,
-      }),
-    });
-
-    this.searchSource = new ol.source.Vector();
-
-    const searchLayer = new ol.layer.Vector({
-      source: this.searchSource,
-      style: searchStyle,
-    });
-
+    const searchLayer = createVectorLayer('rgba(255, 255, 255, 0.2)', '#cccccc');
+    this.searchSource = searchLayer.getSource();
     this.map.addLayer(searchLayer);
 
+    // create layer to display footprints of download selection
+    const downloadSelectionLayer = createVectorLayer('rgba(255, 0, 0, 0.2)', '#ff0000');
+    this.downloadSelectionSource = downloadSelectionLayer.getSource();
+    this.map.addLayer(downloadSelectionLayer);
+
     // create layer for highlighting features
-
-    const highlightStyle = new ol.style.Style({
-      fill: new ol.style.Fill({
-        color: this.highlightFillColor || 'rgba(255, 255, 255, 0.2)',
-      }),
-      stroke: new ol.style.Stroke({
-        color: this.highlightStrokeColor || '#cccccc',
-        width: 1,
-      }),
-    });
-
-    this.highlightSource = new ol.source.Vector();
-
-    const highlightLayer = new ol.layer.Vector({
-      source: this.highlightSource,
-      style: highlightStyle,
-    });
-
+    const highlightLayer = createVectorLayer(
+      this.highlightFillColor || 'rgba(255, 255, 255, 0.2)',
+      this.highlightStrokeColor || '#cccccc'
+    );
+    this.highlightSource = highlightLayer.getSource();
     this.map.addLayer(highlightLayer);
+
+    const selectionLayer = createVectorLayer('rgba(255, 255, 255, 0.2)', '#ffcc33', 2, 7);
+    this.selectionSource = selectionLayer.getSource();
     this.map.addLayer(selectionLayer);
 
     this.onHighlightChange(this.highlightModel);
 
     // attach to signals of the collections
-
     this.setupEvents();
     this.setupControls();
 
@@ -196,9 +157,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     const params = layerModel.get('display');
     let layer;
 
-    const projection = ol.proj.get('EPSG:4326');
+    const projection = getProjection('EPSG:4326');
     const projectionExtent = projection.getExtent();
-    const size = ol.extent.getWidth(projectionExtent) / 256;
+    const size = getExtentWidth(projectionExtent) / 256;
     const resolutions = new Array(18);
     const matrixIds = new Array(18);
 
@@ -218,22 +179,22 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     switch (params.protocol) {
       case 'WMTS':
-        layer = new ol.layer.Tile({
+        layer = new TileLayer({
           visible: params.visible,
-          source: new ol.source.WMTS({
+          source: new WMTSSource({
             urls: (params.url) ? [params.url] : params.urls,
             layer: params.id,
             matrixSet: params.matrixSet,
             format: params.format,
             projection: params.projection,
-            tileGrid: new ol.tilegrid.WMTS({
-              origin: ol.extent.getTopLeft(projectionExtent),
+            tileGrid: new WMTSTileGrid({
+              origin: getExtentTopLeft(projectionExtent),
               resolutions,
               matrixIds,
             }),
             style: params.style,
             attributions: [
-              new ol.Attribution({
+              new Attribution({
                 html: params.attribution,
               }),
             ],
@@ -242,9 +203,9 @@ class OpenLayersMapView extends Marionette.ItemView {
         });
         break;
       case 'WMS':
-        layer = new ol.layer.Tile({
+        layer = new TileLayer({
           visible: params.visible,
-          source: new ol.source.TileWMS({
+          source: new WMSTileSource({
             crossOrigin: 'anonymous',
             params: {
               LAYERS: params.id,
@@ -254,7 +215,7 @@ class OpenLayersMapView extends Marionette.ItemView {
             url: params.url || params.urls[0],
             wrapX: true,
             attributions: [
-              new ol.Attribution({
+              new Attribution({
                 html: params.attribution,
               }),
             ],
@@ -369,7 +330,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (feature.bbox) {
         geometry = feature.bbox;
       } else {
-        const format = new ol.format.GeoJSON();
+        const format = new GeoJSON();
         geometry = format.readGeometry(feature.geometry);
       }
       this.map.getView().fit(geometry, this.map.getSize(), { duration: 250 });
@@ -377,6 +338,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     if (this.searchCollection) {
       this.searchCollection.forEach(searchModel => {
+        // TODO: merge from different layers
         this.listenTo(searchModel.get('results'), 'reset', () => {
           this.searchSource.clear();
           const olFeatures = this.createMapFeatures(searchModel.get('results').toJSON());
@@ -386,6 +348,18 @@ class OpenLayersMapView extends Marionette.ItemView {
         this.listenTo(searchModel.get('results'), 'add', (model) => {
           const olFeatures = this.createMapFeatures(model.attributes);
           this.searchSource.addFeatures(olFeatures);
+        });
+
+        // TODO: merge from different layers
+        this.listenTo(searchModel.get('downloadSelection'), 'reset remove', () => {
+          this.downloadSelectionSource.clear();
+          const olFeatures = this.createMapFeatures(searchModel.get('downloadSelection').toJSON());
+          this.downloadSelectionSource.addFeatures(olFeatures);
+        });
+
+        this.listenTo(searchModel.get('downloadSelection'), 'add', (model) => {
+          const olFeatures = this.createMapFeatures(model.attributes);
+          this.downloadSelectionSource.addFeatures(olFeatures);
         });
       });
     }
@@ -436,6 +410,24 @@ class OpenLayersMapView extends Marionette.ItemView {
       const features = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
       this.highlightModel.highlight(features.map(feature => feature.orig));
     });
+
+    this.map.on('click', (event) => {
+      if (!this.searchCollection) {
+        return;
+      }
+      const toAdd = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
+      const toRemove = this.downloadSelectionSource.getFeaturesAtCoordinate(event.coordinate);
+      const downloadSelection = this.searchCollection.at(0).get('downloadSelection');
+      if (toRemove.length) {
+        for (let i = 0; i < toRemove.length; ++i) {
+          downloadSelection.remove(toRemove[i].orig.id);
+        }
+      } else {
+        for (let i = 0; i < toAdd.length; ++i) {
+          downloadSelection.add(toAdd[i].orig);
+        }
+      }
+    });
   }
 
   /**
@@ -444,14 +436,14 @@ class OpenLayersMapView extends Marionette.ItemView {
    */
   setupControls() {
     this.drawControls = {
-      point: new ol.interaction.Draw({ source: this.selectionSource, type: 'Point' }),
-      line: new ol.interaction.Draw({ source: this.selectionSource, type: 'LineString' }),
-      polygon: new ol.interaction.Draw({ source: this.selectionSource, type: 'Polygon' }),
-      bbox: new ol.interaction.Draw({
+      point: new Draw({ source: this.selectionSource, type: 'Point' }),
+      line: new Draw({ source: this.selectionSource, type: 'LineString' }),
+      polygon: new Draw({ source: this.selectionSource, type: 'Polygon' }),
+      bbox: new Draw({
         source: this.selectionSource,
         type: 'LineString',
         geometryFunction: (coordinates, geometry) => {
-          const geom = geometry || new ol.geom.Polygon(null);
+          const geom = geometry || new Polygon(null);
           const start = coordinates[0];
           const end = coordinates[1];
           geom.setCoordinates([
@@ -478,8 +470,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     //   setTimeout(() => this.mapModel.set('tool', null));
     // }, this);
 
-    const format = new ol.format.GeoJSON();
-    for (var key in this.drawControls) {
+    const format = new GeoJSON();
+    for (let key in this.drawControls) {
       if (this.drawControls.hasOwnProperty(key)) {
         const control = this.drawControls[key];
         control.on('drawend', (event) => {
@@ -506,7 +498,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     const layers = this.groups.layers.getLayers();
 
     this.groups.layers.setLayers(
-      new ol.Collection(layers.getArray().sort((layer) => ids.indexOf(layer.id)))
+      new Collection(layers.getArray().sort((layer) => ids.indexOf(layer.id)))
     );
   }
 
@@ -531,13 +523,13 @@ class OpenLayersMapView extends Marionette.ItemView {
     let feature = null;
 
     if (Array.isArray(area)) {
-      const polygon = ol.geom.Polygon.fromExtent([
+      const polygon = Polygon.fromExtent([
         area[0], area[1], area[2], area[3],
       ]);
-      feature = new ol.Feature();
+      feature = new Feature();
       feature.setGeometry(polygon);
     } else if (area && typeof area === 'object') {
-      const format = new ol.format.GeoJSON();
+      const format = new GeoJSON();
       feature = format.readFeature(area);
     }
     if (feature) {
@@ -567,23 +559,21 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   /* helper to create OL features */
   createMapFeatures(features) {
-    if (!Array.isArray(features)) {
-      features = [features];
-    }
+    const actualFeatures = Array.isArray(features) ? features : [features];
 
-    return features
+    const format = new GeoJSON();
+    return actualFeatures
       .map(feature => {
         if (feature) {
           let geometry = null;
           if (feature.geometry) {
-            const format = new ol.format.GeoJSON();
             geometry = format.readGeometry(feature.geometry);
           } else if (feature.bbox) {
-            geometry = ol.geom.Polygon.fromExtent(feature.bbox);
+            geometry = Polygon.fromExtent(feature.bbox);
           }
 
           if (geometry) {
-            const olFeature = new ol.Feature();
+            const olFeature = new Feature();
             olFeature.setGeometry(geometry);
             olFeature.orig = feature;
             return olFeature;
