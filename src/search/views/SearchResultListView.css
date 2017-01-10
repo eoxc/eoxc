@@ -4,8 +4,6 @@
 
 .panel-result-list {
   /*overflow: hidden;*/
-  max-height: 500px;
-  overflow: scroll;
 }
 
 .panel-result-list .panel-body {
