@@ -2,7 +2,20 @@
   <div class="panel-heading" role="tab">
     <h4 class="panel-title">
       <a role="button" data-toggle="collapse" href="#collapse-{{layerId}}" aria-expanded="true">
-        {{layerName}} {{#if isSearching}}<i class="fa fa-circle-o-notch fa-spin"></i>{{else}}{{#if hasError}}<i class="fa fa-exclamation text-danger"></i>{{else}}({{totalResults}}){{/if}}{{/if}}
+        {{layerName}}
+        {{#if isSearching}}
+          <i class="fa fa-circle-o-notch fa-spin"></i>
+        {{else}}
+          {{#if hasError}}
+            <i class="fa fa-exclamation text-danger"></i>
+          {{else}}
+            {{#if hasMore}}
+              ({{maxCount}}/{{totalResults}})
+            {{else}}
+              ({{totalResults}})
+            {{/if}}
+          {{/if}}
+        {{/if}}
         {{#if isSearching}}{{else}}<span class="caret"></span>{{/if}}
       </a>
     </h4>
@@ -12,15 +25,10 @@
       <ul id="result-list-{{layerId}}" class="result-list list-inline list-unstyled"></ul>
     </div>
 
-    <div class="panel-footer">
-        Showing {{hasLoaded}} records.
-      {{#if isSearching}}
-        <button class="btn btn-default" disabled="disabled">Loading {{nextPageSize}} more...</button>
-      {{else}}
-        {{#if hasNextPage}}
-          <button class="btn btn-default btn-load-more">Load {{nextPageSize}} more</button>
-        {{/if}}
-      {{/if}}
-    </div>
+    {{#if hasMore}}
+      <div class="panel-footer">
+        Showing {{maxCount}} of {{totalResults}} records.
+      </div>
+    {{/if}}
   </div>
 </div>

@@ -1,7 +1,7 @@
 import Backbone from 'backbone';
 import debounce from 'debounce';
 
-import { search } from '../';
+import { search, searchAllRecords } from '../';
 
 import OpenSearchCollection from './OpenSearchCollection';
 import EOWCSCollection from './EOWCSCollection';
@@ -16,6 +16,7 @@ class SearchModel extends Backbone.Model {
   defaults() {
     return {
       defaultPageSize: 9,
+      maxCount: 200,
       currentPage: 0,
       totalResults: undefined,
       isSearching: false,
@@ -80,10 +81,59 @@ class SearchModel extends Backbone.Model {
     this.doSearchDebounced(layerModel, filtersModel, mapModel, page);
   }
 
-  doSearch(layerModel, filtersModel, mapModel, page) {
-    const request = search(layerModel, filtersModel, mapModel, {
+  // doSearch(layerModel, filtersModel, mapModel, page) {
+  //   const request = search(layerModel, filtersModel, mapModel, {
+  //     itemsPerPage: this.get('defaultPageSize'),
+  //     page,
+  //   });
+  //
+  //   const searchState = this.get('searchState') + 1;
+  //
+  //   this.set({
+  //     isSearching: true,
+  //     hasError: false,
+  //     searchState,
+  //     hasLoaded: 0,
+  //   });
+  //
+  //   return request.then((result) => {
+  //     if (searchState !== this.get('searchState')) {
+  //       // abort when the search is not the current one
+  //       return;
+  //     }
+  //     this.set({
+  //       totalResults: result.totalResults,
+  //       startIndex: result.startIndex,
+  //       itemsPerPage: result.itemsPerPage,
+  //       isSearching: false,
+  //       hasLoaded: result.records.length,
+  //     });
+  //
+  //     this.pages[page] = result.records;
+  //     // const allRecords = [];
+  //     // const offset = result.startIndex % result.itemsPerPage;
+  //     // for (let i = 0; i < result.totalResults; ++i) {
+  //     //   allRecords[i] =
+  //     // }
+  //     this.get('results').reset(result.records);
+  //   }).catch((error) => {
+  //     if (searchState !== this.get('searchState')) {
+  //       console.log("not setting error:", searchState, this.get('searchState'));
+  //       return
+  //     }
+  //     this.set({
+  //       isSearching: false,
+  //       hasError: true,
+  //     });
+  //     this.get('results').reset([]);
+  //     this.trigger('search:error', error);
+  //   });
+  // }
+
+  doSearch(layerModel, filtersModel, mapModel) {
+    const request = searchAllRecords(layerModel, filtersModel, mapModel, {
       itemsPerPage: this.get('defaultPageSize'),
-      page,
+      maxCount: this.get('maxCount'),
     });
 
     const searchState = this.get('searchState') + 1;
@@ -107,13 +157,6 @@ class SearchModel extends Backbone.Model {
         isSearching: false,
         hasLoaded: result.records.length,
       });
-
-      this.pages[page] = result.records;
-      // const allRecords = [];
-      // const offset = result.startIndex % result.itemsPerPage;
-      // for (let i = 0; i < result.totalResults; ++i) {
-      //   allRecords[i] =
-      // }
       this.get('results').reset(result.records);
     }).catch((error) => {
       if (searchState !== this.get('searchState')) {

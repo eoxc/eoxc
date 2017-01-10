@@ -20,21 +20,12 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   template,
   templateHelpers() {
     const totalResults = this.model.get('totalResults');
-    const itemsPerPage = this.model.get('itemsPerPage');
-    const hasLoaded = this.model.get('hasLoaded');
-    let hasNextPage = false;
-    let nextPageSize = false;
-
-    if (totalResults) {
-      hasNextPage = hasLoaded < totalResults;
-      nextPageSize = Math.min(itemsPerPage, totalResults - hasLoaded);
-    }
+    const maxCount = this.model.get('maxCount');
 
     return {
       layerName: this.model.get('layerModel').get('displayName'),
       layerId: this.model.get('layerModel').get('id'),
-      hasNextPage,
-      nextPageSize,
+      hasMore: totalResults > maxCount,
     };
   },
 
@@ -94,7 +85,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     if ($collPanel.length) {
       this.previousCollapsed = !$collPanel.hasClass('in');
     }
-    this.scrollPos = $collPanel.scrollTop();
+    this.scrollPos = this.$('.panel-body').scrollTop();
   },
 
   onRender() {
@@ -107,7 +98,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     if (this.previousCollapsed) {
       $collPanel.removeClass('in');
     }
-    $collPanel.scrollTop(this.scrollPos);
+    this.$('.panel-body').scrollTop(this.scrollPos);
   },
 
   onBeforeDetach() {
