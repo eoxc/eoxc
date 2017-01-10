@@ -1,3 +1,4 @@
+import { Model } from 'backbone';
 import Marionette from 'backbone.marionette';
 import ol from 'openlayers';
 import $ from 'jquery';
@@ -55,6 +56,8 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.isPanning = false;
     this.isZooming = false;
+
+    this.onFeatureClicked = options.onFeatureClicked;
   }
 
   onRender() {
@@ -341,24 +344,24 @@ class OpenLayersMapView extends Marionette.ItemView {
         // TODO: merge from different layers
         this.listenTo(searchModel.get('results'), 'reset', () => {
           this.searchSource.clear();
-          const olFeatures = this.createMapFeatures(searchModel.get('results').toJSON());
+          const olFeatures = this.createMapFeatures(searchModel.get('results'));
           this.searchSource.addFeatures(olFeatures);
         });
 
         this.listenTo(searchModel.get('results'), 'add', (model) => {
-          const olFeatures = this.createMapFeatures(model.attributes);
+          const olFeatures = this.createMapFeatures(model);
           this.searchSource.addFeatures(olFeatures);
         });
 
         // TODO: merge from different layers
         this.listenTo(searchModel.get('downloadSelection'), 'reset remove', () => {
           this.downloadSelectionSource.clear();
-          const olFeatures = this.createMapFeatures(searchModel.get('downloadSelection').toJSON());
+          const olFeatures = this.createMapFeatures(searchModel.get('downloadSelection'));
           this.downloadSelectionSource.addFeatures(olFeatures);
         });
 
         this.listenTo(searchModel.get('downloadSelection'), 'add', (model) => {
-          const olFeatures = this.createMapFeatures(model.attributes);
+          const olFeatures = this.createMapFeatures(model);
           this.downloadSelectionSource.addFeatures(olFeatures);
         });
       });
@@ -408,24 +411,29 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.map.on('pointermove', (event) => {
       const features = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
-      this.highlightModel.highlight(features.map(feature => feature.orig));
+      this.highlightModel.highlight(features.map(feature => feature.model));
     });
 
     this.map.on('click', (event) => {
-      if (!this.searchCollection) {
-        return;
-      }
-      const toAdd = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
-      const toRemove = this.downloadSelectionSource.getFeaturesAtCoordinate(event.coordinate);
-      const downloadSelection = this.searchCollection.at(0).get('downloadSelection');
-      if (toRemove.length) {
-        for (let i = 0; i < toRemove.length; ++i) {
-          downloadSelection.remove(toRemove[i].orig.id);
-        }
-      } else {
-        for (let i = 0; i < toAdd.length; ++i) {
-          downloadSelection.add(toAdd[i].orig);
-        }
+      // if (!this.searchCollection) {
+      //   return;
+      // }
+      // const toAdd = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
+      // const toRemove = this.downloadSelectionSource.getFeaturesAtCoordinate(event.coordinate);
+      // const downloadSelection = this.searchCollection.at(0).get('downloadSelection');
+      // if (toRemove.length) {
+      //   for (let i = 0; i < toRemove.length; ++i) {
+      //     downloadSelection.remove(toRemove[i].orig.id);
+      //   }
+      // } else {
+      //   for (let i = 0; i < toAdd.length; ++i) {
+      //     downloadSelection.add(toAdd[i].orig);
+      //   }
+      // }
+      const records = this.searchSource.getFeaturesAtCoordinate(event.coordinate)
+        .map(feature => feature.model);
+      if (records.length && this.onFeatureClicked) {
+        this.onFeatureClicked(records);
       }
     });
   }
@@ -558,24 +566,27 @@ class OpenLayersMapView extends Marionette.ItemView {
   }
 
   /* helper to create OL features */
-  createMapFeatures(features) {
-    const actualFeatures = Array.isArray(features) ? features : [features];
+  createMapFeatures(models) {
+    if (!models) {
+      return [];
+    }
+    const actualModels = models.map ? models : [models];
 
     const format = new GeoJSON();
-    return actualFeatures
-      .map(feature => {
-        if (feature) {
+    return actualModels
+      .map(model => {
+        if (model) {
           let geometry = null;
-          if (feature.geometry) {
-            geometry = format.readGeometry(feature.geometry);
-          } else if (feature.bbox) {
-            geometry = Polygon.fromExtent(feature.bbox);
+          if (model.geometry || model.get('geometry')) {
+            geometry = format.readGeometry(model.geometry || model.get('geometry'));
+          } else if (model.bbox || model.get('bbox')) {
+            geometry = Polygon.fromExtent(model.bbox || model.get('bbox'));
           }
 
           if (geometry) {
             const olFeature = new Feature();
             olFeature.setGeometry(geometry);
-            olFeature.orig = feature;
+            olFeature.model = model;
             return olFeature;
           }
         }
