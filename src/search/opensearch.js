@@ -126,32 +126,40 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
   return getService(url)
     .then(service => {
       const parameters = convertFilters(filtersModel, mapModel, options, format, service);
-      return service.search(parameters, format, method || 'GET')
+      return service.search(parameters, format, method || 'GET', false, true);
     })
     .then(result => {
       result.records = prepareRecords(result.records);
       return result;
-    })
+    });
 }
 
 export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
   const url = layerModel.get('search.url');
   const method = layerModel.get('search.method');
   const format = options.mimeType || layerModel.get('search.format') || null;
+  const maxCount = options.maxCount;
 
   return getService(url)
     .then(service => {
       const parameters = convertFilters(filtersModel, mapModel, options, format, service);
-      const paginator = service.getPaginator(parameters, format, method);
+      const paginator = service.getPaginator(parameters, format, method, true);
+      if (maxCount) {
+        return paginator.fetchFirstRecords(maxCount)
+          .then(result => ({
+            totalResults: result.totalResults,
+            itemsPerPage: result.itemsPerPage,
+            startIndex: result.startIndex,
+            records: prepareRecords(result.records),
+          }));
+      }
       return paginator.fetchAllRecords()
-        .then(records => {
-          return {
-            totalResults: records.length,
-            itemsPerPage: records.length,
-            startIndex: 0,
-            records: prepareRecords(records),
-          };
-        });
+        .then(result => ({
+          totalResults: result.totalResults,
+          itemsPerPage: result.itemsPerPage,
+          startIndex: result.startIndex,
+          records: prepareRecords(result.records),
+        }));
     });
 }
 
@@ -161,9 +169,6 @@ export function getParameters(layerModel) {
   const format = layerModel.get('search.format');
 
   return getService(url)
-    // .then(service => {
-    //   console.log(service.getDescription().getUrls());
-    // });
     .then(service => service
       .getDescription()
       .getUrl(null, format, method)
