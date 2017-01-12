@@ -27,7 +27,7 @@ export function padLeft(str, pad, size) {
  */
 
 export function getDateString(date) {
-  return date.getFullYear() + '-'
+  return date.getUTCFullYear() + '-'
     + padLeft(String(date.getUTCMonth() + 1), '0', 2) + '-'
     + padLeft(String(date.getUTCDate()), '0', 2);
 }
