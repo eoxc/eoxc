@@ -111,7 +111,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   onItemInfo(childView) {
-    this.trigger('item:info', childView.model, this.model.get('layerModel'));
+    this.trigger('item:info', childView.model, this.model);
   },
 
   onItemHover(childView) {
