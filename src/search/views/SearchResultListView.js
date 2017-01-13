@@ -1,4 +1,5 @@
 import Marionette from 'backbone.marionette';
+import 'jquery-lazyload';
 
 import template from './SearchResultListView.hbs';
 import './SearchResultListView.css';
@@ -99,6 +100,18 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
       $collPanel.removeClass('in');
     }
     this.$('.panel-body').scrollTop(this.scrollPos);
+
+    setTimeout(() => {
+      const $el = window.jQuery(this.$el);
+      $el.find('img').lazyload({
+        event: 'scroll',
+        effect: 'fadeIn',
+        skip_invisible: false,
+        threshold: 200,
+        container: $el.closest('.scrollbar-inner'),
+      });
+      $el.closest('.scrollbar-inner').trigger('scroll');
+    });
   },
 
   onBeforeDetach() {

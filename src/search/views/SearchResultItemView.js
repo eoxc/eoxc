@@ -1,5 +1,4 @@
 import Marionette from 'backbone.marionette';
-import 'jquery-lazyload';
 
 const template = require('./SearchResultItemView.hbs');
 require('./SearchResultItemView.css');
@@ -42,18 +41,6 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
   },
 
   onRender() {
-    // does not work... :()
-    window.jQuery(this.$el).find('img').lazyload({
-      event: 'scroll',
-      effect: 'fadeIn',
-      skip_invisible: false,
-      threshold: 200,
-      container: window.jQuery('#collapse-Landsat .panel-body'), // TODO!
-    });
-    // for initial check if visible
-    // setTimeout(() => {
-    //   window.jQuery('#collapse-Landsat .panel-body').trigger('scroll');
-    // });
     this.onSelectedForDownloadChange();
   },
 
