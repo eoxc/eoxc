@@ -52,6 +52,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.highlightFillColor = options.highlightFillColor;
     this.highlightStrokeColor = options.highlightStrokeColor;
 
+    this.staticHighlight = options.staticHighlight;
+
     this.map = undefined;
 
     this.isPanning = false;
@@ -413,8 +415,10 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (this.mapModel.get('tool')) {
         return;
       }
-      const features = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
-      this.highlightModel.highlight(features.map(feature => feature.model));
+      if (!this.staticHighlight) {
+        const features = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
+        this.highlightModel.highlight(features.map(feature => feature.model));
+      }
     });
 
     this.map.on('click', (event) => {
