@@ -344,24 +344,24 @@ class OpenLayersMapView extends Marionette.ItemView {
         // TODO: merge from different layers
         this.listenTo(searchModel.get('results'), 'reset', () => {
           this.searchSource.clear();
-          const olFeatures = this.createMapFeatures(searchModel.get('results'));
+          const olFeatures = this.createMapFeatures(searchModel.get('results'), searchModel);
           this.searchSource.addFeatures(olFeatures);
         });
 
         this.listenTo(searchModel.get('results'), 'add', (model) => {
-          const olFeatures = this.createMapFeatures(model);
+          const olFeatures = this.createMapFeatures(model, searchModel);
           this.searchSource.addFeatures(olFeatures);
         });
 
         // TODO: merge from different layers
         this.listenTo(searchModel.get('downloadSelection'), 'reset remove', () => {
           this.downloadSelectionSource.clear();
-          const olFeatures = this.createMapFeatures(searchModel.get('downloadSelection'));
+          const olFeatures = this.createMapFeatures(searchModel.get('downloadSelection'), searchModel);
           this.downloadSelectionSource.addFeatures(olFeatures);
         });
 
         this.listenTo(searchModel.get('downloadSelection'), 'add', (model) => {
-          const olFeatures = this.createMapFeatures(model);
+          const olFeatures = this.createMapFeatures(model, searchModel);
           this.downloadSelectionSource.addFeatures(olFeatures);
         });
       });
@@ -410,11 +410,17 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     this.map.on('pointermove', (event) => {
+      if (this.mapModel.get('tool')) {
+        return;
+      }
       const features = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
       this.highlightModel.highlight(features.map(feature => feature.model));
     });
 
     this.map.on('click', (event) => {
+      if (this.mapModel.get('tool')) {
+        return;
+      }
       // if (!this.searchCollection) {
       //   return;
       // }
@@ -431,7 +437,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       //   }
       // }
       const records = this.searchSource.getFeaturesAtCoordinate(event.coordinate)
-        .map(feature => feature.model);
+        .map(feature => [feature.model, feature.searchModel]);
       if (records.length && this.onFeatureClicked) {
         this.onFeatureClicked(records);
       }
@@ -566,7 +572,7 @@ class OpenLayersMapView extends Marionette.ItemView {
   }
 
   /* helper to create OL features */
-  createMapFeatures(models) {
+  createMapFeatures(models, searchModel) {
     if (!models) {
       return [];
     }
@@ -587,6 +593,7 @@ class OpenLayersMapView extends Marionette.ItemView {
             const olFeature = new Feature();
             olFeature.setGeometry(geometry);
             olFeature.model = model;
+            olFeature.searchModel = searchModel;
             return olFeature;
           }
         }
