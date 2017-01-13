@@ -63,6 +63,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.domain = options.domain;
     this.display = options.display;
     this.constrainTimeDomain = options.constrainTimeDomain;
+    this.timeSliderControls = options.timeSliderControls;
     this.displayInterval = options.displayInterval;
     this.selectableInterval = options.selectableInterval;
     this.maxTooltips = options.maxTooltips;
@@ -83,6 +84,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       ticksize: 8,
       datasets: [],
       constrain: this.constrainTimeDomain,
+      controls: this.timeSliderControls,
       displayLimit: this.displayInterval,
       selectionLimit: this.selectableInterval,
       recordFilter: this.createRecordFilter(this.mapModel.get('bbox')),
