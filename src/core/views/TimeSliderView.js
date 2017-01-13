@@ -202,7 +202,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       id: layerModel.get('id'),
       color: layerModel.get('displayColor'),
       source,
-      bucket: true,
+      bucket: layerModel.get('search.lightweightBuckets'),
       bucketSource,
       histogramThreshold: layerModel.get('search.histogramThreshold'),
       histogramBinCount: layerModel.get('search.histogramBinCount'),
