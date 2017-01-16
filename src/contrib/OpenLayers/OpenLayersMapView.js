@@ -172,7 +172,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.highlightSource = highlightLayer.getSource();
     this.map.addLayer(highlightLayer);
 
-    const selectionLayer = createVectorLayer('rgba(255, 255, 255, 0.2)', '#ffcc33', 2, 7);
+    const selectionLayer = createVectorLayer('rgba(255, 255, 255, 0.0)', '#ffcc33', 2, 7);
     this.selectionSource = selectionLayer.getSource();
     this.map.addLayer(selectionLayer);
 
@@ -577,18 +577,57 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.selectionSource.clear();
     const area = filtersModel.get('area');
     let feature = null;
+    let ring = null;
+
+    const globalPolygon = new ol.geom.Polygon([[
+        [-180, -90], [180, -90], [180, 90], [-180, 90],
+    ]]);
 
     if (Array.isArray(area)) {
       const polygon = Polygon.fromExtent([
         area[0], area[1], area[2], area[3],
       ]);
+
+      ring = [
+        area[0], area[1], area[2], area[1],
+        area[2], area[3], area[0], area[3],
+      ];
+
       feature = new Feature();
       feature.setGeometry(polygon);
     } else if (area && typeof area === 'object') {
       const format = new GeoJSON();
+      const flatten = arr => arr.reduce((a, b) => a.concat(Array.isArray(b) ? flatten(b) : b), []);
+      if (area.hasOwnProperty('geometry') &&
+          area.geometry.hasOwnProperty('type') &&
+          area.geometry.type === 'Point') {
+        ring = area.geometry.coordinates;
+      } else {
+        // TODO: need to handle multiple features? Not only getting the first
+        ring = flatten(area.geometry.coordinates[0]);
+      }
       feature = format.readFeature(area);
     }
     if (feature) {
+      const st = new ol.style.Style({
+        stroke: new ol.style.Stroke({
+          color: [0, 0, 0, 0],
+          width: 1,
+        }),
+        fill: new ol.style.Fill({
+          color: [100, 100, 100, 0.7],
+        }),
+      });
+
+      globalPolygon.appendLinearRing(new ol.geom.LinearRing([ring]));
+      const inverseFeature = new ol.Feature({
+        name: 'InverseFeature',
+        geometry: globalPolygon,
+      });
+      inverseFeature.setStyle(st);
+
+      this.selectionSource.addFeature(inverseFeature);
+
       this.selectionSource.addFeature(feature);
     }
   }
