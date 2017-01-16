@@ -27,6 +27,39 @@ const Draw = ol.interaction.Draw;
 const Polygon = ol.geom.Polygon;
 const Feature = ol.Feature;
 
+
+function wrapBox(box) {
+  const bbox = box;
+  if (bbox[2] - bbox[0] > 360) {
+    bbox[0] = -180;
+    bbox[2] = 180;
+  }
+  bbox[1] = Math.max(bbox[1], -90);
+  bbox[3] = Math.min(bbox[3], 90);
+
+  for (let i = 0; i <= 2; i += 2) {
+    while (bbox[i] > 180) {
+      bbox[i] -= 360;
+    }
+    while (bbox[i] < -180) {
+      bbox[i] += 360;
+    }
+  }
+  return bbox;
+}
+
+function wrapCoordinate(coord) {
+  let x = coord[0];
+  while (x > 180) {
+    x -= 360;
+  }
+  while (x < -180) {
+    x += 360;
+  }
+  const y = Math.min(Math.max(coord[1], -90), 90);
+  return [x, y];
+}
+
 /**
  * @memberof contrib/OpenLayers
  */
@@ -334,6 +367,10 @@ class OpenLayersMapView extends Marionette.ItemView {
       let geometry = null;
       if (feature.bbox) {
         geometry = feature.bbox;
+      } else if (Array.isArray(feature)) {
+        geometry = Polygon.fromExtent([
+          feature[0], feature[1], feature[2], feature[3],
+        ]);
       } else {
         const format = new GeoJSON();
         geometry = format.readGeometry(feature.geometry);
@@ -384,23 +421,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     this.map.on('moveend', () => {
-      const bbox = self.map.getView().calculateExtent(self.map.getSize());
+      let bbox = self.map.getView().calculateExtent(self.map.getSize());
       // wrap minX and maxX to fit -180, 180
-      if (bbox[2] - bbox[0] > 360) {
-        bbox[0] = -180;
-        bbox[2] = 180;
-      }
-      bbox[1] = Math.max(bbox[1], -90);
-      bbox[3] = Math.min(bbox[3], 90);
-
-      for (let i = 0; i <= 2; i += 2) {
-        while (bbox[i] > 180) {
-          bbox[i] -= 360;
-        }
-        while (bbox[i] < -180) {
-          bbox[i] += 360;
-        }
-      }
+      bbox = wrapBox(bbox);
 
       self.mapModel.set({
         center: self.map.getView().getCenter(),
@@ -416,7 +439,8 @@ class OpenLayersMapView extends Marionette.ItemView {
         return;
       }
       if (!this.staticHighlight) {
-        const features = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
+        const coordinate = wrapCoordinate(event.coordinate);
+        const features = this.searchSource.getFeaturesAtCoordinate(coordinate);
         this.highlightModel.highlight(features.map(feature => feature.model));
       }
     });
@@ -440,7 +464,8 @@ class OpenLayersMapView extends Marionette.ItemView {
       //     downloadSelection.add(toAdd[i].orig);
       //   }
       // }
-      const records = this.searchSource.getFeaturesAtCoordinate(event.coordinate)
+      const coordinate = wrapCoordinate(event.coordinate);
+      const records = this.searchSource.getFeaturesAtCoordinate(coordinate)
         .map(feature => [feature.model, feature.searchModel]);
       if (records.length && this.onFeatureClicked) {
         this.onFeatureClicked(records);
