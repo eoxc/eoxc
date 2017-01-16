@@ -42,7 +42,7 @@ function convertFilters(filtersModel, mapModel, options, format, service) {
       parameters['geo:box'] = prepareBox(area);
     } else if (area.geometry) {
       const geometry = area.geometry;
-      if (geometry.type === 'Point') {
+      if (geometry.type === 'Point' && url.hasParameter('geo:lon') && url.hasParameter('geo:lat')) {
         parameters['geo:lon'] = geometry.coordinates[0];
         parameters['geo:lat'] = geometry.coordinates[1];
       } else {
@@ -85,7 +85,7 @@ function getMaxPageSize(urlObj) {
 
 function prepareRecords(records) {
   return records.map(record => {
-    if (record.geometry && record.geometry.type === "Polygon") {
+    if (record.geometry && record.geometry.type === 'Polygon') {
       for (let ringIndex = 0; ringIndex < record.geometry.coordinates.length; ++ringIndex) {
         const ring = record.geometry.coordinates[ringIndex];
         let last = null;
