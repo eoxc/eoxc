@@ -380,7 +380,13 @@ class OpenLayersMapView extends Marionette.ItemView {
         ]);
       } else {
         const format = new GeoJSON();
-        geometry = format.readGeometry(feature.geometry);
+        if (feature.geometry.type === 'Point') {
+          const c = feature.geometry.coordinates;
+          const b = 0.5;
+          geometry = [c[0] - b, c[1] - b, c[0] + b, c[1] + b];
+        } else {
+          geometry = format.readGeometry(feature.geometry);
+        }
       }
       this.map.getView().fit(geometry, this.map.getSize(), { duration: 250 });
     });
