@@ -237,6 +237,9 @@ class OpenLayersMapView extends Marionette.ItemView {
               }),
             ],
             wrapX: true,
+            dimensions: {
+              time: '',
+            }
           }),
         });
         break;
@@ -271,15 +274,19 @@ class OpenLayersMapView extends Marionette.ItemView {
     const time = filtersModel.get('time');
     const isoTime = (time !== null) ?
         `${getISODateTimeString(time[0])}/${getISODateTimeString(time[1])}` : null;
-    const source = layer.getSource();
-    const params = source.getParams();
-    if (isoTime !== null) {
-      params.time = isoTime;
-    } else {
-      delete params.time;
-    }
-    source.updateParams(params);
 
+    const source = layer.getSource();
+    if (source instanceof WMSTileSource) {
+      const params = source.getParams();
+      if (isoTime !== null) {
+        params.time = isoTime;
+      } else {
+        delete params.time;
+      }
+      source.updateParams(params);
+    } else if (source instanceof WMTSSource) {
+      source.updateDimensions({ time: isoTime });
+    }
     // Workaround to make sure tiles are reloaded when parameters change
     source.setTileLoadFunction(source.getTileLoadFunction());
   }
