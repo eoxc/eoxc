@@ -4,7 +4,7 @@ import ol from 'openlayers';
 import $ from 'jquery';
 
 import { getISODateTimeString } from '../../core/util';
-import { createMap, createVectorLayer } from './utils';
+import { createMap, createVectorLayer, wrapLongitude } from './utils';
 
 import 'openlayers/dist/ol.css';
 
@@ -154,6 +154,10 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.applyLayerFilters(layer, this.filtersModel);
     }, this);
 
+    const selectionLayer = createVectorLayer('rgba(255, 255, 255, 0.0)', '#ffcc33', 2, 7);
+    this.selectionSource = selectionLayer.getSource();
+    this.map.addLayer(selectionLayer);
+
     // create layer to display footprints of search results
     const searchLayer = createVectorLayer('rgba(255, 255, 255, 0.2)', '#cccccc');
     this.searchSource = searchLayer.getSource();
@@ -171,10 +175,6 @@ class OpenLayersMapView extends Marionette.ItemView {
     );
     this.highlightSource = highlightLayer.getSource();
     this.map.addLayer(highlightLayer);
-
-    const selectionLayer = createVectorLayer('rgba(255, 255, 255, 0.0)', '#ffcc33', 2, 7);
-    this.selectionSource = selectionLayer.getSource();
-    this.map.addLayer(selectionLayer);
 
     this.onHighlightChange(this.highlightModel);
 
@@ -577,7 +577,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.selectionSource.clear();
     const area = filtersModel.get('area');
     let feature = null;
-    let ring = null;
+    let ringElements = null;
 
     const globalPolygon = new ol.geom.Polygon([[
         [-180, -90], [180, -90], [180, 90], [-180, 90],
@@ -588,10 +588,36 @@ class OpenLayersMapView extends Marionette.ItemView {
         area[0], area[1], area[2], area[3],
       ]);
 
-      ring = [
-        area[0], area[1], area[2], area[1],
-        area[2], area[3], area[0], area[3],
-      ];
+      // Check to see if area selection goes over dateline limit
+      const a = area.map((c) => c % 360);
+      if (a[0] < -180 && a[2] > -180) {
+        ringElements = [
+          [
+            (360 + a[0]), a[1], 180, a[1],
+            180, a[3], (360 + a[0]), a[3],
+          ],
+          [
+            -180, a[1], a[2], a[1],
+            a[2], a[3], -180, a[3],
+          ],
+        ];
+      } else if (a[2] > 180 && a[0] < 180) {
+        ringElements = [
+          [
+            -180, a[1], (a[2] - 360), a[1],
+            (a[2] - 360), a[3], -180, a[3],
+          ],
+          [
+            a[0], a[1], 180, a[1],
+            180, a[3], a[0], a[3],
+          ],
+        ];
+      } else {
+        ringElements = [[
+          a[0], a[1], a[2], a[1],
+          a[2], a[3], a[0], a[3],
+        ]];
+      }
 
       feature = new Feature();
       feature.setGeometry(polygon);
@@ -601,10 +627,17 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (area.hasOwnProperty('geometry') &&
           area.geometry.hasOwnProperty('type') &&
           area.geometry.type === 'Point') {
-        ring = area.geometry.coordinates;
+        ringElements = [area.geometry.coordinates];
       } else {
-        // TODO: need to handle multiple features? Not only getting the first
-        ring = flatten(area.geometry.coordinates[0]);
+        // Multipolygon
+        if (area.geometry.coordinates.length > 1) {
+          ringElements = [];
+          for (let i = 0; i < area.geometry.coordinates.length; i++) {
+            ringElements.push(flatten(area.geometry.coordinates[i]));
+          }
+        } else {
+          ringElements = [flatten(area.geometry.coordinates[0])];
+        }
       }
       feature = format.readFeature(area);
     }
@@ -619,7 +652,14 @@ class OpenLayersMapView extends Marionette.ItemView {
         }),
       });
 
-      globalPolygon.appendLinearRing(new ol.geom.LinearRing([ring]));
+      for (let i = 0; i < ringElements.length; i++) {
+        // Normalize feature coordinates to make sure they are not wrapped around
+        /*for (let j = 0; j < ringElements[i].length; j += 2) {
+          ringElements[i][j] = wrapLongitude(ringElements[i][j]);
+        }*/
+        globalPolygon.appendLinearRing(new ol.geom.LinearRing([ringElements[i]]));
+      }
+
       const inverseFeature = new ol.Feature({
         name: 'InverseFeature',
         geometry: globalPolygon,
