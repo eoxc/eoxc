@@ -37,6 +37,9 @@ MapModel.prototype.defaults = {
   bbox: [0, 0, 1, 1],
   zoom: 2,
 
+  // the current start/end time selection
+  time: [null, null],
+
   tool: null,
 
   // properties to indicate that the map is currently panned or zoomed by the user

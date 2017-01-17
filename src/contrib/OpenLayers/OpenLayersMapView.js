@@ -151,7 +151,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     };
 
     this.groups.layers.getLayers().forEach((layer) => {
-      this.applyLayerFilters(layer, this.filtersModel);
+      this.applyLayerFilters(layer, this.mapModel, this.filtersModel);
     }, this);
 
     // create layer to display footprints of search results
@@ -270,8 +270,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     return layer;
   }
 
-  applyLayerFilters(layer, filtersModel) {
-    const time = filtersModel.get('time');
+  applyLayerFilters(layer, mapModel) {
+    const time = mapModel.get('time');
     const isoTime = (time !== null) ?
         `${getISODateTimeString(time[0])}/${getISODateTimeString(time[1])}` : null;
 
@@ -366,9 +366,8 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.map.getView().setRotation(mapModel.get('roll'));
     });
 
+    this.listenTo(this.mapModel, 'change:time', this.onTimeChange);
     this.listenTo(this.mapModel, 'change:tool', this.onToolChange);
-
-    this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightChange);
 
     this.listenTo(this.mapModel, 'show', (feature) => {
       let geometry = null;
@@ -419,9 +418,9 @@ class OpenLayersMapView extends Marionette.ItemView {
       });
     }
 
-    // setup filters signals
+    this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightChange);
 
-    this.listenTo(this.filtersModel, 'change:time', this.onFiltersTimeChange);
+    // setup filters signals
     this.listenTo(this.filtersModel, 'change:area', this.onFiltersAreaChange);
 
     // setup map events
@@ -567,9 +566,11 @@ class OpenLayersMapView extends Marionette.ItemView {
     }
   }
 
-  onFiltersTimeChange(filtersModel) {
+  onTimeChange() {
     this.layersCollection.forEach((layerModel) => {
-      this.applyLayerFilters(this.getLayerOfGroup(layerModel, this.groups.layers), filtersModel);
+      this.applyLayerFilters(
+        this.getLayerOfGroup(layerModel, this.groups.layers), this.mapModel
+      );
     }, this);
   }
 
