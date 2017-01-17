@@ -10,7 +10,7 @@ function convertFilters(filtersModel, mapModel, options) {
     count: options.itemsPerPage,
   };
 
-  const time = filtersModel.get('time');
+  const time = filtersModel.get('time') || mapModel.get('time');
   if (time) {
     if (Array.isArray(time)) {
       parameters.subsetTime = time.map((t) => `${t.toISOString().substring(0, 19)}Z`);

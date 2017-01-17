@@ -103,7 +103,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         return tooltip;
       },
     };
-    const time = this.filtersModel.get('time');
+    const time = this.mapModel.get('time');
     if (time !== null) {
       options.brush = {
         start: time[0],
@@ -123,7 +123,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       this.$el.css('display', 'none');
     }
 
-    this.listenTo(this.filtersModel, 'change:time', this.onModelSelectionChanged);
+    this.listenTo(this.mapModel, 'change:time', this.onModelSelectionChanged);
     this.listenTo(this.filtersModel, 'show:time', (timeFilter) => {
       this.timeSlider.center(...timeFilter);
     });
@@ -238,7 +238,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onSelectionChanged(event) {
     const selection = event.originalEvent.detail;
-    this.filtersModel.set('time', [selection.start, selection.end]);
+    this.mapModel.set('time', [selection.start, selection.end]);
   },
 
   onRecordClicked(event) {
@@ -246,7 +246,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     if (record.params) {
       this.mapModel.show(record.params);
     }
-    this.filtersModel.set('time', [record.start, record.end]);
+    this.mapModel.set('time', [record.start, record.end]);
   },
 
   onRecordMouseover(event) {
@@ -278,7 +278,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     if (combinedBbox) {
       this.mapModel.show({ bbox: combinedBbox });
     }
-    this.filtersModel.set('time', [detail.start, detail.end]);
+    this.mapModel.set('time', [detail.start, detail.end]);
   },
 
   onRecordsMouseover(event) {
@@ -294,11 +294,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onBucketClicked(event) {
     const detail = event.originalEvent.detail;
-    this.filtersModel.set('time', [detail.start, detail.end]);
+    this.mapModel.set('time', [detail.start, detail.end]);
   },
 
-  onModelSelectionChanged(filtersModel) {
-    const selection = filtersModel.get('time');
+  onModelSelectionChanged(mapModel) {
+    const selection = mapModel.get('time');
     this.timeSlider.select(selection[0], selection[1]);
   },
 
