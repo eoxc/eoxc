@@ -84,6 +84,9 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.highlightFillColor = options.highlightFillColor;
     this.highlightStrokeColor = options.highlightStrokeColor;
+    this.filterFillColor = options.filterFillColor;
+    this.filterStrokeColor = options.filterStrokeColor;
+    this.filterOutsideColor = options.filterOutsideColor;
 
     this.staticHighlight = options.staticHighlight;
 
@@ -659,16 +662,6 @@ class OpenLayersMapView extends Marionette.ItemView {
       feature = format.readFeature(area);
     }
     if (feature) {
-      const st = new ol.style.Style({
-        stroke: new ol.style.Stroke({
-          color: [0, 0, 0, 0],
-          width: 1,
-        }),
-        fill: new ol.style.Fill({
-          color: [100, 100, 100, 0.7],
-        }),
-      });
-
       for (let i = 0; i < ringElements.length; i++) {
         // Normalize feature coordinates to make sure they are not wrapped around
         /*for (let j = 0; j < ringElements[i].length; j += 2) {
@@ -676,15 +669,31 @@ class OpenLayersMapView extends Marionette.ItemView {
         }*/
         globalPolygon.appendLinearRing(new ol.geom.LinearRing([ringElements[i]]));
       }
-
       const inverseFeature = new ol.Feature({
         name: 'InverseFeature',
         geometry: globalPolygon,
       });
-      inverseFeature.setStyle(st);
+
+      inverseFeature.setStyle(new ol.style.Style({
+        stroke: new ol.style.Stroke({
+          color: this.filterStrokeColor,
+          width: 1,
+        }),
+        fill: new ol.style.Fill({
+          color: this.filterOutsideColor,
+        }),
+      }));
+      feature.setStyle(new ol.style.Style({
+        stroke: new ol.style.Stroke({
+          color: this.filterStrokeColor,
+          width: 1,
+        }),
+        fill: new ol.style.Fill({
+          color: this.filterFillColor,
+        }),
+      }))
 
       this.selectionSource.addFeature(inverseFeature);
-
       this.selectionSource.addFeature(feature);
     }
   }

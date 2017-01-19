@@ -60,6 +60,10 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.mapModel = options.mapModel;
     this.highlightModel = options.highlightModel;
 
+    this.filterFillColor = options.filterFillColor;
+    this.filterStrokeColor = options.filterStrokeColor;
+    this.filterOutsideColor = options.filterOutsideColor;
+
     this.domain = options.domain;
     this.display = options.display;
     this.constrainTimeDomain = options.constrainTimeDomain;
@@ -124,6 +128,17 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     }
 
     this.listenTo(this.mapModel, 'change:time', this.onModelSelectionChanged);
+    this.listenTo(this.filtersModel, 'change:time', () => {
+      const time = this.filtersModel.get('time');
+      if (time) {
+        this.timeSlider.setHighlightInterval(
+          time[0], time[1],
+          this.filterFillColor, this.filterStrokeColor, this.filterOutsideColor
+        );
+      } else {
+        this.timeSlider.setHighlightInterval(null);
+      }
+    });
     this.listenTo(this.filtersModel, 'show:time', (timeFilter) => {
       this.timeSlider.center(...timeFilter);
     });
