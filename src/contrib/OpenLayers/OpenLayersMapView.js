@@ -450,7 +450,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (this.mapModel.get('tool')) {
         return;
       }
-      if (!this.staticHighlight) {
+      if (!this.staticHighlight && !this.isOverlayShown()) {
         const coordinate = wrapCoordinate(event.coordinate);
         const features = this.searchSource.getFeaturesAtCoordinate(coordinate);
         this.highlightModel.highlight(features.map(feature => feature.model));
@@ -461,27 +461,11 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (this.mapModel.get('tool')) {
         return;
       }
-      // if (!this.searchCollection) {
-      //   return;
-      // }
-      // const toAdd = this.searchSource.getFeaturesAtCoordinate(event.coordinate);
-      // const toRemove = this.downloadSelectionSource.getFeaturesAtCoordinate(event.coordinate);
-      // const downloadSelection = this.searchCollection.at(0).get('downloadSelection');
-      // if (toRemove.length) {
-      //   for (let i = 0; i < toRemove.length; ++i) {
-      //     downloadSelection.remove(toRemove[i].orig.id);
-      //   }
-      // } else {
-      //   for (let i = 0; i < toAdd.length; ++i) {
-      //     downloadSelection.add(toAdd[i].orig);
-      //   }
-      // }
       const coordinate = wrapCoordinate(event.coordinate);
-      const records = this.searchSource.getFeaturesAtCoordinate(coordinate)
-        .map(feature => [feature.model, feature.searchModel]);
-      if (records.length && this.onFeatureClicked) {
-        this.onFeatureClicked(records);
-      }
+      const searchFeatures = this.searchSource.getFeaturesAtCoordinate(coordinate);
+      const selectedFeatures = this.downloadSelectionSource.getFeaturesAtCoordinate(coordinate);
+      this.highlightModel.highlight(searchFeatures.map(feature => feature.model));
+      this.showOverlay(coordinate, searchFeatures, selectedFeatures);
     });
   }
 
@@ -510,21 +494,6 @@ class OpenLayersMapView extends Marionette.ItemView {
         maxPoints: 2,
       }),
     };
-
-    // this.drawControls.bbox.on('boxstart', (evt) => {
-    //   this.drawControls.bbox.boxstart = evt.coordinate;
-    // }, this);
-    //
-    // this.drawControls.bbox.on('boxend', (evt) => {
-    //   this.selectionSource.clear();
-    //   const boxend = evt.coordinate;
-    //   const boxstart = this.drawControls.bbox.boxstart;
-    //   this.filtersModel.set('area', [
-    //     boxstart[0], boxstart[1], boxend[0], boxend[1],
-    //   ]);
-    //   setTimeout(() => this.mapModel.set('tool', null));
-    // }, this);
-
     const format = new GeoJSON();
     for (let key in this.drawControls) {
       if (this.drawControls.hasOwnProperty(key)) {
@@ -543,8 +512,55 @@ class OpenLayersMapView extends Marionette.ItemView {
         });
       }
     }
-  }
 
+    const $html = $(`
+    <div class="popover top in" role="tooltip"
+         style="width: 75px; height: 32px; top: -32px; left: -37px; z-index: unset">
+      <div class="arrow" style="left: 50%;"></div>
+      <div class="popover-content" style="padding: 3px;">
+        <div class="btn-group" role="group">
+          <button type="button" class="btn btn-default btn-xs deselect-feature">
+            <i class="fa fa-square-o" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="btn btn-default btn-xs select-feature">
+            <i class="fa fa-check-square-o" aria-hidden="true"></i>
+          </button>
+          <button type="button" class="btn btn-default btn-xs feature-info">
+            <i class="fa fa-info-circle" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+    </div>`);
+    this.marker = new ol.Overlay({
+      positioning: 'top-center',
+      element: $html[0],
+      stopEvent: true,
+    });
+    this.map.addOverlay(this.marker);
+
+    $html.find('.select-feature').on('click', () => {
+      for (let i = 0; i < this.marker.searchRecords.length; ++i) {
+        const [recordModel, searchModel] = this.marker.searchRecords[i];
+        const downloadSelection = searchModel.get('downloadSelection');
+        downloadSelection.add(recordModel.toJSON());
+      }
+      this.hideOverlay();
+    });
+
+    $html.find('.deselect-feature').on('click', () => {
+      for (let i = 0; i < this.marker.selectedRecords.length; ++i) {
+        const [recordModel, searchModel] = this.marker.selectedRecords[i];
+        const downloadSelection = searchModel.get('downloadSelection');
+        downloadSelection.remove(recordModel.get('id'));
+      }
+      this.hideOverlay();
+    });
+
+    $html.find('.feature-info').on('click', () => {
+      this.hideOverlay();
+      this.onFeatureClicked(this.marker.searchRecords);
+    });
+  }
 
   // collection/model signal handlers
 
@@ -722,6 +738,50 @@ class OpenLayersMapView extends Marionette.ItemView {
         return null;
       })
       .filter(olFeature => olFeature);
+  }
+
+  showOverlay(coordinate, searchFeatures, selectedFeatures) {
+    if (searchFeatures.length || selectedFeatures.length) {
+      this.marker.searchRecords = searchFeatures.map((f) => [f.model, f.searchModel]);
+      this.marker.selectedRecords = selectedFeatures.map((f) => [f.model, f.searchModel]);
+      this.marker.visible = true;
+      this.marker.setPosition(coordinate);
+
+      const $elem = $(this.marker.getElement());
+      if (selectedFeatures.length) {
+        $elem.find('.deselect-feature').removeAttr('disabled');
+      } else {
+        $elem.find('.deselect-feature').attr('disabled', 'disabled');
+      }
+
+      const unselected = this.marker.searchRecords.filter(([record, searchModel]) => {
+        return !this.marker.selectedRecords.find(([r2, s2]) => {
+          return (
+            record.get('id') === r2.get('id')
+            && searchModel === s2
+          );
+        });
+      });
+
+      if (unselected.length) {
+        $elem.find('.select-feature').removeAttr('disabled');
+      } else {
+        $elem.find('.select-feature').attr('disabled', 'disabled');
+      }
+
+      $elem.show();
+    } else {
+      this.hideOverlay();
+    }
+  }
+
+  hideOverlay() {
+    this.marker.visible = false;
+    $(this.marker.getElement()).hide();
+  }
+
+  isOverlayShown() {
+    return this.marker.visible;
   }
 
   onDestroy() {
