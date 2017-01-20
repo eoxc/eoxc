@@ -17,15 +17,15 @@ class SearchModel extends Backbone.Model {
     return {
       defaultPageSize: 9,
       maxCount: 200,
-      currentPage: 0,
       totalResults: undefined,
       isSearching: false,
       hasError: false,
-      // results: new Backbone.Collection(),
+
       downloadSelection: new Backbone.Collection,
       searchState: 0,
 
       hasLoaded: 0,
+      debounceTime: 250,
     };
   }
 
@@ -42,96 +42,31 @@ class SearchModel extends Backbone.Model {
         throw new Error(`Unsupported search protocol '${layerModel.get('search.protocol')}'.`);
     }
 
+    this.listenTo(this, 'change:debounceTime', this.onDebounceTimeChange);
+
     this.listenTo(this.get('results'), 'reset', this.onSearchCollectionReset);
     this.listenTo(this.get('filtersModel'), 'change', this.onFiltersModelChange);
     this.listenTo(this.get('mapModel'), 'change:bbox', this.onMapBBOXChange);
     this.listenTo(this.get('mapModel'), 'change:time', this.onMapTimeChange);
 
-    this.pages = [];
-
-    this.doSearchDebounced = debounce((...args) => this.doSearch(...args), 250);
+    this.onDebounceTimeChange();
 
     this.automaticSearch = options.automaticSearch;
     if (this.automaticSearch) {
-      this.search(true);
+      this.search();
     }
   }
 
   search(reset) {
-    if (reset) {
-      this.set({
-        itemsPerPage: undefined,
-        totalResults: undefined,
-        currentPage: 0,
-        hasLoaded: 0,
-      });
-      this.get('downloadSelection').reset([]);
-      this.pages = [];
-    }
-
     const layerModel = this.get('layerModel');
     const filtersModel = this.get('filtersModel');
     const mapModel = this.get('mapModel');
 
-    const page = this.get('currentPage');
-
-    if (this.pages[page]) {
-      const records = this.pages[page];
-      this.get('results').reset(records);
-    }
-    this.doSearchDebounced(layerModel, filtersModel, mapModel, page);
+    this.doSearchDebounced(layerModel, filtersModel, mapModel);
   }
 
-  // doSearch(layerModel, filtersModel, mapModel, page) {
-  //   const request = search(layerModel, filtersModel, mapModel, {
-  //     itemsPerPage: this.get('defaultPageSize'),
-  //     page,
-  //   });
-  //
-  //   const searchState = this.get('searchState') + 1;
-  //
-  //   this.set({
-  //     isSearching: true,
-  //     hasError: false,
-  //     searchState,
-  //     hasLoaded: 0,
-  //   });
-  //
-  //   return request.then((result) => {
-  //     if (searchState !== this.get('searchState')) {
-  //       // abort when the search is not the current one
-  //       return;
-  //     }
-  //     this.set({
-  //       totalResults: result.totalResults,
-  //       startIndex: result.startIndex,
-  //       itemsPerPage: result.itemsPerPage,
-  //       isSearching: false,
-  //       hasLoaded: result.records.length,
-  //     });
-  //
-  //     this.pages[page] = result.records;
-  //     // const allRecords = [];
-  //     // const offset = result.startIndex % result.itemsPerPage;
-  //     // for (let i = 0; i < result.totalResults; ++i) {
-  //     //   allRecords[i] =
-  //     // }
-  //     this.get('results').reset(result.records);
-  //   }).catch((error) => {
-  //     if (searchState !== this.get('searchState')) {
-  //       console.log("not setting error:", searchState, this.get('searchState'));
-  //       return
-  //     }
-  //     this.set({
-  //       isSearching: false,
-  //       hasError: true,
-  //     });
-  //     this.get('results').reset([]);
-  //     this.trigger('search:error', error);
-  //   });
-  // }
-
   doSearch(layerModel, filtersModel, mapModel) {
+    console.time("XXX")
     const request = searchAllRecords(layerModel, filtersModel, mapModel, {
       itemsPerPage: this.get('defaultPageSize'),
       maxCount: this.get('maxCount'),
@@ -146,7 +81,11 @@ class SearchModel extends Backbone.Model {
       hasLoaded: 0,
     });
 
+    console.log("Clearing")
+    this.get('results').reset([]);
+
     return request.then((result) => {
+      console.timeEnd("XXX")
       if (searchState !== this.get('searchState')) {
         // abort when the search is not the current one
         return;
@@ -173,47 +112,10 @@ class SearchModel extends Backbone.Model {
     });
   }
 
-  searchMore() {
-    const layerModel = this.get('layerModel');
-    const filtersModel = this.get('filtersModel');
-    const mapModel = this.get('mapModel');
-
-    const page = this.get('currentPage') + 1;
-    const request = search(layerModel, filtersModel, mapModel, {
-      itemsPerPage: this.get('defaultPageSize'),
-      page,
-    });
-
-    this.set({
-      isSearching: true,
-      hasError: false,
-      currentPage: page,
-    });
-
-    return request.then((result) => {
-      this.set({
-        totalResults: result.totalResults,
-        startIndex: result.startIndex,
-        itemsPerPage: result.itemsPerPage,
-        isSearching: false,
-        hasLoaded: this.get('hasLoaded') + result.records.length,
-      });
-      this.get('results').add(result.records);
-    }).catch((error) => {
-      this.set({
-        isSearching: false,
-        hasError: true,
-      });
-      this.get('results').reset([]);
-      this.trigger('search:error', error);
-    });
-  }
-
-  searchPage(page) {
-    this.set('currentPage', parseInt(page, 10));
-    if (this.automaticSearch) {
-      this.search(false);
-    }
+  onDebounceTimeChange() {
+    this.doSearchDebounced = debounce(
+      (...args) => this.doSearch(...args), this.get('debounceTime')
+    );
   }
 
   onSearchCollectionReset() {
@@ -222,19 +124,19 @@ class SearchModel extends Backbone.Model {
 
   onFiltersModelChange() {
     if (this.automaticSearch) {
-      this.search(true);
+      this.search();
     }
   }
 
   onMapBBOXChange() {
     if (this.automaticSearch && !this.get('filtersModel').get('area')) {
-      this.search(true);
+      this.search();
     }
   }
 
   onMapTimeChange() {
     if (this.automaticSearch && !this.get('filtersModel').get('time')) {
-      this.search(true);
+      this.search();
     }
   }
 }
