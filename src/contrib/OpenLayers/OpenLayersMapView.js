@@ -84,9 +84,14 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.highlightFillColor = options.highlightFillColor;
     this.highlightStrokeColor = options.highlightStrokeColor;
+    this.highlightStrokeWidth = options.highlightStrokeWidth;
     this.filterFillColor = options.filterFillColor;
     this.filterStrokeColor = options.filterStrokeColor;
     this.filterOutsideColor = options.filterOutsideColor;
+    this.footprintFillColor = options.footprintFillColor;
+    this.footprintStrokeColor = options.footprintStrokeColor;
+    this.selectedFootprintFillColor = options.selectedFootprintFillColor;
+    this.selectedFootprintStrokeColor = options.selectedFootprintStrokeColor;
 
     this.staticHighlight = options.staticHighlight;
 
@@ -162,19 +167,24 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.map.addLayer(selectionLayer);
 
     // create layer to display footprints of search results
-    const searchLayer = createVectorLayer('rgba(255, 255, 255, 0.2)', '#cccccc');
+    const searchLayer = createVectorLayer(
+      this.footprintFillColor, this.footprintStrokeColor
+    );
     this.searchSource = searchLayer.getSource();
     this.map.addLayer(searchLayer);
 
     // create layer to display footprints of download selection
-    const downloadSelectionLayer = createVectorLayer('rgba(255, 0, 0, 0.2)', '#ff0000');
+    const downloadSelectionLayer = createVectorLayer(
+      this.selectedFootprintFillColor, this.selectedFootprintStrokeColor
+    );
     this.downloadSelectionSource = downloadSelectionLayer.getSource();
     this.map.addLayer(downloadSelectionLayer);
 
     // create layer for highlighting features
     const highlightLayer = createVectorLayer(
       this.highlightFillColor || 'rgba(255, 255, 255, 0.2)',
-      this.highlightStrokeColor || '#cccccc'
+      this.highlightStrokeColor || '#cccccc',
+      this.highlightStrokeWidth
     );
     this.highlightSource = highlightLayer.getSource();
     this.map.addLayer(highlightLayer);
