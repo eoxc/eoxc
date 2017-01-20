@@ -107,9 +107,9 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
         event: 'scroll',
         effect: 'fadeIn',
         skip_invisible: false,
-        container: $el.closest('.scrollbar-inner'),
+        container: $el.closest('.side-panel-content'),
       });
-      $el.closest('.scrollbar-inner').trigger('scroll');
+      $el.closest('.side-panel-content').trigger('scroll');
     });
   },
 
