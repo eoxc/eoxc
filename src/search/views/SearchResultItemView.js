@@ -57,6 +57,14 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
       }
       this.$el.toggleClass('highlighted', isHighlighted);
     });
+
+    const $el = window.jQuery(this.$el);
+    $el.find('img').lazyload({
+      event: 'scroll',
+      effect: 'fadeIn',
+      skip_invisible: false,
+      container: $el.closest('.scrollbar-inner'),
+    });
   },
 
   onChecked(event) {
