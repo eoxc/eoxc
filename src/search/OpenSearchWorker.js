@@ -111,7 +111,7 @@ function getService(url) {
   if (!self.services[url]) {
     // add a new promise
     // self.services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise });
-    self.services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise });
+    self.services[url] = discover(url, { useXHR: true });
   }
   return self.services[url];
 }
