@@ -2,6 +2,8 @@ import Marionette from 'backbone.marionette';
 import 'jquery-lazyload';
 
 import template from './SearchResultListView.hbs';
+import ErrorViewTemplate from './SearchResultListErrorView.hbs';
+import EmptyViewTemplate from './SearchResultListEmptyView.hbs';
 import './SearchResultListView.css';
 import SearchResultItemView from './SearchResultItemView';
 
@@ -10,11 +12,11 @@ const FetchingView = Marionette.ItemView.extend({
 });
 
 const ErrorView = Marionette.ItemView.extend({
-  template: () => '<i>An error occurred during the search.</i>',
+  template: ErrorViewTemplate,
 });
 
 const EmptyView = Marionette.ItemView.extend({
-  template: () => '<i>No records matched the search.</i>',
+  template: EmptyViewTemplate,
 });
 
 const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultListView# */{
