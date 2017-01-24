@@ -57,7 +57,8 @@
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
     "webpack": "^1.12.9",
-    "webpack-dev-server": "^1.14.1"
+    "webpack-dev-server": "^1.14.1",
+    "worker-loader": "^0.7.1"
   },
   "dependencies": {
     "@turf/bbox": "^3.7.5",
@@ -77,6 +78,7 @@
     "less": "^2.7.1",
     "libcoverage": "^0.1.9",
     "openlayers": "^3.20.0",
-    "opensearch-browser": "0.0.17"
+    "opensearch-browser": "0.0.17",
+    "xmldom": "^0.1.27"
   }
 }

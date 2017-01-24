@@ -1,4 +1,20 @@
 import { discover } from 'opensearch-browser';
+import { setPromiseClass } from 'opensearch-browser/src/config';
+const BluebirdPromise = require('bluebird');
+
+
+import OpenSearchWorker from 'worker-loader!./OpenSearchWorker.js';
+
+
+// TODO: not necessary in Bluebird anymore??
+// BluebirdPromise.config({
+//   warnings: false,
+//   longStackTraces: false,
+//   cancellation: true,
+//   monitoring: false,
+// });
+
+setPromiseClass(BluebirdPromise);
 
 function prepareBox(bbox) {
   bbox[1] = Math.max(bbox[1], -90);
@@ -113,7 +129,7 @@ const services = {};
 function getService(url) {
   if (!services[url]) {
     // add a new promise
-    services[url] = discover(url);
+    services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise });
   }
   return services[url];
 }
@@ -133,35 +149,71 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
       return result;
     });
 }
+//
+// export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
+//   const url = layerModel.get('search.url');
+//   const method = layerModel.get('search.method');
+//   const format = options.mimeType || layerModel.get('search.format') || null;
+//   const maxCount = options.maxCount;
+//
+//   return getService(url)
+//     .then(service => {
+//       const parameters = convertFilters(filtersModel, mapModel, options, format, service);
+//       const paginator = service.getPaginator(parameters, format, method, true);
+//       if (maxCount) {
+//         return paginator.fetchFirstRecords(maxCount)
+//           .then(result => ({
+//             totalResults: result.totalResults,
+//             itemsPerPage: result.itemsPerPage,
+//             startIndex: result.startIndex,
+//             records: prepareRecords(result.records),
+//           }));
+//       }
+//       return paginator.fetchAllRecords()
+//         .then(result => ({
+//           totalResults: result.totalResults,
+//           itemsPerPage: result.itemsPerPage,
+//           startIndex: result.startIndex,
+//           records: prepareRecords(result.records),
+//         }));
+//     });
+// }
+
+const worker = new OpenSearchWorker();
+let id = 0;
 
 export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
   const url = layerModel.get('search.url');
   const method = layerModel.get('search.method');
   const format = options.mimeType || layerModel.get('search.format') || null;
-  const maxCount = options.maxCount;
 
-  return getService(url)
-    .then(service => {
-      const parameters = convertFilters(filtersModel, mapModel, options, format, service);
-      const paginator = service.getPaginator(parameters, format, method, true);
-      if (maxCount) {
-        return paginator.fetchFirstRecords(maxCount)
-          .then(result => ({
-            totalResults: result.totalResults,
-            itemsPerPage: result.itemsPerPage,
-            startIndex: result.startIndex,
-            records: prepareRecords(result.records),
-          }));
+  const currentId = ++id;
+
+  const filterParams = filtersModel.toJSON();
+  const mapParams = mapModel ? mapModel.toJSON() : null;
+
+  return new Promise((resolve, reject) => {
+    const cb = (event) => {
+      const [status, resultId, result] = event.data;
+      if (currentId === resultId) {
+        worker.removeEventListener('message', cb);
+
+        if (status === 'success') {
+          resolve(result);
+        } else {
+          reject(result);
+        }
       }
-      return paginator.fetchAllRecords()
-        .then(result => ({
-          totalResults: result.totalResults,
-          itemsPerPage: result.itemsPerPage,
-          startIndex: result.startIndex,
-          records: prepareRecords(result.records),
-        }));
-    });
+    };
+    worker.addEventListener('message', cb);
+    worker.postMessage([
+      'searchAll', currentId, {
+        url, method, filterParams, mapParams, options, format,
+      },
+    ]);
+  });
 }
+
 
 export function getParameters(layerModel) {
   const url = layerModel.get('search.url');
