@@ -4,7 +4,7 @@ import ol from 'openlayers';
 import $ from 'jquery';
 
 import { getISODateTimeString } from '../../core/util';
-import { createMap, createVectorLayer, wrapLongitude } from './utils';
+import { createMap, createVectorLayer, createCutOut } from './utils';
 
 import 'openlayers/dist/ol.css';
 
@@ -488,11 +488,10 @@ class OpenLayersMapView extends Marionette.ItemView {
    */
   setupControls() {
     this.drawControls = {
-      point: new Draw({ source: this.selectionSource, type: 'Point' }),
-      line: new Draw({ source: this.selectionSource, type: 'LineString' }),
-      polygon: new Draw({ source: this.selectionSource, type: 'Polygon' }),
+      point: new Draw({ type: 'Point' }),
+      line: new Draw({ type: 'LineString' }),
+      polygon: new Draw({ type: 'Polygon' }),
       bbox: new Draw({
-        source: this.selectionSource,
         type: 'LineString',
         geometryFunction: (coordinates, geometry) => {
           const geom = geometry || new Polygon(null);
@@ -520,6 +519,7 @@ class OpenLayersMapView extends Marionette.ItemView {
             geom = format.writeFeatureObject(event.feature);
           }
           this.filtersModel.set('area', geom);
+
           // to avoid a zoom-in on a final double click
           setTimeout(() => this.mapModel.set('tool', null));
         });
@@ -606,105 +606,19 @@ class OpenLayersMapView extends Marionette.ItemView {
   onFiltersAreaChange(filtersModel) {
     this.selectionSource.clear();
     const area = filtersModel.get('area');
-    let feature = null;
-    let ringElements = null;
 
-    const globalPolygon = new ol.geom.Polygon([[
-        [-180, -90], [180, -90], [180, 90], [-180, 90],
-    ]]);
+    const format = new GeoJSON();
 
-    if (Array.isArray(area)) {
-      const polygon = Polygon.fromExtent([
-        area[0], area[1], area[2], area[3],
-      ]);
-
-      // Check to see if area selection goes over dateline limit
-      const a = area.map((c) => c % 360);
-      if (a[0] < -180 && a[2] > -180) {
-        ringElements = [
-          [
-            (360 + a[0]), a[1], 180, a[1],
-            180, a[3], (360 + a[0]), a[3],
-          ],
-          [
-            -180, a[1], a[2], a[1],
-            a[2], a[3], -180, a[3],
-          ],
-        ];
-      } else if (a[2] > 180 && a[0] < 180) {
-        ringElements = [
-          [
-            -180, a[1], (a[2] - 360), a[1],
-            (a[2] - 360), a[3], -180, a[3],
-          ],
-          [
-            a[0], a[1], 180, a[1],
-            180, a[3], a[0], a[3],
-          ],
-        ];
-      } else {
-        ringElements = [[
-          a[0], a[1], a[2], a[1],
-          a[2], a[3], a[0], a[3],
-        ]];
+    if (area) {
+      const [outer, inner] = createCutOut(
+        area, format, this.filterFillColor, this.filterOutsideColor, this.filterStrokeColor, 1
+      );
+      if (outer) {
+        this.selectionSource.addFeature(outer);
       }
-
-      feature = new Feature();
-      feature.setGeometry(polygon);
-    } else if (area && typeof area === 'object') {
-      const format = new GeoJSON();
-      const flatten = arr => arr.reduce((a, b) => a.concat(Array.isArray(b) ? flatten(b) : b), []);
-      if (area.hasOwnProperty('geometry') &&
-          area.geometry.hasOwnProperty('type') &&
-          area.geometry.type === 'Point') {
-        ringElements = [area.geometry.coordinates];
-      } else {
-        // Multipolygon
-        if (area.geometry.coordinates.length > 1) {
-          ringElements = [];
-          for (let i = 0; i < area.geometry.coordinates.length; i++) {
-            ringElements.push(flatten(area.geometry.coordinates[i]));
-          }
-        } else {
-          ringElements = [flatten(area.geometry.coordinates[0])];
-        }
+      if (inner) {
+        this.selectionSource.addFeature(inner);
       }
-      feature = format.readFeature(area);
-    }
-    if (feature) {
-      for (let i = 0; i < ringElements.length; i++) {
-        // Normalize feature coordinates to make sure they are not wrapped around
-        /*for (let j = 0; j < ringElements[i].length; j += 2) {
-          ringElements[i][j] = wrapLongitude(ringElements[i][j]);
-        }*/
-        globalPolygon.appendLinearRing(new ol.geom.LinearRing([ringElements[i]]));
-      }
-      const inverseFeature = new ol.Feature({
-        name: 'InverseFeature',
-        geometry: globalPolygon,
-      });
-
-      inverseFeature.setStyle(new ol.style.Style({
-        stroke: new ol.style.Stroke({
-          color: this.filterStrokeColor,
-          width: 1,
-        }),
-        fill: new ol.style.Fill({
-          color: this.filterOutsideColor,
-        }),
-      }));
-      feature.setStyle(new ol.style.Style({
-        stroke: new ol.style.Stroke({
-          color: this.filterStrokeColor,
-          width: 1,
-        }),
-        fill: new ol.style.Fill({
-          color: this.filterFillColor,
-        }),
-      }))
-
-      this.selectionSource.addFeature(inverseFeature);
-      this.selectionSource.addFeature(feature);
     }
   }
 
