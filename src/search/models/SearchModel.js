@@ -66,7 +66,6 @@ class SearchModel extends Backbone.Model {
   }
 
   doSearch(layerModel, filtersModel, mapModel) {
-    console.time("XXX")
     const request = searchAllRecords(layerModel, filtersModel, mapModel, {
       itemsPerPage: this.get('defaultPageSize'),
       maxCount: this.get('maxCount'),
@@ -81,11 +80,9 @@ class SearchModel extends Backbone.Model {
       hasLoaded: 0,
     });
 
-    console.log("Clearing")
     this.get('results').reset([]);
 
     return request.then((result) => {
-      console.timeEnd("XXX")
       if (searchState !== this.get('searchState')) {
         // abort when the search is not the current one
         return;
