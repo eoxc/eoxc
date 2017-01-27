@@ -1,3 +1,15 @@
+<div class="dropdown">
+  <button class="btn btn-default btn-block dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+    <span>{{selectedLayer.displayName}}</span>
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu">
+    {{#each layers}}
+    <li><a href="#" data-layer="{{this.id}}">{{this.displayName}}</a></li>
+    {{/each}}
+  </ul>
+</div>
+
 <div class="result-contents"></div>
 <div class="input-group download-control">
   {{#if showDownloadOptions}}

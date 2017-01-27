@@ -1,7 +1,11 @@
-.result-contents {
-  overflow-y: hidden;
-  overflow-x: hidden;
+.search-result-view {
   height: 100%;
+}
+.result-contents {
+  height: -moz-calc(100% - 50px);
+  height: -webkit-calc(100% - 50px);
+  height: -o-calc(100% - 50px);
+  height: calc(100% - 50px);
 }
 
 .download-control {

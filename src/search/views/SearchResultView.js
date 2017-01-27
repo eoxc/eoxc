@@ -6,15 +6,19 @@ import download from '../../download/';
 require('./SearchResultView.css');
 const template = require('./SearchResultView.hbs');
 
-const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultView# */{
+const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/layers.SearchResultView# */{
   template,
   templateHelpers() {
     return {
       showDownloadOptions: this.collection.any(searchModel => (
         searchModel.get('layerModel').get('download.protocol') === 'EO-WCS'
       )),
+      layers: this.collection.map(model => model.get('layerModel').toJSON()),
+      selectedLayer: this.selectedLayer ? this.selectedLayer.toJSON() : null,
     };
   },
+
+  className: 'search-result-view',
 
   childView: SearchResultListView,
 
@@ -30,6 +34,10 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     'click #start-download': 'onStartDownloadClicked',
   },
 
+  regions: {
+    'search-results': '.result-contents',
+  },
+
   initialize(options) {
     this.filtersModel = options.filtersModel;
     this.highlightModel = options.highlightModel;
@@ -41,6 +49,31 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
         searchModel.get('downloadSelection'), 'reset update', this.onDownloadSelectionChange
       );
     });
+    this.setSelectedSearchModel(this.collection.find((searchModel) => (
+      searchModel.get('layerModel').get('display.visible')
+    )));
+  },
+
+  setSelectedSearchModel(selectedSearchModel) {
+    if (this.selectedSearchModel) {
+      this.stopListening(this.selectedSearchModel.get('results'));
+    }
+
+    this.listenTo(
+      selectedSearchModel.get('results'), 'reset', this.onResultsChange
+    );
+    this.selectedSearchModel = selectedSearchModel;
+  },
+
+  onResultsChange(resultsCollection) {
+    if (resultsCollection) {
+      this.showChildView('search-results', new SearchResultListView({
+        searchModel: this.selectedSearchModel,
+        referenceCollection: resultsCollection,
+        downloadSelectionCollection: this.selectedSearchModel.get('downloadSelection'),
+        highlightModel: this.highlightModel,
+      }));
+    }
   },
 
   buildChildView(child, ChildViewClass) {

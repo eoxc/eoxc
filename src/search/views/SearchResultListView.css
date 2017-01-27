@@ -10,3 +10,9 @@
   /*max-height: 400px;
   overflow: auto;*/
 }
+
+.search-result-list {
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}

@@ -63,7 +63,7 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
       event: 'scroll',
       effect: 'fadeIn',
       skip_invisible: false,
-      container: $el.closest('.side-panel-content'),
+      container: $el.closest('ul'),
     });
   },
 
