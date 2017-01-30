@@ -6,19 +6,6 @@ import template from './SearchResultListView.hbs';
 import './SearchResultListView.css';
 import SearchResultItemView from './SearchResultItemView';
 
-const FetchingView = Marionette.ItemView.extend({
-  template: () => '<i class="fa fa-circle-o-notch fa-spin"></i>',
-});
-
-const ErrorView = Marionette.ItemView.extend({
-  template: () => '<i>An error occurred during the search.</i>',
-});
-
-const EmptyView = Marionette.ItemView.extend({
-  template: () => '<i>No records matched the search.</i>',
-});
-
-// const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultListView# */{
 const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/views/layers.SearchResultListView# */{
   initialLowerBound: 0,
   initialUpperBound: 21,
@@ -42,16 +29,6 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
   template,
   tagName: 'ul',
   className: 'search-result-list list-unstyled list-inline',
-  // templateHelpers() {
-  //   const totalResults = this.model.get('totalResults');
-  //   const maxCount = this.model.get('maxCount');
-  //
-  //   return {
-  //     layerName: this.model.get('layerModel').get('displayName'),
-  //     layerId: this.model.get('layerModel').get('id'),
-  //     hasMore: totalResults > maxCount,
-  //   };
-  // },
 
   childView: SearchResultItemView,
   childViewContainer: 'ul.result-list',
@@ -61,18 +38,8 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
       model: child,
       searchModel: this.searchModel,
       highlightModel: this.highlightModel,
-      downloadSelectionCollection: this.downloadSelectionCollection,
     });
   },
-
-  // getEmptyView() {
-  //   if (this.model.get('isSearching')) {
-  //     return FetchingView;
-  //   } else if (this.model.get('hasError')) {
-  //     return ErrorView;
-  //   }
-  //   return EmptyView;
-  // },
 
   events: {
     'click .btn-load-more': 'onLoadMoreClicked',
@@ -97,7 +64,7 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
 
   onRender() {
     // create spacer
-    this.$el.append('<div class="spacer" style="background-color: red;"></div>');
+    this.$el.append('<div class="spacer"></div>');
   },
 
   _updateCollection() {
@@ -131,14 +98,6 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
 
   onItemHoverEnd(childView) {
     this.highlightModel.unHighlight(childView.model.attributes);
-  },
-
-  onLayerVisibleChange() {
-    if (this.model.get('layerModel').get('display.visible')) {
-      this.$el.show('fast');
-    } else {
-      this.$el.hide('fast');
-    }
   },
 });
 
