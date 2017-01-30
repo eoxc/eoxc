@@ -15,6 +15,7 @@ import EOWCSCollection from './EOWCSCollection';
 class SearchModel extends Backbone.Model {
   defaults() {
     return {
+      automaticSearch: false,
       defaultPageSize: 9,
       maxCount: 200,
       totalResults: undefined,
@@ -22,7 +23,6 @@ class SearchModel extends Backbone.Model {
       hasError: false,
 
       downloadSelection: new Backbone.Collection,
-      searchState: 0,
 
       hasLoaded: 0,
       debounceTime: 250,
@@ -42,22 +42,23 @@ class SearchModel extends Backbone.Model {
         throw new Error(`Unsupported search protocol '${layerModel.get('search.protocol')}'.`);
     }
 
-    this.listenTo(this, 'change:debounceTime', this.onDebounceTimeChange);
+    // back reference from results to collection
+    this.get('results').searchModel = this;
 
+    this.listenTo(this, 'change:debounceTime', this.onDebounceTimeChange);
+    this.listenTo(this, 'change:automaticSearch', this.onAutomaticSearchChange);
+
+    this.listenTo(layerModel, 'change:display.visible', this.onLayerVisibleChange);
     this.listenTo(this.get('results'), 'reset', this.onSearchCollectionReset);
     this.listenTo(this.get('filtersModel'), 'change', this.onFiltersModelChange);
     this.listenTo(this.get('mapModel'), 'change:bbox', this.onMapBBOXChange);
     this.listenTo(this.get('mapModel'), 'change:time', this.onMapTimeChange);
 
     this.onDebounceTimeChange();
-
-    this.automaticSearch = options.automaticSearch;
-    if (this.automaticSearch) {
-      this.search();
-    }
+    this.set('automaticSearch', layerModel.get('display.visible'));
   }
 
-  search(reset) {
+  search() {
     const layerModel = this.get('layerModel');
     const filtersModel = this.get('filtersModel');
     const mapModel = this.get('mapModel');
@@ -66,30 +67,22 @@ class SearchModel extends Backbone.Model {
   }
 
   doSearch(layerModel, filtersModel, mapModel) {
-    console.time("XXX")
-    const request = searchAllRecords(layerModel, filtersModel, mapModel, {
+    if (this.prevRequest && this.prevRequest.cancel) {
+      this.prevRequest.cancel();
+    }
+    this.prevRequest = searchAllRecords(layerModel, filtersModel, mapModel, {
       itemsPerPage: this.get('defaultPageSize'),
       maxCount: this.get('maxCount'),
     });
 
-    const searchState = this.get('searchState') + 1;
-
     this.set({
       isSearching: true,
       hasError: false,
-      searchState,
       hasLoaded: 0,
     });
-
-    console.log("Clearing")
     this.get('results').reset([]);
 
-    return request.then((result) => {
-      console.timeEnd("XXX")
-      if (searchState !== this.get('searchState')) {
-        // abort when the search is not the current one
-        return;
-      }
+    return this.prevRequest.then((result) => {
       this.set({
         totalResults: result.totalResults,
         startIndex: result.startIndex,
@@ -99,10 +92,6 @@ class SearchModel extends Backbone.Model {
       });
       this.get('results').reset(result.records);
     }).catch((error) => {
-      if (searchState !== this.get('searchState')) {
-        console.log("not setting error:", searchState, this.get('searchState'));
-        return
-      }
       this.set({
         isSearching: false,
         hasError: true,
@@ -118,24 +107,35 @@ class SearchModel extends Backbone.Model {
     );
   }
 
+  onAutomaticSearchChange() {
+    if (this.get('automaticSearch')) {
+      this.search();
+    }
+  }
+
+  onLayerVisibleChange() {
+    const layerModel = this.get('layerModel');
+    this.set('automaticSearch', layerModel.get('display.visible'));
+  }
+
   onSearchCollectionReset() {
     this.trigger('search:complete', this);
   }
 
   onFiltersModelChange() {
-    if (this.automaticSearch) {
+    if (this.get('automaticSearch')) {
       this.search();
     }
   }
 
   onMapBBOXChange() {
-    if (this.automaticSearch && !this.get('filtersModel').get('area')) {
+    if (this.get('automaticSearch') && !this.get('filtersModel').get('area')) {
       this.search();
     }
   }
 
   onMapTimeChange() {
-    if (this.automaticSearch && !this.get('filtersModel').get('time')) {
+    if (this.get('automaticSearch') && !this.get('filtersModel').get('time')) {
       this.search();
     }
   }
