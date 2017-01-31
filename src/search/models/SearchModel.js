@@ -1,7 +1,7 @@
 import Backbone from 'backbone';
 import debounce from 'debounce';
 
-import { search, searchAllRecords } from '../';
+import { searchAllRecords } from '../';
 
 import OpenSearchCollection from './OpenSearchCollection';
 import EOWCSCollection from './EOWCSCollection';
@@ -22,21 +22,21 @@ class SearchModel extends Backbone.Model {
       isSearching: false,
       hasError: false,
 
-      downloadSelection: new Backbone.Collection,
+      downloadSelection: new Backbone.Collection(),
 
       hasLoaded: 0,
       debounceTime: 250,
     };
   }
 
-  initialize(attributes, options = {}) {
+  initialize() {
     const layerModel = this.get('layerModel');
     switch (layerModel.get('search.protocol')) {
       case 'EO-WCS':
-        this.set('results', new EOWCSCollection);
+        this.set('results', new EOWCSCollection());
         break;
       case 'OpenSearch':
-        this.set('results', new OpenSearchCollection);
+        this.set('results', new OpenSearchCollection());
         break;
       default:
         throw new Error(`Unsupported search protocol '${layerModel.get('search.protocol')}'.`);
@@ -138,6 +138,10 @@ class SearchModel extends Backbone.Model {
     if (this.get('automaticSearch') && !this.get('filtersModel').get('time')) {
       this.search();
     }
+  }
+
+  triggerShowInfo(records) {
+    this.trigger('showInfo', Array.isArray(records) ? records : [records]);
   }
 }
 
