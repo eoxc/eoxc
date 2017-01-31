@@ -1,0 +1,52 @@
+.result-list {
+  margin: -5px 0 0 -5px;
+}
+
+.record-item {
+  width: 112px;
+  position: relative;
+  padding: 5px !important;
+  margin: 5px 0 0 5px;
+  border: 1px solid transparent;
+  border-color: #ddd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.record-item:hover, .record-item.highlighted {
+  background-color: #e6e6e6;
+  border-color: #adadad;
+}
+
+.record-item.selected-for-download {
+  border-color: red !important;
+}
+
+.record-item a {
+  display: block;
+  height: 100px;
+}
+
+.record-item img {
+  max-width: 100px;
+  max-height: 100px;
+  margin: 0;
+  padding: 0;
+}
+
+.record-item input[type="checkbox"] {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+}
+
+.record-item button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: none;
+}
+
+.record-item:hover button {
+  display: block;
+}
