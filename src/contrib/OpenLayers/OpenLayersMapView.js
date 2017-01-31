@@ -1,12 +1,10 @@
-import { Model } from 'backbone';
 import Marionette from 'backbone.marionette';
 import ol from 'openlayers';
 import $ from 'jquery';
+import 'openlayers/dist/ol.css';
 
 import { getISODateTimeString } from '../../core/util';
 import { createMap, createVectorLayer, createCutOut } from './utils';
-
-import 'openlayers/dist/ol.css';
 
 const Collection = ol.Collection;
 const Group = ol.layer.Group;
@@ -26,6 +24,22 @@ const Draw = ol.interaction.Draw;
 
 const Polygon = ol.geom.Polygon;
 const Feature = ol.Feature;
+
+class GroupById extends Group {
+  constructor(options = {}) {
+    const layers = options.layers || [];
+    super(options);
+    this.byId = {};
+    for (let i = 0; i < layers.length; ++i) {
+      const layer = layers[i];
+      this.byId[layer.id] = layer;
+    }
+  }
+
+  getLayerById(id) {
+    return this.byId[id];
+  }
+}
 
 
 function wrapBox(box) {
@@ -166,19 +180,29 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.selectionSource = selectionLayer.getSource();
     this.map.addLayer(selectionLayer);
 
-    // create layer to display footprints of search results
-    const searchLayer = createVectorLayer(
-      this.footprintFillColor, this.footprintStrokeColor
-    );
-    this.searchSource = searchLayer.getSource();
-    this.map.addLayer(searchLayer);
+    // create layer group to display footprints of search results
+    this.searchLayersGroup = new GroupById({
+      layers: this.searchCollection.map((searchModel) => {
+        const searchLayer = createVectorLayer(
+          this.footprintFillColor, this.footprintStrokeColor
+        );
+        searchLayer.id = searchModel.get('layerModel').get('id');
+        return searchLayer;
+      }),
+    });
+    this.map.addLayer(this.searchLayersGroup);
 
-    // create layer to display footprints of download selection
-    const downloadSelectionLayer = createVectorLayer(
-      this.selectedFootprintFillColor, this.selectedFootprintStrokeColor
-    );
-    this.downloadSelectionSource = downloadSelectionLayer.getSource();
-    this.map.addLayer(downloadSelectionLayer);
+    // create layer group to display footprints of download selection
+    this.downloadSelectionLayerGroup = new GroupById({
+      layers: this.searchCollection.map((searchModel) => {
+        const downloadSelectionLayer = createVectorLayer(
+          this.selectedFootprintFillColor, this.selectedFootprintStrokeColor
+        );
+        downloadSelectionLayer.id = searchModel.get('layerModel').get('id');
+        return downloadSelectionLayer;
+      })
+    });
+    this.map.addLayer(this.downloadSelectionLayerGroup);
 
     // create layer for highlighting features
     const highlightLayer = createVectorLayer(
@@ -315,7 +339,7 @@ class OpenLayersMapView extends Marionette.ItemView {
   getLayerOfGroup(layerModel, group) {
     const id = layerModel.get('id');
     let foundLayer;
-    group.getLayers().forEach(layer => {
+    group.getLayers().forEach((layer) => {
       if (layer.id === id) {
         foundLayer = layer;
       }
@@ -404,29 +428,32 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     if (this.searchCollection) {
-      this.searchCollection.forEach(searchModel => {
+      this.searchCollection.forEach((searchModel) => {
+        const id = searchModel.get('layerModel').get('id');
+        const searchSource = this.searchLayersGroup.getLayerById(id).getSource();
+        const downloadSource = this.downloadSelectionLayerGroup.getLayerById(id).getSource();
         // TODO: merge from different layers
         this.listenTo(searchModel.get('results'), 'reset', () => {
-          this.searchSource.clear();
+          searchSource.clear();
           const olFeatures = this.createMapFeatures(searchModel.get('results'), searchModel);
-          this.searchSource.addFeatures(olFeatures);
+          searchSource.addFeatures(olFeatures);
         });
 
         this.listenTo(searchModel.get('results'), 'add', (model) => {
           const olFeatures = this.createMapFeatures(model, searchModel);
-          this.searchSource.addFeatures(olFeatures);
+          searchSource.addFeatures(olFeatures);
         });
 
         // TODO: merge from different layers
         this.listenTo(searchModel.get('downloadSelection'), 'reset remove', () => {
-          this.downloadSelectionSource.clear();
+          downloadSource.clear();
           const olFeatures = this.createMapFeatures(searchModel.get('downloadSelection'), searchModel);
-          this.downloadSelectionSource.addFeatures(olFeatures);
+          downloadSource.addFeatures(olFeatures);
         });
 
         this.listenTo(searchModel.get('downloadSelection'), 'add', (model) => {
           const olFeatures = this.createMapFeatures(model, searchModel);
-          this.downloadSelectionSource.addFeatures(olFeatures);
+          downloadSource.addFeatures(olFeatures);
         });
       });
     }
@@ -465,8 +492,12 @@ class OpenLayersMapView extends Marionette.ItemView {
       }
       if (!this.staticHighlight && !this.isOverlayShown()) {
         const coordinate = wrapCoordinate(event.coordinate);
-        const features = this.searchSource.getFeaturesAtCoordinate(coordinate);
-        this.highlightModel.highlight(features.map(feature => feature.model));
+        const models = this.searchLayersGroup.getLayers().getArray()
+          .map(layer => layer.getSource())
+          .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
+          .map(feature => feature.model);
+
+        this.highlightModel.highlight(models);
       }
     });
 
@@ -475,8 +506,12 @@ class OpenLayersMapView extends Marionette.ItemView {
         return;
       }
       const coordinate = wrapCoordinate(event.coordinate);
-      const searchFeatures = this.searchSource.getFeaturesAtCoordinate(coordinate);
-      const selectedFeatures = this.downloadSelectionSource.getFeaturesAtCoordinate(coordinate);
+      const searchFeatures = this.searchLayersGroup.getLayers().getArray()
+        .map(layer => layer.getSource())
+        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
+      const selectedFeatures = this.downloadSelectionLayerGroup.getLayers().getArray()
+        .map(layer => layer.getSource())
+        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
       this.highlightModel.highlight(searchFeatures.map(feature => feature.model));
       this.showOverlay(coordinate, searchFeatures, selectedFeatures);
     });
@@ -592,6 +627,10 @@ class OpenLayersMapView extends Marionette.ItemView {
       const display = layerModel.get('display');
       layer.setVisible(display.visible);
       layer.setOpacity(display.opacity);
+      const searchLayer = this.searchLayersGroup.getLayerById(layerModel.get('id'));
+      if (searchLayer) {
+        searchLayer.setVisible(display.visible);
+      }
     }
   }
 
