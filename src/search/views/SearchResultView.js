@@ -50,10 +50,26 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
 
     this.listenTo(this.collection, 'change', this.onSearchModelsChange);
 
-    this.collection.each(searchModel => {
+    this.collection.each((searchModel) => {
       this.listenTo(
         searchModel.get('downloadSelection'), 'reset update', this.onDownloadSelectionChange
       );
+
+      this.listenTo(searchModel.get('layerModel'), 'change:display.visible', (layerModel) => {
+        let newSelectedSearchModels;
+        const $checkbox = this.$(`[data-layer="${layerModel.get('id')}"]`);
+        if (layerModel.get('display.visible')) {
+          newSelectedSearchModels = this.selectedSearchModels.concat([searchModel]);
+          $checkbox.parent().show();
+          $checkbox.prop('checked', true);
+        } else {
+          newSelectedSearchModels = this.selectedSearchModels.filter(
+            model => model !== searchModel
+          );
+          $checkbox.parent().hide();
+        }
+        this.setSelectedSearchModels(newSelectedSearchModels);
+      });
     });
   },
 
@@ -65,10 +81,17 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
     const names = searchModels.map(
       (searchModel) => searchModel.get('layerModel').get('displayName')
     );
-    if (names.length) {
-      this.$('.selected-layer-names').html(names.join(', '));
+    const visibleLayers = this.collection.filter(model => model.get('layerModel').get('display.visible'));
+    if (visibleLayers.length) {
+      if (names.length) {
+        this.$('.selected-layer-names').html(`${names.length} layer${names.length > 1 ? 's' : ''} selected.`);
+      } else {
+        this.$('.selected-layer-names').html('<i>No layer selected</i>');
+      }
+      this.$('.dropdown button').prop('disabled', false);
     } else {
-      this.$('.selected-layer-names').html('<i>No layer selected</i>');
+      this.$('.selected-layer-names').html('<i>No layer available</i>');
+      this.$('.dropdown button').prop('disabled', true);
     }
 
     // adjust events
@@ -112,21 +135,24 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
       ids.indexOf(searchModel.get('layerModel').get('id')) > -1
     ));
     this.setSelectedSearchModels(selectedSearchModels);
+    this.onSearchModelsChange();
   },
 
   onSearchModelsChange(searchModel) {
-    // update the layers status
-    const layerModel = searchModel.get('layerModel');
-    const $status = this.$(`[data-layer="${layerModel.get('id')}"]`)
-      .parent()
-      .find('.search-status');
+    if (searchModel) {
+      // update the layers status
+      const layerModel = searchModel.get('layerModel');
+      const $status = this.$(`[data-layer="${layerModel.get('id')}"]`)
+        .parent()
+        .find('.search-status');
 
-    if (searchModel.get('isSearching')) {
-      $status.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
-    } else if (searchModel.get('hasError')) {
-      $status.html('<i class="fa fa-exclamation"></i>');
-    } else {
-      $status.html(`${searchModel.get('hasLoaded')}/${searchModel.get('totalResults')}`);
+      if (searchModel.get('isSearching')) {
+        $status.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+      } else if (searchModel.get('hasError')) {
+        $status.html('<i class="fa fa-exclamation"></i>');
+      } else {
+        $status.html(`${searchModel.get('hasLoaded')}/${searchModel.get('totalResults')}`);
+      }
     }
 
     // update the global status
@@ -135,14 +161,16 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
       $globalStatus.html('<i class="fa fa-exclamation"></i>');
     } else if (this.collection.any((model) => model.get('isSearching'))) {
       $globalStatus.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
-    } else {
-      const sumTotalResults = this.collection.reduce(
+    } else if (this.selectedSearchModels.length) {
+      const sumTotalResults = this.selectedSearchModels.reduce(
         (current, model) => (current + model.get('totalResults')), 0
       );
-      const sumHasLoaded = this.collection.reduce(
+      const sumHasLoaded = this.selectedSearchModels.reduce(
         (current, model) => (current + model.get('hasLoaded')), 0
       );
       $globalStatus.html(`${sumHasLoaded}/${sumTotalResults}`);
+    } else {
+      $globalStatus.html('');
     }
   },
 
