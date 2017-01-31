@@ -1,36 +1,34 @@
 import Marionette from 'backbone.marionette';
+import 'marionette.sliding-view';
 import 'jquery-lazyload';
 
 import template from './SearchResultListView.hbs';
-import ErrorViewTemplate from './SearchResultListErrorView.hbs';
-import EmptyViewTemplate from './SearchResultListEmptyView.hbs';
 import './SearchResultListView.css';
 import SearchResultItemView from './SearchResultItemView';
 
-const FetchingView = Marionette.ItemView.extend({
-  template: () => '<i class="fa fa-circle-o-notch fa-spin"></i>',
-});
-
-const ErrorView = Marionette.ItemView.extend({
-  template: ErrorViewTemplate,
-});
-
-const EmptyView = Marionette.ItemView.extend({
-  template: EmptyViewTemplate,
-});
-
-const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultListView# */{
-  template,
-  templateHelpers() {
-    const totalResults = this.model.get('totalResults');
-    const maxCount = this.model.get('maxCount');
-
-    return {
-      layerName: this.model.get('layerModel').get('displayName'),
-      layerId: this.model.get('layerModel').get('id'),
-      hasMore: totalResults > maxCount,
-    };
+const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/views/layers.SearchResultListView# */{
+  initialLowerBound: 0,
+  initialUpperBound: 21,
+  getLowerBound() {
+    return 0;
   },
+  getUpperBound() {
+    const height = this.$el.height();
+    const elemHeight = this.$el.find('li').outerHeight(true);
+    const upper = Math.ceil((this.$el.scrollTop() + height) * 3 / elemHeight) + 3;
+    if (upper > this.prevUpper) {
+      this.prevUpper = upper;
+    }
+    return this.prevUpper;
+  },
+
+  pruneCollection(lowerBound, upperBound) {
+    return this.referenceCollection.slice(lowerBound, upperBound);
+  },
+
+  template,
+  tagName: 'ul',
+  className: 'search-result-list list-unstyled list-inline',
 
   childView: SearchResultItemView,
   childViewContainer: 'ul.result-list',
@@ -38,22 +36,14 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   buildChildView(child, ChildViewClass) {
     return new ChildViewClass({
       model: child,
+      searchModel: this.searchModel,
       highlightModel: this.highlightModel,
-      downloadSelectionCollection: this.downloadSelectionCollection,
     });
-  },
-
-  getEmptyView() {
-    if (this.model.get('isSearching')) {
-      return FetchingView;
-    } else if (this.model.get('hasError')) {
-      return ErrorView;
-    }
-    return EmptyView;
   },
 
   events: {
     'click .btn-load-more': 'onLoadMoreClicked',
+    scroll: 'onUpdateEvent',
   },
 
   childEvents: {
@@ -63,50 +53,33 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     'item:hover:end': 'onItemHoverEnd',
   },
 
-  collectionEvents: {
-    reset: 'onCollectionReset', // TODO
-  },
-
-  modelEvents: {
-    change: 'render',
-    'search:complete': 'onSearchComplete',
-  },
-
   initialize(options) {
+    this.searchModel = options.searchModel;
     this.highlightModel = options.highlightModel;
     this.downloadSelectionCollection = options.downloadSelectionCollection;
     this.finished = false;
-    this.listenTo(
-      this.model.get('layerModel'), 'change:display.visible', this.onLayerVisibleChange
-    );
     this.previousCollapsed = false;
-    this.scrollPos = 0;
-  },
-
-  onBeforeRender() {
-    const $collPanel = this.$(`#collapse-${this.model.get('layerModel').get('id')}`);
-    if ($collPanel.length) {
-      this.previousCollapsed = !$collPanel.hasClass('in');
-    }
-    this.scrollPos = this.$('.panel-body').scrollTop();
+    this.prevUpper = 0;
   },
 
   onRender() {
-    if (!this.model.get('layerModel').get('display.visible')) {
-      this.$el.hide();
-    }
-    // this does not work with the usual events dict for some reason...
-    // this.$('.panel-body').bind('scroll', (...args) => this.onScroll(...args));
-    const $collPanel = this.$(`#collapse-${this.model.get('layerModel').get('id')}`);
-    if (this.previousCollapsed) {
-      $collPanel.removeClass('in');
-    }
-    this.$('.panel-body').scrollTop(this.scrollPos);
+    // create spacer
+    this.$el.append('<div class="spacer"></div>');
   },
 
-  onBeforeDetach() {
-    // this does not work with the usual events dict for some reason...
-    // this.$('.panel-body').unbind('scroll');
+  _updateCollection() {
+    // eslint-ignore-next-line
+    Marionette.SlidingView.prototype._updateCollection.call(this);
+    this.adjustSpacer();
+  },
+
+  adjustSpacer() {
+    const $spacer = this.$('.spacer');
+    const elemHeight = this.$el.find('li').outerHeight(true);
+    const totalHeight = Math.ceil(this.referenceCollection.size() / 3) * elemHeight;
+    const displayedHeight = Math.ceil(this.collection.size() / 3) * elemHeight;
+    $spacer.height(totalHeight - displayedHeight);
+    this.$el.append($spacer);
   },
 
   onItemClicked(childView) {
@@ -114,7 +87,9 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   onItemInfo(childView) {
-    this.trigger('item:info', childView.model, this.model);
+    this.trigger('item:info', {
+      record: childView.model, searchModel: this.searchModel,
+    });
   },
 
   onItemHover(childView) {
@@ -123,35 +98,6 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   onItemHoverEnd(childView) {
     this.highlightModel.unHighlight(childView.model.attributes);
-  },
-
-  onCollectionReset() {
-    this.finished = true;
-    this.trigger('collection:reset', this.collection);
-  },
-
-  onSearchComplete() {
-    // TODO
-  },
-
-  onPageClicked(event) {
-    this.model.searchPage(event.currentTarget.dataset.page);
-  },
-
-  onLoadMoreClicked() {
-    this.model.searchMore();
-  },
-
-  onScroll(event) {
-    console.log(event);
-  },
-
-  onLayerVisibleChange() {
-    if (this.model.get('layerModel').get('display.visible')) {
-      this.$el.show('fast');
-    } else {
-      this.$el.hide('fast');
-    }
   },
 });
 

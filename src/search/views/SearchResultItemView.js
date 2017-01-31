@@ -24,7 +24,8 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
   },
 
   initialize(options) {
-    this.downloadSelectionCollection = options.downloadSelectionCollection;
+    const searchModel = this.model.collection.searchModel;
+    this.downloadSelectionCollection = searchModel.get('downloadSelection');
     this.highlightModel = options.highlightModel;
     this.listenTo(this.downloadSelectionCollection, 'update', this.onSelectedForDownloadChange);
   },
@@ -63,7 +64,7 @@ const SearchResultItemView = Marionette.ItemView.extend(/** @lends search/views/
       event: 'scroll',
       effect: 'fadeIn',
       skip_invisible: false,
-      container: $el.closest('.side-panel-content'),
+      container: $el.closest('ul'),
     });
   },
 
