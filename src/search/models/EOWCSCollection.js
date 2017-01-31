@@ -1,6 +1,7 @@
 import Backbone from 'backbone';
+import RecordModel from '../../core/models/RecordModel';
 
-class EOWCSRecordModel extends Backbone.Model {
+class EOWCSRecordModel extends RecordModel {
   getThumbnailUrl() {
     // TODO
     return null;

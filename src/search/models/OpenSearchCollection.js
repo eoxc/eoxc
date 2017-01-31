@@ -1,6 +1,7 @@
 import Backbone from 'backbone';
+import RecordModel from '../../core/models/RecordModel';
 
-class OpenSearchRecordModel extends Backbone.Model {
+class OpenSearchRecordModel extends RecordModel {
   getThumbnailUrl() {
     const properties = this.get('properties');
     if (properties && properties.media) {
