@@ -68,35 +68,13 @@ export function createVectorLayer(fillColor, strokeColor, strokeWidth = 1, circl
 
 export function createCollectionVectorLayer(collection, searchModel, fillColor, strokeColor,
   strokeWidth = 1, circleRadius = 0) {
-  const definition = {
-    fill: new Fill({
-      color: fillColor,
-    }),
-    stroke: new Stroke({
-      color: strokeColor,
-      width: strokeWidth,
-    }),
-  };
-
-  if (circleRadius) {
-    definition.image = new Circle({
-      radius: circleRadius,
-      fill: new Fill({
-        color: '#ffcc33',
-      }),
-    });
-  }
-
-  const style = new Style(definition);
-  return new VectorLayer({
-    source: new CollectionSource({
-      collection,
-      searchModel,
-      format: new GeoJSON(),
-    }),
-    style,
-    wrapX: true,
-  });
+  const layer = createVectorLayer(fillColor, strokeColor, strokeWidth, circleRadius);
+  layer.setSource(new CollectionSource({
+    collection,
+    searchModel,
+    format: new GeoJSON(),
+  }));
+  return layer;
 }
 
 function featureFromExtent(extent) {

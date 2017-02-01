@@ -11,7 +11,7 @@ const Feature = ol.Feature;
 export default class CollectionSource extends VectorSource {
   constructor(options = {}) {
     super(options);
-    this.setCollection(options.collection);
+    this.setCollection(options.collection, false);
     this.format = options.format;
     this.searchModel = options.searchModel;
   }
@@ -26,11 +26,11 @@ export default class CollectionSource extends VectorSource {
       prevCollection.off(null, null, this);
     }
     if (collection) {
-      this.collection = collection;
       collection.on('reset', this.onCollectionReset, this);
       collection.on('add', this.onCollectionAdd, this);
       collection.on('remove', this.onCollectionRemove, this);
     }
+    this.collection = collection;
   }
 
   // collection event handlers
