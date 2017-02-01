@@ -2,8 +2,6 @@ import Backbone from 'backbone';
 import Marionette from 'backbone.marionette';
 import SearchResultListView from './SearchResultListView';
 
-import download from '../../download/';
-
 require('./SearchResultView.css');
 const template = require('./SearchResultView.hbs');
 
@@ -18,23 +16,14 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
       selectedLayer: this.selectedLayer ? this.selectedLayer.toJSON() : null,
     };
   },
-
   className: 'search-result-view',
 
   childView: SearchResultListView,
-
   childViewContainer: '.result-contents',
 
-  childEvents: {
-    'item:clicked': 'onResultItemClicked',
-    'item:info': 'onChildItemInfo',
-  },
-
   events: {
-    'click #start-download': 'onStartDownloadClicked',
     'change input[data-layer]': 'onLayerSelectionChange',
   },
-
   regions: {
     'search-results': '.result-contents',
   },
@@ -44,17 +33,12 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
     this.highlightModel = options.highlightModel;
     this.onResultItemClicked = options.onResultItemClicked;
     this.onResultItemInfo = options.onResultItemInfo;
-    this.onDownload = options.onDownload;
 
     this.selectedSearchModels = [];
 
     this.listenTo(this.collection, 'change', this.onSearchModelsChange);
 
     this.collection.each((searchModel) => {
-      this.listenTo(
-        searchModel.get('downloadSelection'), 'reset update', this.onDownloadSelectionChange
-      );
-
       this.listenTo(searchModel.get('layerModel'), 'change:display.visible', (layerModel) => {
         let newSelectedSearchModels;
         const $checkbox = this.$(`[data-layer="${layerModel.get('id')}"]`);
@@ -79,7 +63,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
 
   setSelectedSearchModels(searchModels) {
     const names = searchModels.map(
-      (searchModel) => searchModel.get('layerModel').get('displayName')
+      searchModel => searchModel.get('layerModel').get('displayName')
     );
     const visibleLayers = this.collection.filter(model => model.get('layerModel').get('display.visible'));
     if (visibleLayers.length) {
@@ -157,9 +141,9 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
 
     // update the global status
     const $globalStatus = this.$('.global-search-status');
-    if (this.collection.any((model) => model.get('hasError'))) {
+    if (this.collection.any(model => model.get('hasError'))) {
       $globalStatus.html('<i class="fa fa-exclamation"></i>');
-    } else if (this.collection.any((model) => model.get('isSearching'))) {
+    } else if (this.collection.any(model => model.get('isSearching'))) {
       $globalStatus.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
     } else if (this.selectedSearchModels.length) {
       const sumTotalResults = this.selectedSearchModels.reduce(
@@ -173,50 +157,6 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
       $globalStatus.html('');
     }
   },
-
-  onChildItemInfo(childView, args) {
-    const recordModel = args.model;
-    this.onResultItemInfo(recordModel, recordModel.collection.searchModel);
-  },
-
-  // TODO: move to Download section
-  // onStartDownloadClicked() {
-  //   const visibleSearchModels = this.collection.filter(
-  //     searchModel => searchModel.get('layerModel').get('display.visible')
-  //   );
-  //
-  //   const options = {
-  //     format: null,
-  //     outputCRS: 'EPSG:4326', // TODO:
-  //   };
-  //
-  //   let index = 0;
-  //   const $downloadElements = this.$('#download-elements');
-  //
-  //   visibleSearchModels.forEach(searchModel => {
-  //     searchModel.get('downloadSelection')
-  //       .forEach(recordModel => {
-  //         setTimeout(() => {
-  //           download(
-  //             searchModel.get('layerModel'),
-  //             this.filtersModel,
-  //             recordModel,
-  //             options,
-  //             $downloadElements
-  //           );
-  //         }, index * 1000);
-  //         index++;
-  //       });
-  //   });
-  // },
-  //
-  // onDownloadSelectionChange() {
-  //   const totalCount = this.collection.reduce((count, searchModel) => (
-  //     count + searchModel.get('downloadSelection').length
-  //   ), 0);
-  //
-  //   this.$('#start-download').prop('disabled', totalCount === 0);
-  // },
 });
 
 export default SearchResultView;

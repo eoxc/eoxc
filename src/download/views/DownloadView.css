@@ -1,3 +1,15 @@
 .download-view {
   height: 100%;
 }
+
+.download-view .selection-lists {
+  height: calc(100% - 30px);
+  overflow-y: auto;
+}
+
+.download-control {
+    position: absolute;
+    width: calc(100% - 10px);
+    margin-bottom: 5px;
+    bottom: 0px;
+}
