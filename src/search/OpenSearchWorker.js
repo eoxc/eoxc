@@ -1,6 +1,14 @@
-import { discover } from 'opensearch-browser';
+import { discover, config } from 'opensearch-browser';
 import { DOMParser } from 'xmldom';
-// const BluebirdPromise = require('bluebird');
+import BluebirdPromise from 'bluebird';
+
+BluebirdPromise.config({
+  cancellation: true,
+});
+config({
+  PromiseClass: BluebirdPromise,
+  useXHR: true,
+});
 
 self.DOMParser = DOMParser;
 
@@ -23,7 +31,7 @@ function prepareBox(bbox) {
 }
 
 function prepareRecords(records) {
-  return records.map(record => {
+  return records.map((record) => {
     if (record.geometry && record.geometry.type === 'Polygon') {
       for (let ringIndex = 0; ringIndex < record.geometry.coordinates.length; ++ringIndex) {
         const ring = record.geometry.coordinates[ringIndex];
@@ -110,8 +118,8 @@ function convertFilters(filterParams, mapParams, options, format, service) {
 function getService(url) {
   if (!self.services[url]) {
     // add a new promise
-    // self.services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise });
-    self.services[url] = discover(url, { useXHR: true });
+    self.services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise });
+    // self.services[url] = discover(url, { useXHR: true });
   }
   return self.services[url];
 }
@@ -155,7 +163,7 @@ self.onmessage = function onMessage({ data }) {
     }
     case 'cancel': {
       const previousPromise = self.promises[id];
-      if (previousPromise && previousPromise.cancel) {
+      if (previousPromise) {
         delete self.promises[id];
         previousPromise.cancel();
       }
