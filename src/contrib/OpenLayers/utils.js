@@ -2,6 +2,8 @@ import ol from 'openlayers';
 import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
 
+import CollectionSource from './CollectionSource';
+
 const Map = ol.Map;
 const Attribution = ol.control.Attribution;
 const Zoom = ol.control.Zoom;
@@ -11,15 +13,14 @@ const Style = ol.style.Style;
 const Fill = ol.style.Fill;
 const Stroke = ol.style.Stroke;
 const Circle = ol.style.Circle;
-const Polygon = ol.geom.Polygon;
-const Feature = ol.Feature;
+const GeoJSON = ol.format.GeoJSON;
 
 
 export function createMap(center, zoom, renderer) {
   return new Map({
     controls: [
-      new Attribution,
-      new Zoom,
+      new Attribution(),
+      new Zoom(),
       // new ol.control.MousePosition({
       //   coordinateFormat: ol.coordinate.createStringXY(4),
       //   projection: 'EPSG:4326',
@@ -59,7 +60,40 @@ export function createVectorLayer(fillColor, strokeColor, strokeWidth = 1, circl
 
   const style = new Style(definition);
   return new VectorLayer({
-    source: new VectorSource,
+    source: new VectorSource(),
+    style,
+    wrapX: true,
+  });
+}
+
+export function createCollectionVectorLayer(collection, searchModel, fillColor, strokeColor,
+  strokeWidth = 1, circleRadius = 0) {
+  const definition = {
+    fill: new Fill({
+      color: fillColor,
+    }),
+    stroke: new Stroke({
+      color: strokeColor,
+      width: strokeWidth,
+    }),
+  };
+
+  if (circleRadius) {
+    definition.image = new Circle({
+      radius: circleRadius,
+      fill: new Fill({
+        color: '#ffcc33',
+      }),
+    });
+  }
+
+  const style = new Style(definition);
+  return new VectorLayer({
+    source: new CollectionSource({
+      collection,
+      searchModel,
+      format: new GeoJSON(),
+    }),
     style,
     wrapX: true,
   });

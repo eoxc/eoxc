@@ -4,7 +4,7 @@ import $ from 'jquery';
 import 'openlayers/dist/ol.css';
 
 import { getISODateTimeString } from '../../core/util';
-import { createMap, createVectorLayer, createCutOut } from './utils';
+import { createMap, createVectorLayer, createCollectionVectorLayer, createCutOut } from './utils';
 
 const Collection = ol.Collection;
 const Group = ol.layer.Group;
@@ -180,10 +180,12 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.selectionSource = selectionLayer.getSource();
     this.map.addLayer(selectionLayer);
 
+    const searchCollection = this.searchCollection || [];
     // create layer group to display footprints of search results
     this.searchLayersGroup = new GroupById({
-      layers: this.searchCollection.map((searchModel) => {
-        const searchLayer = createVectorLayer(
+      layers: searchCollection.map((searchModel) => {
+        const searchLayer = createCollectionVectorLayer(
+          searchModel.get('results'), searchModel,
           this.footprintFillColor, this.footprintStrokeColor
         );
         searchLayer.id = searchModel.get('layerModel').get('id');
@@ -194,8 +196,9 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     // create layer group to display footprints of download selection
     this.downloadSelectionLayerGroup = new GroupById({
-      layers: this.searchCollection.map((searchModel) => {
-        const downloadSelectionLayer = createVectorLayer(
+      layers: searchCollection.map((searchModel) => {
+        const downloadSelectionLayer = createCollectionVectorLayer(
+          searchModel.get('downloadSelection'), searchModel,
           this.selectedFootprintFillColor, this.selectedFootprintStrokeColor
         );
         downloadSelectionLayer.id = searchModel.get('layerModel').get('id');
@@ -247,7 +250,7 @@ class OpenLayersMapView extends Marionette.ItemView {
         id = params.matrixIdPrefix + id;
       }
       if (params.matrixIdPostfix) {
-        id = id + params.matrixIdPostfix;
+        id += params.matrixIdPostfix;
       }
       matrixIds[z] = id;
     }
@@ -354,34 +357,34 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   setupEvents() {
     // setup collection signals
-    this.listenTo(this.layersCollection, 'add', (layerModel) =>
+    this.listenTo(this.layersCollection, 'add', layerModel =>
       this.addLayer(layerModel, this.groups.layers)
     );
-    this.listenTo(this.layersCollection, 'change', (layerModel) =>
+    this.listenTo(this.layersCollection, 'change', layerModel =>
       this.onLayerChange(layerModel, this.groups.layers)
     );
-    this.listenTo(this.layersCollection, 'remove', (layerModel) =>
+    this.listenTo(this.layersCollection, 'remove', layerModel =>
       this.removeLayer(layerModel, this.groups.layers)
     );
-    this.listenTo(this.layersCollection, 'sort', (layers) => this.onLayersSorted(layers));
+    this.listenTo(this.layersCollection, 'sort', layers => this.onLayersSorted(layers));
 
-    this.listenTo(this.baseLayersCollection, 'add', (layerModel) =>
+    this.listenTo(this.baseLayersCollection, 'add', layerModel =>
       this.addLayer(layerModel, this.groups.baseLayers)
     );
-    this.listenTo(this.baseLayersCollection, 'change', (layerModel) =>
+    this.listenTo(this.baseLayersCollection, 'change', layerModel =>
       this.onLayerChange(layerModel, this.groups.baseLayers)
     );
-    this.listenTo(this.baseLayersCollection, 'remove', (layerModel) =>
+    this.listenTo(this.baseLayersCollection, 'remove', layerModel =>
       this.removeLayer(layerModel, this.groups.baseLayers)
     );
 
-    this.listenTo(this.overlayLayersCollection, 'add', (layerModel) =>
+    this.listenTo(this.overlayLayersCollection, 'add', layerModel =>
       this.addLayer(layerModel, this.groups.overlayLayers)
     );
-    this.listenTo(this.overlayLayersCollection, 'change', (layerModel) =>
+    this.listenTo(this.overlayLayersCollection, 'change', layerModel =>
       this.onLayerChange(layerModel, this.groups.overlayLayers)
     );
-    this.listenTo(this.overlayLayersCollection, 'remove', (layerModel) =>
+    this.listenTo(this.overlayLayersCollection, 'remove', layerModel =>
       this.removeLayer(layerModel, this.groups.overlayLayers)
     );
 
@@ -426,37 +429,6 @@ class OpenLayersMapView extends Marionette.ItemView {
       }
       this.map.getView().fit(geometry, this.map.getSize(), { duration: 250 });
     });
-
-    if (this.searchCollection) {
-      this.searchCollection.forEach((searchModel) => {
-        const id = searchModel.get('layerModel').get('id');
-        const searchSource = this.searchLayersGroup.getLayerById(id).getSource();
-        const downloadSource = this.downloadSelectionLayerGroup.getLayerById(id).getSource();
-        // TODO: merge from different layers
-        this.listenTo(searchModel.get('results'), 'reset', () => {
-          searchSource.clear();
-          const olFeatures = this.createMapFeatures(searchModel.get('results'), searchModel);
-          searchSource.addFeatures(olFeatures);
-        });
-
-        this.listenTo(searchModel.get('results'), 'add', (model) => {
-          const olFeatures = this.createMapFeatures(model, searchModel);
-          searchSource.addFeatures(olFeatures);
-        });
-
-        // TODO: merge from different layers
-        this.listenTo(searchModel.get('downloadSelection'), 'reset remove', () => {
-          downloadSource.clear();
-          const olFeatures = this.createMapFeatures(searchModel.get('downloadSelection'), searchModel);
-          downloadSource.addFeatures(olFeatures);
-        });
-
-        this.listenTo(searchModel.get('downloadSelection'), 'add', (model) => {
-          const olFeatures = this.createMapFeatures(model, searchModel);
-          downloadSource.addFeatures(olFeatures);
-        });
-      });
-    }
 
     this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightChange);
 
@@ -542,24 +514,22 @@ class OpenLayersMapView extends Marionette.ItemView {
       }),
     };
     const format = new GeoJSON();
-    for (let key in this.drawControls) {
-      if (this.drawControls.hasOwnProperty(key)) {
-        const control = this.drawControls[key];
-        control.on('drawend', (event) => {
-          this.selectionSource.clear();
-          let geom;
-          if (event.feature.getGeometry().isBox) {
-            geom = event.feature.getGeometry().getExtent();
-          } else {
-            geom = format.writeFeatureObject(event.feature);
-          }
-          this.filtersModel.set('area', geom);
+    Object.keys(this.drawControls).forEach((key) => {
+      const control = this.drawControls[key];
+      control.on('drawend', (event) => {
+        this.selectionSource.clear();
+        let geom;
+        if (event.feature.getGeometry().isBox) {
+          geom = event.feature.getGeometry().getExtent();
+        } else {
+          geom = format.writeFeatureObject(event.feature);
+        }
+        this.filtersModel.set('area', geom);
 
-          // to avoid a zoom-in on a final double click
-          setTimeout(() => this.mapModel.set('tool', null));
-        });
-      }
-    }
+        // to avoid a zoom-in on a final double click
+        setTimeout(() => this.mapModel.set('tool', null));
+      });
+    });
 
     const $html = $(`
     <div class="popover top in" role="tooltip"
@@ -590,7 +560,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       for (let i = 0; i < this.marker.searchRecords.length; ++i) {
         const [recordModel, searchModel] = this.marker.searchRecords[i];
         const downloadSelection = searchModel.get('downloadSelection');
-        downloadSelection.add(recordModel.toJSON());
+        downloadSelection.add(recordModel);
       }
       this.hideOverlay();
     });
@@ -617,7 +587,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     const layers = this.groups.layers.getLayers();
 
     this.groups.layers.setLayers(
-      new Collection(layers.getArray().sort((layer) => ids.indexOf(layer.id)))
+      new Collection(layers.getArray().sort(layer => ids.indexOf(layer.id)))
     );
   }
 
@@ -664,11 +634,9 @@ class OpenLayersMapView extends Marionette.ItemView {
   onToolChange(mapModel) {
     const toolName = mapModel.get('tool');
     // deactivate all potentially activated tools
-    for (const key in this.drawControls) {
-      if (this.drawControls.hasOwnProperty(key)) {
-        this.map.removeInteraction(this.drawControls[key]);
-      }
-    }
+    Object.keys(this.drawControls).forEach(
+      key => this.map.removeInteraction(this.drawControls[key])
+    );
     // activate the requested tool if it is available
     if (this.drawControls.hasOwnProperty(toolName)) {
       this.map.addInteraction(this.drawControls[toolName]);
@@ -690,7 +658,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     const format = new GeoJSON();
     return actualModels
-      .map(model => {
+      .map((model) => {
         if (model) {
           let geometry = null;
           if (model.geometry || model.get('geometry')) {
@@ -714,8 +682,8 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   showOverlay(coordinate, searchFeatures, selectedFeatures) {
     if (searchFeatures.length || selectedFeatures.length) {
-      this.marker.searchRecords = searchFeatures.map((f) => [f.model, f.searchModel]);
-      this.marker.selectedRecords = selectedFeatures.map((f) => [f.model, f.searchModel]);
+      this.marker.searchRecords = searchFeatures.map(f => [f.model, f.searchModel]);
+      this.marker.selectedRecords = selectedFeatures.map(f => [f.model, f.searchModel]);
       this.marker.visible = true;
       this.marker.setPosition(coordinate);
 
@@ -726,14 +694,12 @@ class OpenLayersMapView extends Marionette.ItemView {
         $elem.find('.deselect-feature').attr('disabled', 'disabled');
       }
 
-      const unselected = this.marker.searchRecords.filter(([record, searchModel]) => {
-        return !this.marker.selectedRecords.find(([r2, s2]) => {
-          return (
-            record.get('id') === r2.get('id')
-            && searchModel === s2
-          );
-        });
-      });
+      const unselected = this.marker.searchRecords.filter(([record, searchModel]) => (
+        !this.marker.selectedRecords.find(([r2, s2]) => (
+          record.get('id') === r2.get('id')
+          && searchModel === s2
+        ))
+      ));
 
       if (unselected.length) {
         $elem.find('.select-feature').removeAttr('disabled');
