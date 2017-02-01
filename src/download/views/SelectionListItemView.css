@@ -1,0 +1,6 @@
+.selection-list-item button.record-unselect {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: none;
+}

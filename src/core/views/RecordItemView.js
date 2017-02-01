@@ -3,22 +3,19 @@ import Marionette from 'backbone.marionette';
 import template from './RecordItemView.hbs';
 import './RecordItemView.css';
 
-const RecordItemView = Marionette.ItemView.extend(/** @lends search/views/layers.RecordItemView# */{
+const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.RecordItemView# */{
   template,
   tagName: 'li',
   className: 'record-item',
 
   events: {
-    'click button': 'onItemInfoClicked',
+    'click .record-info': 'onItemInfoClicked',
     mouseover: 'onItemMouseOver',
     mouseout: 'onItemMouseOut',
   },
 
   initialize(options) {
-    const searchModel = this.model.collection.searchModel;
-    this.downloadSelectionCollection = searchModel.get('downloadSelection');
     this.highlightModel = options.highlightModel;
-    this.listenTo(this.downloadSelectionCollection, 'update', this.onSelectedForDownloadChange);
   },
 
   templateHelpers() {
@@ -32,11 +29,11 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends search/views/layers
   },
 
   onRender() {
-    this.onSelectedForDownloadChange();
     // TODO: this flickers the image
-    this.$('img').one('load', () => {
-      this.$('img').hide().fadeIn();
-    });
+    this.$('img')
+      // .css({ opacity: 0 })
+      .one('load', () => this.$('img').fadeIn('slow'));
+      // .one('error', () => this.$('img').css({ opacity: 1 }));
   },
 
   onAttach() {
@@ -64,10 +61,6 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends search/views/layers
 
   onItemMouseOut() {
     this.highlightModel.unHighlight(this.model.attributes);
-  },
-
-  onSelectedForDownloadChange() {
-    this.$el.toggleClass('selected-for-download', this.model.isSelectedForDownload());
   },
 });
 

@@ -64,7 +64,9 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
 
   onRender() {
     // create spacer
+    // const height = Math.ceil(this.referenceCollection.length / 3) * 157;
     this.$el.append('<div class="spacer"></div>');
+    this.adjustSpacer();
   },
 
   _updateCollection() {
@@ -75,7 +77,7 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
 
   adjustSpacer() {
     const $spacer = this.$('.spacer');
-    const elemHeight = this.$el.find('li').outerHeight(true);
+    const elemHeight = this.$el.find('li').outerHeight(true) || 157;
     const totalHeight = Math.ceil(this.referenceCollection.size() / 3) * elemHeight;
     const displayedHeight = Math.ceil(this.collection.size() / 3) * elemHeight;
     $spacer.height(totalHeight - displayedHeight);
