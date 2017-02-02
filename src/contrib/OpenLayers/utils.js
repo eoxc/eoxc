@@ -115,24 +115,32 @@ function moveCoordinates(coords, dx, dy) {
   return [coords[0] + dx, coords[1] + dy];
 }
 
-function moveBy(feature, dx, dy) {
+export function moveBy(feature, dx, dy) {
+  if (Array.isArray(feature) && feature.length === 4) {
+    return [
+      feature[0] + dx,
+      feature[1] + dy,
+      feature[2] + dx,
+      feature[3] + dy,
+    ];
+  }
   const geom = feature.geometry;
   let newCoordinates = null;
   if (geom.type === 'Point') {
     newCoordinates = moveCoordinates(geom.coordinates);
   } else if (geom.type === 'LineString' || geom.type === 'MultiPoint') {
-    newCoordinates = geom.coordinates.map((coord) => moveCoordinates(coord, dx, dy));
+    newCoordinates = geom.coordinates.map(coord => moveCoordinates(coord, dx, dy));
   } else if (geom.type === 'Polygon' || geom.type === 'MultiLineString') {
     newCoordinates = geom.coordinates.map(
-      (line) => line.map(
-        (coord) => moveCoordinates(coord, dx, dy)
+      line => line.map(
+        coord => moveCoordinates(coord, dx, dy)
       )
     );
   } else if (geom.type === 'MultiPolygon') {
     newCoordinates = geom.coordinates.map(
-      (polygon) => polygon.map(
-        (line) => line.map(
-          (coord) => moveCoordinates(coord, dx, dy)
+      polygon => polygon.map(
+        line => line.map(
+          coord => moveCoordinates(coord, dx, dy)
         )
       )
     );
