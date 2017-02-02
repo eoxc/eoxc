@@ -465,6 +465,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (!this.staticHighlight && !this.isOverlayShown()) {
         const coordinate = wrapCoordinate(event.coordinate);
         const models = this.searchLayersGroup.getLayers().getArray()
+          .filter(layer => layer.getVisible())
           .map(layer => layer.getSource())
           .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
           .map(feature => feature.model);
@@ -479,6 +480,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       }
       const coordinate = wrapCoordinate(event.coordinate);
       const searchFeatures = this.searchLayersGroup.getLayers().getArray()
+        .filter(layer => layer.getVisible())
         .map(layer => layer.getSource())
         .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
       const selectedFeatures = this.downloadSelectionLayerGroup.getLayers().getArray()
