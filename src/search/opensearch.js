@@ -1,10 +1,15 @@
-import { discover } from 'opensearch-browser';
-import { setPromiseClass } from 'opensearch-browser/src/config';
-const BluebirdPromise = require('bluebird');
+import { discover, config as configureOpenSearch } from 'opensearch-browser';
+import BluebirdPromise from 'bluebird';
 
+import OpenSearchWorker from 'worker-loader?inline!./OpenSearchWorker.js';
 
-import OpenSearchWorker from 'worker-loader!./OpenSearchWorker.js';
+BluebirdPromise.config({
+  cancellation: true,
+});
 
+configureOpenSearch({
+  useXHR: true,
+});
 
 // TODO: not necessary in Bluebird anymore??
 // BluebirdPromise.config({
@@ -13,8 +18,6 @@ import OpenSearchWorker from 'worker-loader!./OpenSearchWorker.js';
 //   cancellation: true,
 //   monitoring: false,
 // });
-
-setPromiseClass(BluebirdPromise);
 
 function prepareBox(bbox) {
   bbox[1] = Math.max(bbox[1], -90);
@@ -140,16 +143,16 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
   const format = options.mimeType || layerModel.get('search.format') || null;
 
   return getService(url)
-    .then(service => {
+    .then((service) => {
       const parameters = convertFilters(filtersModel, mapModel, options, format, service);
       return service.search(parameters, format, method || 'GET', false, true);
     })
-    .then(result => {
+    .then((result) => {
       result.records = prepareRecords(result.records);
       return result;
     });
 }
-//
+
 // export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
 //   const url = layerModel.get('search.url');
 //   const method = layerModel.get('search.method');
@@ -192,7 +195,7 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
   const filterParams = filtersModel.toJSON();
   const mapParams = mapModel ? mapModel.toJSON() : null;
 
-  return new Promise((resolve, reject) => {
+  return new BluebirdPromise((resolve, reject, onCancel) => {
     const cb = (event) => {
       const [status, resultId, result] = event.data;
       if (currentId === resultId) {
@@ -205,6 +208,11 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
         }
       }
     };
+    if (onCancel && typeof onCancel === 'function') {
+      onCancel(() => {
+        worker.postMessage(['cancel', currentId]);
+      });
+    }
     worker.addEventListener('message', cb);
     worker.postMessage([
       'searchAll', currentId, {

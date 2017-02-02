@@ -6,10 +6,10 @@ BluebirdPromise.config({
   cancellation: true,
 });
 config({
-  PromiseClass: BluebirdPromise,
   useXHR: true,
 });
 
+self.Promise = BluebirdPromise;
 self.DOMParser = DOMParser;
 
 self.services = {};
