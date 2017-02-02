@@ -1,9 +1,14 @@
 import Backbone from 'backbone';
 import Marionette from 'backbone.marionette';
+import i18next from 'i18next';
 import SearchResultListView from './SearchResultListView';
 
-require('./SearchResultView.css');
-const template = require('./SearchResultView.hbs');
+import './SearchResultView.css';
+import template from './SearchResultView.hbs';
+
+import noLayerSelectedTemplate from './NoLayerSelected.hbs';
+import noLayersAvailableTemplate from './NoLayersAvailable.hbs';
+import nLayersSelectedTemplate from './NLayersSelected.hbs';
 
 const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/layers.SearchResultView# */{
   template,
@@ -43,7 +48,9 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
         let newSelectedSearchModels;
         const $checkbox = this.$(`[data-layer="${layerModel.get('id')}"]`);
         if (layerModel.get('display.visible')) {
-          newSelectedSearchModels = this.selectedSearchModels.concat([searchModel]);
+          if (!this.selectedSearchModels.find(m => m === searchModel)) {
+            newSelectedSearchModels = this.selectedSearchModels.concat([searchModel]);
+          }
           $checkbox.parent().show();
           $checkbox.prop('checked', true);
         } else {
@@ -53,6 +60,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
           $checkbox.parent().hide();
         }
         this.setSelectedSearchModels(newSelectedSearchModels);
+        this.onSearchModelsChange();
       });
     });
   },
@@ -68,13 +76,14 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
     const visibleLayers = this.collection.filter(model => model.get('layerModel').get('display.visible'));
     if (visibleLayers.length) {
       if (names.length) {
-        this.$('.selected-layer-names').html(`${names.length} layer${names.length > 1 ? 's' : ''} selected.`);
+        // this.$('.selected-layer-names').html(`${names.length} layer${names.length > 1 ? 's' : ''} selected.`);
+        this.$('.selected-layer-names').html(nLayersSelectedTemplate({count: names.length}));
       } else {
-        this.$('.selected-layer-names').html('<i>No layer selected</i>');
+        this.$('.selected-layer-names').html(noLayerSelectedTemplate({}));
       }
       this.$('.dropdown button').prop('disabled', false);
     } else {
-      this.$('.selected-layer-names').html('<i>No layer available</i>');
+      this.$('.selected-layer-names').html(noLayersAvailableTemplate({}));
       this.$('.dropdown button').prop('disabled', true);
     }
 
@@ -115,7 +124,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
       .toArray();
 
     // filter selected
-    const selectedSearchModels = this.collection.filter((searchModel) => (
+    const selectedSearchModels = this.collection.filter(searchModel => (
       ids.indexOf(searchModel.get('layerModel').get('id')) > -1
     ));
     this.setSelectedSearchModels(selectedSearchModels);
