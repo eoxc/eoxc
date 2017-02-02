@@ -21,6 +21,9 @@ const DownloadView = Marionette.CompositeView.extend({
 
   events: {
     'click #start-download': 'onStartDownloadClicked',
+    'click .download-as-csv': 'onDownloadAsCSVClicked',
+    'click .download-as-metalink': 'onDownloadAsMetalinkClicked',
+    'click .download-as-url-list': 'onDownloadAsUrlListClicked',
   },
 
   initialize(options) {
@@ -61,6 +64,18 @@ const DownloadView = Marionette.CompositeView.extend({
           index++;
         });
     });
+  },
+
+  onDownloadAsCSVClicked() {
+    alert('Downloading as CSV');
+  },
+
+  onDownloadAsMetalinkClicked() {
+    alert('Downloading as Metalink');
+  },
+
+  onDownloadAsUrlListClicked() {
+    alert('Downloading as URL-List');
   },
 
   onDownloadSelectionChange() {
