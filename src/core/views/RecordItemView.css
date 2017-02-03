@@ -19,7 +19,7 @@
 }
 
 .record-item.selected-for-download {
-  border-color: red !important;
+  border-color: red;
 }
 
 .record-item a {

@@ -19,7 +19,7 @@
 }
 
 .result-list-item.selected-for-download {
-  border-color: red !important;
+  border-color: red;
 }
 
 .result-list-item a {
