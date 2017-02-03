@@ -20,10 +20,11 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   events: {
-    'click #start-download': 'onStartDownloadClicked',
+    'click .start-download': 'onStartDownloadClicked',
     'click .download-as-csv': 'onDownloadAsCSVClicked',
     'click .download-as-metalink': 'onDownloadAsMetalinkClicked',
     'click .download-as-url-list': 'onDownloadAsUrlListClicked',
+    'click .deselect-all': 'onDeselectAllClicked',
   },
 
   initialize(options) {
@@ -78,12 +79,21 @@ const DownloadView = Marionette.CompositeView.extend({
     alert('Downloading as URL-List');
   },
 
+  onDeselectAllClicked() {
+    this.collection.each(searchModel =>
+      searchModel.get('downloadSelection').reset([])
+    );
+  },
+
   onDownloadSelectionChange() {
     const totalCount = this.collection.reduce((count, searchModel) => (
       count + searchModel.get('downloadSelection').length
     ), 0);
 
-    this.$('#start-download').prop('disabled', totalCount === 0);
+    this.$('.download-control')
+      .find('button,select,input')
+      .prop('disabled', totalCount === 0);
+
     this.triggerMethod('update:status', totalCount ? `<span class="badge">${totalCount}</span>` : '');
   },
 });

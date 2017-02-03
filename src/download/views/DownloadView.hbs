@@ -11,18 +11,24 @@
   <span class="input-group-btn">
     <button class="btn btn-default btn-sm" type="button" id="start-download" disabled>{{t 'Download'}}</button>
   </span>
+  <div class="btn-group" role="group">
+    <button class="btn btn-default btn-sm btn-danger deselect-all" type="button" disabled>{{t 'Deselect all'}}</button>
+  </div>
   {{else}}
   <span class="btn-group btn-group-justified">
     <div class="btn-group" role="group">
       <button class="btn btn-default btn-sm" type="button" id="start-download" disabled>{{t 'Download'}}</button>
     </div>
     <div class="btn-group dropup" role="group">
-      <button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" type="button">{{t 'Download As'}}<span class="caret"></span></button>
+      <button class="btn btn-default btn-sm dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" type="button" disabled>{{t 'Download as'}} <span class="caret"></span></button>
       <ul class="dropdown-menu dropdown-menu-right">
         <li><a href="#" class="download-as-csv">{{t 'Download as CSV'}}</a></li>
         <li><a href="#" class="download-as-metalink">{{t 'Download as Metalink'}}</a></li>
         <li><a href="#" class="download-as-url-list">{{t 'Download as URL-List'}}</a></li>
       </ul>
+    </div>
+    <div class="btn-group" role="group">
+      <button class="btn btn-default btn-sm btn-danger deselect-all" type="button" disabled>{{t 'Deselect all'}}</button>
     </div>
   </span>
   {{/if}}
