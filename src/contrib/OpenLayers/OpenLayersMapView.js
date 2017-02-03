@@ -4,7 +4,7 @@ import $ from 'jquery';
 import 'openlayers/dist/ol.css';
 
 import { getISODateTimeString } from '../../core/util';
-import { createMap, createVectorLayer, createCollectionVectorLayer, createCutOut, moveBy } from './utils';
+import { createMap, createVectorLayer, createCollectionVectorLayer, createCutOut, moveBy, wrapToBounds } from './utils';
 
 const Collection = ol.Collection;
 const Group = ol.layer.Group;
@@ -468,7 +468,12 @@ class OpenLayersMapView extends Marionette.ItemView {
           .filter(layer => layer.getVisible())
           .map(layer => layer.getSource())
           .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
-          .map(feature => feature.model);
+          .map(feature => feature.model)
+          .concat(this.downloadSelectionLayerGroup.getLayers().getArray()
+            .filter(layer => layer.getVisible())
+            .map(layer => layer.getSource())
+            .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
+            .map(feature => feature.model));
 
         this.highlightModel.highlight(models);
       }
@@ -521,14 +526,14 @@ class OpenLayersMapView extends Marionette.ItemView {
       control.on('drawend', (event) => {
         this.selectionSource.clear();
         let geom;
+        const bounds = [-180, -90, 180, 90];
         const extent = event.feature.getGeometry().getExtent();
         if (event.feature.getGeometry().isBox) {
-          geom = extent;
+          geom = wrapToBounds(extent, bounds);
         } else {
-          geom = format.writeFeatureObject(event.feature);
+          // TODO: check that feature is within bounds
+          geom = wrapToBounds(format.writeFeatureObject(event.feature), bounds);
         }
-        const dx = Math.floor((extent[0] - 180) / -360) * 360;
-        geom = moveBy(geom, dx, 0);
         this.filtersModel.set('area', geom);
 
         // to avoid a zoom-in on a final double click

@@ -1,6 +1,7 @@
 import ol from 'openlayers';
 import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
+import turfIntersect from '@turf/intersect';
 
 import CollectionSource from './CollectionSource';
 
@@ -116,6 +117,7 @@ function moveCoordinates(coords, dx, dy) {
 }
 
 export function moveBy(feature, dx, dy) {
+  // special case for extents
   if (Array.isArray(feature) && feature.length === 4) {
     return [
       feature[0] + dx,
@@ -124,10 +126,11 @@ export function moveBy(feature, dx, dy) {
       feature[3] + dy,
     ];
   }
+
   const geom = feature.geometry;
   let newCoordinates = null;
   if (geom.type === 'Point') {
-    newCoordinates = moveCoordinates(geom.coordinates);
+    newCoordinates = moveCoordinates(geom.coordinates, dx, dy);
   } else if (geom.type === 'LineString' || geom.type === 'MultiPoint') {
     newCoordinates = geom.coordinates.map(coord => moveCoordinates(coord, dx, dy));
   } else if (geom.type === 'Polygon' || geom.type === 'MultiLineString') {
@@ -175,6 +178,9 @@ export function toNormalizedFeature(geometry) {
       minx += dx;
       maxx += dx;
     }
+    if (maxx < minx) {
+      maxx += 360;
+    }
     miny = Math.max(miny, -90);
     maxy = Math.min(maxy, 90);
     const newExtent = featureFromExtent([minx, miny, maxx, maxy]);
@@ -204,6 +210,51 @@ export function toNormalizedFeature(geometry) {
   return [feature, feature];
 }
 
+export function wrapToBounds(featureOrExtent, bounds) {
+  let geom;
+  let extent;
+  const maxWidth = bounds[2] - bounds[0];
+
+  if (Array.isArray(featureOrExtent)) {
+    extent = featureOrExtent;
+    // check that bbox is within bounds and adjust
+    if (extent[2] - extent[0] >= maxWidth) {
+      extent[0] = bounds[0];
+      extent[2] = bounds[2];
+    }
+    extent[1] = Math.max(extent[1], bounds[1]);
+    extent[3] = Math.min(extent[3], bounds[3]);
+    if (extent[1] > extent[3]) {
+      geom = null;
+    } else {
+      geom = extent;
+    }
+  } else {
+    // check that feature is within bounds
+    geom = featureOrExtent;
+    extent = turfBBox(geom);
+  }
+
+  if (geom) {
+    const dx = Math.ceil((extent[0] + 180) / -maxWidth) * maxWidth;
+    geom = moveBy(geom, dx, 0);
+  }
+
+  if (geom && geom.type === 'Feature') {
+    const boundsFeature = featureFromExtent(bounds);
+    // check that geom is within bounds
+    if (!turfIntersect(geom, boundsFeature)) {
+      geom = null;
+    }
+  } else if (Array.isArray(geom)) {
+    if (geom[2] > 180) {
+      geom[2] -= 360;
+    }
+  }
+  return geom;
+}
+
+
 const globalPolygon = featureFromExtent([-180, -90, 180, 90]);
 
 /*
@@ -226,33 +277,40 @@ export function createCutOut(geometry, format, fillColor, outerColor, strokeColo
     }
   }
 
-  const outerFeature = format.readFeature(diffFeature);
-  outerFeature.setStyle(new Style({
-    stroke: new Stroke({
-      color: 'transparent',
-      width: 0,
-    }),
-    fill: new Fill({
-      color: outerColor,
-    }),
-  }));
+  let outerFeature = null;
+  let innerFeature = null;
 
-  const innerFeature = format.readFeature(optimized);
-  innerFeature.setStyle(new Style({
-    stroke: new Stroke({
-      color: strokeColor,
-      width: strokeWidth,
-    }),
-    fill: new Fill({
-      color: fillColor,
-    }),
-    image: new Circle({
-      radius: 5,
-      fill: new Fill({
-        color: strokeColor,
+  if (diffFeature) {
+    outerFeature = format.readFeature(diffFeature);
+    outerFeature.setStyle(new Style({
+      stroke: new Stroke({
+        color: 'transparent',
+        width: 0,
       }),
-    }),
-  }));
+      fill: new Fill({
+        color: outerColor,
+      }),
+    }));
+  }
+
+  if (optimized) {
+    innerFeature = format.readFeature(optimized);
+    innerFeature.setStyle(new Style({
+      stroke: new Stroke({
+        color: strokeColor,
+        width: strokeWidth,
+      }),
+      fill: new Fill({
+        color: fillColor,
+      }),
+      image: new Circle({
+        radius: 5,
+        fill: new Fill({
+          color: strokeColor,
+        }),
+      }),
+    }));
+  }
 
   return [outerFeature, innerFeature];
 }
