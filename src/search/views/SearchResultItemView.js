@@ -12,7 +12,7 @@ const SearchResultItemView = RecordItemView.extend(/** @lends search/views/layer
     RecordItemView.prototype.initialize.call(this, options);
     const searchModel = this.model.collection.searchModel;
     const downloadSelectionCollection = searchModel.get('downloadSelection');
-    this.listenTo(downloadSelectionCollection, 'update', this.onSelectedForDownloadChange);
+    this.listenTo(downloadSelectionCollection, 'reset update', this.onSelectedForDownloadChange);
   },
 
   onRender() {
