@@ -1,9 +1,10 @@
 import $ from 'jquery';
+import saveAs from 'save-as';
 
 import downloadEOWCS from './eowcs';
 import downloadURL from './url';
 
-export default function (layerModel, filtersModel, recordModel, options, elementContainer) {
+export function downloadRecord(layerModel, filtersModel, recordModel, options, elementContainer) {
   let element = null;
   if (layerModel.get('download.protocol') === 'EO-WCS') {
     element = downloadEOWCS(layerModel, filtersModel, recordModel, options);
@@ -23,4 +24,8 @@ export default function (layerModel, filtersModel, recordModel, options, element
     }
   }
   return element;
+}
+
+export function downloadCustom(filename, mediaType, content) {
+  saveAs(new Blob([content], { type: mediaType }), filename);
 }

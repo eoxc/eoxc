@@ -3,7 +3,7 @@ import Marionette from 'backbone.marionette';
 import template from './DownloadView.hbs';
 import './DownloadView.css';
 import SelectionListView from './SelectionListView';
-import download from '../../download/';
+import { downloadRecord, downloadCustom } from '../../download/';
 
 
 const DownloadView = Marionette.CompositeView.extend({
@@ -39,9 +39,6 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   onStartDownloadClicked() {
-    const visibleSearchModels = this.collection.filter(
-      searchModel => searchModel.get('layerModel').get('display.visible')
-    );
     const options = {
       format: null,
       outputCRS: 'EPSG:4326', // TODO:
@@ -50,11 +47,11 @@ const DownloadView = Marionette.CompositeView.extend({
     let index = 0;
     const $downloadElements = this.$('#download-elements');
 
-    visibleSearchModels.forEach((searchModel) => {
+    this.collection.forEach((searchModel) => {
       searchModel.get('downloadSelection')
         .forEach((recordModel) => {
           setTimeout(() => {
-            download(
+            downloadRecord(
               searchModel.get('layerModel'),
               this.filtersModel,
               recordModel,
@@ -68,15 +65,31 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   onDownloadAsCSVClicked() {
-    alert('Downloading as CSV');
+    alert('CSV Download is not yet supported');
   },
 
   onDownloadAsMetalinkClicked() {
-    alert('Downloading as Metalink');
+    alert('Metalink Download is not yet supported');
   },
 
   onDownloadAsUrlListClicked() {
-    alert('Downloading as URL-List');
+    // TODO: dirty hack: only allows URL download atm. Do this for WCS aswell.
+    const hrefs = this.collection.reduce((acc, searchModel) =>
+      acc.concat(searchModel.get('downloadSelection')
+        .map((recordModel) => {
+          const properties = recordModel.get('properties');
+          if (properties && properties.links) {
+            const url = properties.links.find(link => link.rel === 'enclosure');
+            if (url) {
+              return url.href;
+            }
+          }
+          return null;
+        })
+      ), [])
+      .filter(href => !!href);
+
+    downloadCustom('test.txt', 'text/plain', hrefs.join('\n'));
   },
 
   onDeselectAllClicked() {
