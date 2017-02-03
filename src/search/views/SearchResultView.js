@@ -76,8 +76,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
     const visibleLayers = this.collection.filter(model => model.get('layerModel').get('display.visible'));
     if (visibleLayers.length) {
       if (names.length) {
-        // this.$('.selected-layer-names').html(`${names.length} layer${names.length > 1 ? 's' : ''} selected.`);
-        this.$('.selected-layer-names').html(nLayersSelectedTemplate({count: names.length}));
+        this.$('.selected-layer-names').html(nLayersSelectedTemplate({ count: names.length }));
       } else {
         this.$('.selected-layer-names').html(noLayerSelectedTemplate({}));
       }
