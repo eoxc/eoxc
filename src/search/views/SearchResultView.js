@@ -150,9 +150,12 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
 
     // update the global status
     const $globalStatus = this.$('.global-search-status');
-    if (this.collection.any(model => model.get('hasError'))) {
+    const isSearching = this.collection.any(model => model.get('isSearching'));
+    const hasError = this.collection.any(model => model.get('hasError'));
+
+    if (hasError) {
       $globalStatus.html('<i class="fa fa-exclamation"></i>');
-    } else if (this.collection.any(model => model.get('isSearching'))) {
+    } else if (isSearching) {
       $globalStatus.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
     } else if (this.selectedSearchModels.length) {
       const sumTotalResults = this.selectedSearchModels.reduce(
@@ -164,6 +167,15 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
       $globalStatus.html(`${sumHasLoaded}/${sumTotalResults}`);
     } else {
       $globalStatus.html('');
+    }
+
+    // update the tab header
+    if (hasError) {
+      this.triggerMethod('update:status', '<i class="fa fa-exclamation"></i>');
+    } else if (isSearching) {
+      this.triggerMethod('update:status', '<i class="fa fa-circle-o-notch fa-spin"></i>');
+    } else {
+      this.triggerMethod('update:status', '');
     }
   },
 });

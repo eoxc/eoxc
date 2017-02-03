@@ -84,6 +84,7 @@ const DownloadView = Marionette.CompositeView.extend({
     ), 0);
 
     this.$('#start-download').prop('disabled', totalCount === 0);
+    this.triggerMethod('update:status', totalCount ? `<span class="badge">${totalCount}</span>` : '');
   },
 });
 
