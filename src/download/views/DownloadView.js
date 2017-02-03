@@ -89,7 +89,7 @@ const DownloadView = Marionette.CompositeView.extend({
       ), [])
       .filter(href => !!href);
 
-    downloadCustom('test.txt', 'text/plain', hrefs.join('\n'));
+    downloadCustom('url-list.txt', 'text/plain', hrefs.join('\n'));
   },
 
   onDeselectAllClicked() {
