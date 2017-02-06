@@ -83,7 +83,7 @@
     "libcoverage": "^0.1.9",
     "marionette.sliding-view": "^0.1.0",
     "openlayers": "^3.20.0",
-    "opensearch-browser": "0.0.20",
+    "opensearch-browser": "0.0.21",
     "xmldom": "^0.1.27"
   }
 }
