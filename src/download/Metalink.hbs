@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metalink xmlns="urn:ietf:params:xml:ns:metalink">
+  {{# if}}<published>{{ date }}</published>{{/if}}
+  {{#each files}}<file name="{{ this.name }}">
+    <url priority="1">{{ this.url }}</url>
+  </file>
+  {{/each}}
+</metalink>

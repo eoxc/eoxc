@@ -63,8 +63,50 @@ function getCoverageXML(coverageid, options = {}) {
   return params.join('');
 }
 
+function getCoverageKVP(coverageid, options = {}) {
+  const params = [
+    ['service', 'WCS'],
+    ['version', '2.0.0'],
+    ['request', 'GetCoverage'],
+    ['coverageid', 'coverageid'],
+  ];
 
-export default function download(layerModel, filtersModel, recordModel, options) {
+  const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
+
+  if (options.format) {
+    params.push(['format', options.format]);
+  }
+
+  let subsetX = options.subsetX;
+  let subsetY = options.subsetY;
+  if (options.bbox && !options.subsetX && !options.subsetY) {
+    subsetX = [options.bbox[0], options.bbox[2]];
+    subsetY = [options.bbox[1], options.bbox[3]];
+  }
+  if (subsetX) {
+    params.push(['subset', `x(${subsetX[0]},${subsetX[1]})`]);
+  }
+  if (subsetY) {
+    params.push(['subset', `x(${subsetY[0]},${subsetY[1]})`]);
+  }
+
+  if (options.outputCRS) {
+    params.push(['outputCRS', options.outputCRS]);
+  }
+  if (subsetCRS && (subsetX || subsetY)) {
+    params.push(['subsettingCRS', subsetCRS]);
+  }
+  if (options.multipart) {
+    params.push(['mediatype', 'multipart/related']);
+  }
+
+  return params
+    .map(param => param.join('='))
+    .join('&');
+}
+
+
+export function download(layerModel, filtersModel, recordModel, options) {
   if (options.method === 'GET') {
     // TODO: implement
     return null;
@@ -87,4 +129,15 @@ export default function download(layerModel, filtersModel, recordModel, options)
         <input type="hidden" name='<?xml version' value='"1.0"?>${xml}'></input>
     </form>
   `);
+}
+
+export function getDownloadUrl(layerModel, filtersModel, recordModel, options) {
+  const kvp = getCoverageKVP(
+    recordModel.get('id'), {
+      bbox: filtersModel.get('area'), // TODO
+      outputCRS: options.outputCRS,
+      format: options.format,
+    }
+  );
+  return `${layerModel.get('download.url')}?${kvp}`;
 }

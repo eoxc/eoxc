@@ -3,7 +3,8 @@ import Marionette from 'backbone.marionette';
 import template from './DownloadView.hbs';
 import './DownloadView.css';
 import SelectionListView from './SelectionListView';
-import { downloadRecord, downloadCustom } from '../../download/';
+import { downloadRecord, downloadCustom, getDownloadUrl } from '../../download/';
+import metalinkTemplate from '../Metalink.hbs';
 
 
 const DownloadView = Marionette.CompositeView.extend({
@@ -21,7 +22,6 @@ const DownloadView = Marionette.CompositeView.extend({
 
   events: {
     'click .start-download': 'onStartDownloadClicked',
-    'click .download-as-csv': 'onDownloadAsCSVClicked',
     'click .download-as-metalink': 'onDownloadAsMetalinkClicked',
     'click .download-as-url-list': 'onDownloadAsUrlListClicked',
     'click .deselect-all': 'onDeselectAllClicked',
@@ -64,31 +64,25 @@ const DownloadView = Marionette.CompositeView.extend({
     });
   },
 
-  onDownloadAsCSVClicked() {
-    alert('CSV Download is not yet supported');
-  },
-
   onDownloadAsMetalinkClicked() {
-    alert('Metalink Download is not yet supported');
+    const files = this._getDownloadUrls()
+      .map((url) => {
+        const parts = url.split('/');
+        return {
+          name: parts[parts.length - 1],
+          url,
+        };
+      });
+
+    const content = metalinkTemplate({
+      date: (new Date()).toISOString(),
+      files,
+    });
+    downloadCustom('download-files.meta4', 'application/metalink4+xml', content);
   },
 
   onDownloadAsUrlListClicked() {
-    // TODO: dirty hack: only allows URL download atm. Do this for WCS aswell.
-    const hrefs = this.collection.reduce((acc, searchModel) =>
-      acc.concat(searchModel.get('downloadSelection')
-        .map((recordModel) => {
-          const properties = recordModel.get('properties');
-          if (properties && properties.links) {
-            const url = properties.links.find(link => link.rel === 'enclosure');
-            if (url) {
-              return url.href;
-            }
-          }
-          return null;
-        })
-      ), [])
-      .filter(href => !!href);
-
+    const hrefs = this._getDownloadUrls();
     downloadCustom('url-list.txt', 'text/plain', hrefs.join('\n'));
   },
 
@@ -109,6 +103,14 @@ const DownloadView = Marionette.CompositeView.extend({
 
     this.triggerMethod('update:status', totalCount ? `<span class="badge">${totalCount}</span>` : '');
   },
+
+  _getDownloadUrls() {
+    return this.collection.reduce((acc, searchModel) =>
+      acc.concat(searchModel.get('downloadSelection')
+        .map(recordModel => getDownloadUrl(recordModel, this.filtersModel))
+      ), [])
+      .filter(href => !!href);
+  }
 });
 
 export default DownloadView;
