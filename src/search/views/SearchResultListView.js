@@ -10,7 +10,7 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
   initialLowerBound: 0,
   initialUpperBound() {
     const elemHeight = 157;
-    return Math.ceil(this.availableSpace / elemHeight) * 3;
+    return Math.max(Math.ceil(this.availableSpace / elemHeight) * 3, 24);
   },
   getLowerBound() {
     return 0;
