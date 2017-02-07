@@ -108,10 +108,12 @@ const DownloadView = Marionette.CompositeView.extend({
     this.triggerMethod('update:status', `<span class="badge">${totalCount}</span>`);
   },
 
-  _getDownloadUrls() {
+  _getDownloadUrls(options) {
     return this.collection.reduce((acc, searchModel) =>
       acc.concat(searchModel.get('downloadSelection')
-        .map(recordModel => getDownloadUrl(recordModel, this.filtersModel))
+        .map(recordModel => getDownloadUrl(
+          searchModel.get('layerModel'), this.filtersModel, recordModel, options
+        ))
       ), [])
       .filter(href => !!href);
   }

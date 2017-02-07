@@ -2,7 +2,7 @@ import $ from 'jquery';
 import { saveAs } from 'file-saver';
 
 import { download as downloadEOWCS, getDownloadUrl as getDownloadUrlEOWCS } from './eowcs';
-import { download as downloadUrl, getDownloadUrlUrl } from './url';
+import { download as downloadUrl, getDownloadUrl as getDownloadUrlUrl } from './url';
 
 export function downloadRecord(layerModel, filtersModel, recordModel, options, elementContainer) {
   let element = null;
