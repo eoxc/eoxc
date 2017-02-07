@@ -17,7 +17,7 @@ const Circle = ol.style.Circle;
 const GeoJSON = ol.format.GeoJSON;
 
 
-export function createMap(center, zoom, renderer) {
+export function createMap(center, zoom, renderer, minZoom, maxZoom) {
   return new Map({
     controls: [
       new Attribution(),
@@ -34,6 +34,8 @@ export function createMap(center, zoom, renderer) {
       center,
       zoom,
       enableRotation: false,
+      minZoom,
+      maxZoom,
     }),
     logo: false,
   });
