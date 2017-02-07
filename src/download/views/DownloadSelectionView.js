@@ -1,9 +1,10 @@
 import Marionette from 'backbone.marionette';
+import urlParse from 'url-parse';
 
 import template from './DownloadSelectionView.hbs';
 import './DownloadSelectionView.css';
 import SelectionListView from './SelectionListView';
-import { downloadRecord, downloadCustom, getDownloadUrl } from '../../download/';
+import { downloadCustom, getDownloadUrl } from '../../download/';
 import metalinkTemplate from '../Metalink.hbs';
 
 
@@ -45,53 +46,21 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   onStartDownloadClicked() {
-    // const options = {
-    //   format: null,
-    //   outputCRS: 'EPSG:4326', // TODO:
-    // };
-    //
-    // let index = 0;
-    // const $downloadElements = this.$('#download-elements');
-    //
-    // this.collection.forEach((searchModel) => {
-    //   searchModel.get('downloadSelection')
-    //     .forEach((recordModel) => {
-    //       setTimeout(() => {
-    //         downloadRecord(
-    //           searchModel.get('layerModel'),
-    //           this.filtersModel,
-    //           recordModel,
-    //           options,
-    //           $downloadElements
-    //         );
-    //       }, index * 1000);
-    //       index++;
-    //     });
-    // });
     this.onStartDownload();
   },
 
   onDownloadAsMetalinkClicked() {
-    const files = this._getDownloadUrls()
-      .map((url) => {
-        const parts = url.split('/');
-        return {
-          name: parts[parts.length - 1],
-          url,
-        };
-      });
-
     let content = metalinkTemplate({
       date: (new Date()).toISOString(),
-      files,
+      files: this._getDownloadInfos(),
     });
     content = content.replace(/[\n]/g, '\r\n');
     downloadCustom('download-files.meta4', 'application/metalink4+xml', content);
   },
 
   onDownloadAsUrlListClicked() {
-    const hrefs = this._getDownloadUrls();
-    downloadCustom('url-list.txt', 'text/plain', hrefs.join('\r\n'));
+    const urls = this._getDownloadInfos().map(info => info.url);
+    downloadCustom('url-list.txt', 'text/plain', urls.join('\r\n'));
   },
 
   onDeselectAllClicked() {
@@ -112,14 +81,22 @@ const DownloadView = Marionette.CompositeView.extend({
     this.triggerMethod('update:status', `<span class="badge">${totalCount}</span>`);
   },
 
-  _getDownloadUrls(options) {
+  _getDownloadInfos(options) {
     return this.collection.reduce((acc, searchModel) =>
       acc.concat(searchModel.get('downloadSelection')
-        .map(recordModel => getDownloadUrl(
-          searchModel.get('layerModel'), this.filtersModel, recordModel, options
-        ))
+        .map((recordModel) => {
+          const layerModel = searchModel.get('layerModel');
+          const url = getDownloadUrl(layerModel, this.filtersModel, recordModel, options);
+          let name = recordModel.get('id');
+          const parsed = urlParse(url);
+          if (parsed.query.length === 0) {
+            const parts = parsed.pathname.split('/');
+            name = parts[parts.length - 1];
+          }
+          return { url, name };
+        })
       ), [])
-      .filter(href => !!href);
+      .filter(info => !!info.url);
   }
 });
 
