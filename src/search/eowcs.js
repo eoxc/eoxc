@@ -13,7 +13,7 @@ function convertFilters(filtersModel, mapModel, options) {
   const time = filtersModel.get('time') || mapModel.get('time');
   if (time) {
     if (Array.isArray(time)) {
-      parameters.subsetTime = time.map((t) => `${t.toISOString().substring(0, 19)}Z`);
+      parameters.subsetTime = time.map(t => `${t.toISOString().substring(0, 19)}Z`);
     } else {
       parameters.subsetTime = `${time.toISOString().substring(0, 19)}Z`;
     }
@@ -34,7 +34,7 @@ function convertFilters(filtersModel, mapModel, options) {
 }
 
 function prepareRecords(records) {
-  return records.map(coverage => {
+  return records.map((coverage) => {
     const bounds = coverage.bounds;
     const bbox = [bounds.lower[1], bounds.lower[0], bounds.upper[1], bounds.upper[0]];
 
@@ -52,8 +52,7 @@ function prepareRecords(records) {
       id: coverage.coverageId,
       bbox,
       properties: {
-        startTime: new Date(coverage.timePeriod[0]),
-        endTime: new Date(coverage.timePeriod[1]),
+        time: [new Date(coverage.timePeriod[0]), new Date(coverage.timePeriod[1])],
       },
       geometry,
     };
@@ -68,13 +67,13 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
 
   return fetch(url)
     .then(response => response.text())
-    .then(response => {
+    .then((response) => {
       const eoCoverageSet = parse(response, { throwOnException: true });
       const coverageDescriptions = eoCoverageSet.coverageDescriptions || [];
       const records = prepareRecords(coverageDescriptions);
       return {
-        itemsPerPage: eoCoverageSet.numberReturned,
-        totalResults: eoCoverageSet.numberMatched,
+        itemsPerPage: parseInt(eoCoverageSet.numberReturned, 10),
+        totalResults: parseInt(eoCoverageSet.numberMatched, 10),
         records,
       };
     });
