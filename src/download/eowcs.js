@@ -134,7 +134,7 @@ export function download(layerModel, filtersModel, recordModel, options) {
   `);
 }
 
-export function getDownloadUrl(layerModel, filtersModel, recordModel, options) {
+export function getDownloadUrl(layerModel, filtersModel, recordModel, options = {}) {
   const kvp = getCoverageKVP(
     recordModel.get('id'), {
       bbox: filtersModel.get('area'),
