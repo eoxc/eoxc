@@ -53,10 +53,12 @@
           </div>
         </form>
       {{/if}}
-      <p>{{t 'confirm_download' records.length}}</p>
+      <p><b>{{t 'confirm_download' records.length}}</b></p>
+      {{#if records.[1]}}
       <p>
-        <i>Note: the browser might open separate windows or issue a warning.</i>
+        <i>{{t 'confirm_note'}}</i>
       </p>
+      {{/if}}
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-default" data-dismiss="modal">{{t 'Close' }}</button>
