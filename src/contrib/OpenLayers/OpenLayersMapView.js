@@ -1,9 +1,10 @@
 import Marionette from 'backbone.marionette';
 import ol from 'openlayers';
 import $ from 'jquery';
+import _ from 'underscore';
 import 'openlayers/dist/ol.css';
 
-import { getISODateTimeString } from '../../core/util';
+import { getISODateTimeString, uniqueBy } from '../../core/util';
 import { createMap, createVectorLayer, createCollectionVectorLayer, createCutOut, moveBy, wrapToBounds } from './utils';
 
 const Collection = ol.Collection;
@@ -588,7 +589,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     $html.find('.feature-info').on('click', () => {
       this.hideOverlay();
-      this.onFeatureClicked(this.marker.searchRecords);
+      this.onFeatureClicked(this.marker.infoRecords);
     });
   }
 
@@ -696,6 +697,10 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (searchFeatures.length || selectedFeatures.length) {
       this.marker.searchRecords = searchFeatures.map(f => [f.model, f.searchModel]);
       this.marker.selectedRecords = selectedFeatures.map(f => [f.model, f.searchModel]);
+      this.marker.infoRecords = uniqueBy(
+        this.marker.searchRecords.concat(this.marker.selectedRecords),
+        (a, b) => a[0].get('id') === b[0].get('id') && a[1] === b[1]
+      );
       this.marker.visible = true;
       this.marker.setPosition(coordinate);
 

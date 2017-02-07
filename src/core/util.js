@@ -56,3 +56,23 @@ export function getISODateTimeString(date) {
     + padLeft(String(date.getUTCMinutes()), '0', 2) + ':'
     + padLeft(String(date.getUTCSeconds()), '0', 2) + 'Z';
 }
+
+/*
+*/
+export function uniqueBy(arr, cmp) {
+  const out = [];
+  for (let i = 0; i < arr.length; ++i) {
+    const curr = arr[i];
+    let found = false;
+    for (let j = 0; j < out.length; ++j) {
+      if (cmp(out[j], curr)) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      out.push(curr);
+    }
+  }
+  return out;
+}
