@@ -1,7 +1,5 @@
 import $ from 'jquery';
 
-const template = require('./DownloadPostXML.hbs');
-
 
 function getCoverageXML(coverageid, options = {}) {
   let subsetX = options.subsetX;
@@ -24,13 +22,13 @@ function getCoverageXML(coverageid, options = {}) {
     subsetX = [options.bbox[0], options.bbox[2]];
     subsetY = [options.bbox[1], options.bbox[3]];
   }
-  if (options.subsetX) {
+  if (subsetX) {
     params.push(`<wcs:DimensionTrim><wcs:Dimension crs="${subsetCRS}">x</wcs:Dimension>
                    <wcs:TrimLow>${subsetX[0]}</wcs:TrimLow>
                    <wcs:TrimHigh>${subsetX[1]}</wcs:TrimHigh>
                  </wcs:DimensionTrim>`);
   }
-  if (options.subsetY) {
+  if (subsetY) {
     params.push(`<wcs:DimensionTrim><wcs:Dimension crs="${subsetCRS}">y</wcs:Dimension>
                    <wcs:TrimLow>${subsetY[0]}</wcs:TrimLow>
                    <wcs:TrimHigh>${subsetY[1]}</wcs:TrimHigh>
@@ -68,7 +66,7 @@ function getCoverageKVP(coverageid, options = {}) {
     ['service', 'WCS'],
     ['version', '2.0.0'],
     ['request', 'GetCoverage'],
-    ['coverageid', 'coverageid'],
+    ['coverageid', coverageid],
   ];
 
   const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
@@ -87,7 +85,7 @@ function getCoverageKVP(coverageid, options = {}) {
     params.push(['subset', `x(${subsetX[0]},${subsetX[1]})`]);
   }
   if (subsetY) {
-    params.push(['subset', `x(${subsetY[0]},${subsetY[1]})`]);
+    params.push(['subset', `y(${subsetY[0]},${subsetY[1]})`]);
   }
 
   if (options.outputCRS) {
@@ -107,26 +105,31 @@ function getCoverageKVP(coverageid, options = {}) {
 
 
 export function download(layerModel, filtersModel, recordModel, options) {
-  if (options.method === 'GET') {
-    // TODO: implement
-    return null;
-  }
-  const xml = getCoverageXML(
-    recordModel.get('id'), {
-      bbox: filtersModel.get('area'), // TODO
-      outputCRS: options.outputCRS,
-      format: options.format,
-    }
-  );
+  const requestOptions = {
+    bbox: filtersModel.get('area'),
+    outputCRS: options.outputCRS,
+    subsetCRS: options.subsetCRS,
+    format: options.format,
+  };
 
-  // return $(template({
-  //   url: layerModel.get('download.url'),
-  //   xml,
-  // }));
+  if (layerModel.get('download.method') === 'GET') {
+    const kvp = getCoverageKVP(recordModel.get('id'), requestOptions);
+    const url = `${layerModel.get('download.url')}?${kvp}`;
+
+    const a = document.createElement('a');
+    if (typeof a.download !== 'undefined') {
+      a.setAttribute('href', url);
+      a.setAttribute('download', 'true');
+      a.click();
+      return null;
+    }
+    return $(`<iframe src="${url}"></iframe>`);
+  }
+  const xml = getCoverageXML(recordModel.get('id'), requestOptions);
 
   return $(`
     <form method="post" action="${layerModel.get('download.url')}" target="iframe-download-post" enctype="text/plain">
-        <input type="hidden" name='<?xml version' value='"1.0"?>${xml}'></input>
+      <input type="hidden" name='<?xml version' value='"1.0"?>${xml}'></input>
     </form>
   `);
 }
@@ -134,7 +137,7 @@ export function download(layerModel, filtersModel, recordModel, options) {
 export function getDownloadUrl(layerModel, filtersModel, recordModel, options) {
   const kvp = getCoverageKVP(
     recordModel.get('id'), {
-      bbox: filtersModel.get('area'), // TODO
+      bbox: filtersModel.get('area'),
       outputCRS: options.outputCRS,
       format: options.format,
     }

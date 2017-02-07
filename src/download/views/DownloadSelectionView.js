@@ -1,7 +1,7 @@
 import Marionette from 'backbone.marionette';
 
-import template from './DownloadView.hbs';
-import './DownloadView.css';
+import template from './DownloadSelectionView.hbs';
+import './DownloadSelectionView.css';
 import SelectionListView from './SelectionListView';
 import { downloadRecord, downloadCustom, getDownloadUrl } from '../../download/';
 import metalinkTemplate from '../Metalink.hbs';
@@ -36,6 +36,8 @@ const DownloadView = Marionette.CompositeView.extend({
         searchModel.get('downloadSelection'), 'reset update', this.onDownloadSelectionChange
       );
     });
+
+    this.onStartDownload = options.onStartDownload;
   },
 
   onAttach() {
@@ -43,29 +45,30 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   onStartDownloadClicked() {
-    const options = {
-      format: null,
-      outputCRS: 'EPSG:4326', // TODO:
-    };
-
-    let index = 0;
-    const $downloadElements = this.$('#download-elements');
-
-    this.collection.forEach((searchModel) => {
-      searchModel.get('downloadSelection')
-        .forEach((recordModel) => {
-          setTimeout(() => {
-            downloadRecord(
-              searchModel.get('layerModel'),
-              this.filtersModel,
-              recordModel,
-              options,
-              $downloadElements
-            );
-          }, index * 1000);
-          index++;
-        });
-    });
+    // const options = {
+    //   format: null,
+    //   outputCRS: 'EPSG:4326', // TODO:
+    // };
+    //
+    // let index = 0;
+    // const $downloadElements = this.$('#download-elements');
+    //
+    // this.collection.forEach((searchModel) => {
+    //   searchModel.get('downloadSelection')
+    //     .forEach((recordModel) => {
+    //       setTimeout(() => {
+    //         downloadRecord(
+    //           searchModel.get('layerModel'),
+    //           this.filtersModel,
+    //           recordModel,
+    //           options,
+    //           $downloadElements
+    //         );
+    //       }, index * 1000);
+    //       index++;
+    //     });
+    // });
+    this.onStartDownload();
   },
 
   onDownloadAsMetalinkClicked() {

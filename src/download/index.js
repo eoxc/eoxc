@@ -9,6 +9,15 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
   if (layerModel.get('download.protocol') === 'EO-WCS') {
     element = downloadEOWCS(layerModel, filtersModel, recordModel, options);
   } else {
+    // element = downloadUrl(recordModel);
+    const a = document.createElement('a');
+    if (typeof a.download !== 'undefined') {
+      const url = getDownloadUrlUrl(recordModel);
+      a.setAttribute('href', url);
+      a.setAttribute('download', 'true');
+      a.click();
+      return null;
+    }
     element = downloadUrl(recordModel);
   }
 
