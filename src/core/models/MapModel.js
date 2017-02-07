@@ -36,6 +36,8 @@ MapModel.prototype.defaults = {
   center: [0, 0],
   bbox: [0, 0, 1, 1],
   zoom: 2,
+  minZoom: 0,
+  maxZoom: 28,
 
   // the current start/end time selection
   time: [null, null],
