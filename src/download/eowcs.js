@@ -64,7 +64,7 @@ function getCoverageXML(coverageid, options = {}) {
 function getCoverageKVP(coverageid, options = {}) {
   const params = [
     ['service', 'WCS'],
-    ['version', '2.0.0'],
+    ['version', '2.0.1'],
     ['request', 'GetCoverage'],
     ['coverageid', coverageid],
   ];
