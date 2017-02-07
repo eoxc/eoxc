@@ -68,5 +68,5 @@ input[type="radio"].layer-visible:checked + label span:before, input[type="radio
 }
 
 .layer-list-item .form-control {
-  height: unset !important;
+  height: auto;
 }
