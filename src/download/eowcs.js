@@ -64,7 +64,7 @@ function getCoverageXML(coverageid, options = {}) {
 function getCoverageKVP(coverageid, options = {}) {
   const params = [
     ['service', 'WCS'],
-    ['version', '2.0.0'],
+    ['version', '2.0.1'],
     ['request', 'GetCoverage'],
     ['coverageid', coverageid],
   ];
@@ -135,12 +135,15 @@ export function download(layerModel, filtersModel, recordModel, options) {
 }
 
 export function getDownloadUrl(layerModel, filtersModel, recordModel, options) {
-  const kvp = getCoverageKVP(
-    recordModel.get('id'), {
-      bbox: filtersModel.get('area'),
-      outputCRS: options.outputCRS,
-      format: options.format,
-    }
-  );
+  const requestOptions = {
+    bbox: filtersModel.get('area')
+  };
+  if (options && options.format) {
+    requestOptions.push({format: options.format});
+  }
+  if (options && options.outputCRS) {
+    requestOptions.push({outputCRS: options.outputCRS});
+  }
+  const kvp = getCoverageKVP(recordModel.get('id'), requestOptions);
   return `${layerModel.get('download.url')}?${kvp}`;
 }
