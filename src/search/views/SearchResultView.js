@@ -113,6 +113,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
       searchModel: this.selectedSearchModel,
       referenceCollection: collection,
       highlightModel: this.highlightModel,
+      availableSpace: this.$el.outerHeight(),
     }));
   },
 
@@ -163,7 +164,12 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
       const sumHasLoaded = this.selectedSearchModels.reduce(
         (current, model) => (current + model.get('hasLoaded')), 0
       );
-      $globalStatus.html(`${sumHasLoaded}/${sumTotalResults}`);
+
+      if (!isNaN(sumTotalResults)) {
+        $globalStatus.html(`${sumHasLoaded}/${sumTotalResults}`);
+      } else {
+        $globalStatus.html('');
+      }
     } else {
       $globalStatus.html('');
     }

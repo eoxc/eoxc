@@ -9,7 +9,8 @@ import SearchResultItemView from './SearchResultItemView';
 const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/views/layers.SearchResultListView# */{
   initialLowerBound: 0,
   initialUpperBound() {
-    return 21;
+    const elemHeight = 157;
+    return Math.ceil(this.availableSpace / elemHeight) * 3;
   },
   getLowerBound() {
     return 0;
@@ -62,6 +63,7 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
     this.finished = false;
     this.previousCollapsed = false;
     this.prevUpper = 0;
+    this.availableSpace = options.availableSpace;
   },
 
   onRender() {
