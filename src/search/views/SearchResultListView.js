@@ -8,7 +8,9 @@ import SearchResultItemView from './SearchResultItemView';
 
 const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/views/layers.SearchResultListView# */{
   initialLowerBound: 0,
-  initialUpperBound: 21,
+  initialUpperBound() {
+    return 21;
+  },
   getLowerBound() {
     return 0;
   },
@@ -77,7 +79,9 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
 
   adjustSpacer() {
     const $spacer = this.$('.spacer');
-    const elemHeight = this.$el.find('li').outerHeight(true) || 157;
+    // .outerHeight gives wrong size on FF. Use the hardcoded value until better option
+    // const elemHeight = this.$el.find('li').outerHeight(true) || 157;
+    const elemHeight = 157;
     const totalHeight = Math.ceil(this.referenceCollection.size() / 3) * elemHeight;
     const displayedHeight = Math.ceil(this.collection.size() / 3) * elemHeight;
     $spacer.height(totalHeight - displayedHeight);
