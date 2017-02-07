@@ -22,3 +22,8 @@
 .panel-footer {
   padding: 5px !important;
 }
+
+.dropdown-menu {
+  padding-left: 10px;
+  padding-right: 10px;
+}
