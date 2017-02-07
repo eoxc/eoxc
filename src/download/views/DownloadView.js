@@ -78,16 +78,17 @@ const DownloadView = Marionette.CompositeView.extend({
         };
       });
 
-    const content = metalinkTemplate({
+    let content = metalinkTemplate({
       date: (new Date()).toISOString(),
       files,
     });
+    content = content.replace(/[\n]/g, '\r\n');
     downloadCustom('download-files.meta4', 'application/metalink4+xml', content);
   },
 
   onDownloadAsUrlListClicked() {
     const hrefs = this._getDownloadUrls();
-    downloadCustom('url-list.txt', 'text/plain', hrefs.join('\n'));
+    downloadCustom('url-list.txt', 'text/plain', hrefs.join('\r\n'));
   },
 
   onDeselectAllClicked() {
