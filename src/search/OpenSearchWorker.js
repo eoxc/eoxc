@@ -16,18 +16,19 @@ self.services = {};
 self.promises = {};
 
 function prepareBox(bbox) {
-  bbox[1] = Math.max(bbox[1], -90);
-  bbox[3] = Math.min(bbox[3], 90);
+  const b = [...bbox];
+  b[1] = Math.max(b[1], -90);
+  b[3] = Math.min(b[3], 90);
 
   for (let i = 0; i <= 2; i += 2) {
-    while (bbox[i] > 180) {
-      bbox[i] -= 360;
+    while (b[i] > 180) {
+      b[i] -= 360;
     }
-    while (bbox[i] < -180) {
-      bbox[i] += 360;
+    while (b[i] < -180) {
+      b[i] += 360;
     }
   }
-  return bbox;
+  return b;
 }
 
 function prepareRecords(records) {
@@ -99,7 +100,7 @@ function convertFilters(filterParams, mapParams, options, format, service) {
 
   if (options.hasOwnProperty('page')) {
     if (url.hasParameter('startIndex') && options.hasOwnProperty('itemsPerPage')) {
-      parameters.startIndex = options.page * options.itemsPerPage + url.indexOffset;
+      parameters.startIndex = (options.page * options.itemsPerPage) + url.indexOffset;
     } else if (url.hasParameter('startPage')) {
       parameters.startPage = options.page + url.pageOffset;
     }
@@ -129,7 +130,7 @@ function searchAll(url, method, filterParams, mapParams, options, format) {
   const maxCount = options.maxCount;
 
   return getService(url)
-    .then(service => {
+    .then((service) => {
       const parameters = convertFilters(filterParams, mapParams, options, format, service);
       const paginator = service.getPaginator(parameters, format, method, true);
       if (maxCount) {
