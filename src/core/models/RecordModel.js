@@ -11,15 +11,15 @@ class RecordModel extends Backbone.Model {
     return null;
   }
 
-  triggerShowInfo() {
-    if (this.collection && this.collection.searchModel) {
-      this.collection.searchModel.triggerShowInfo(this);
+  triggerShowInfo(collection = this.collection) {
+    if (collection && collection.searchModel) {
+      collection.searchModel.triggerShowInfo(this);
     }
   }
 
-  selectForDownload(select = true) {
-    if (this.collection && this.collection.searchModel) {
-      const downloadSelection = this.collection.searchModel.get('downloadSelection');
+  selectForDownload(select = true, collection = this.collection) {
+    if (collection && collection.searchModel) {
+      const downloadSelection = collection.searchModel.get('downloadSelection');
       if (select) {
         downloadSelection.add(this);
       } else {
@@ -28,9 +28,9 @@ class RecordModel extends Backbone.Model {
     }
   }
 
-  isSelectedForDownload() {
-    if (this.collection && this.collection.searchModel) {
-      const downloadSelection = this.collection.searchModel.get('downloadSelection');
+  isSelectedForDownload(collection = this.collection) {
+    if (collection && collection.searchModel) {
+      const downloadSelection = collection.searchModel.get('downloadSelection');
       return downloadSelection.findIndex(
         other => other.get('id') === this.get('id')
       ) !== -1;

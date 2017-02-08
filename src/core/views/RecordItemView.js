@@ -16,6 +16,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
 
   initialize(options) {
     this.highlightModel = options.highlightModel;
+    this.collection = this.model.collection;
   },
 
   templateHelpers() {
@@ -52,7 +53,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   },
 
   onItemInfoClicked() {
-    this.model.triggerShowInfo();
+    this.model.triggerShowInfo(this.collection);
   },
 
   onItemMouseOver() {

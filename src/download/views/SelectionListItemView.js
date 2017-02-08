@@ -10,7 +10,7 @@ const SelectionListItemView = RecordItemView.extend(/** @lends download/views/la
   }),
 
   onRecordUnselectClicked() {
-    this.model.selectForDownload(false);
+    this.model.selectForDownload(false, this.collection);
   },
 });
 
