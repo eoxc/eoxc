@@ -674,23 +674,22 @@ class OpenLayersMapView extends Marionette.ItemView {
     }
     if (!this.staticHighlight && !this.isOverlayShown()) {
       const coordinate = wrapCoordinate(event.coordinate);
-      const models = this.searchLayersGroup.getLayers().getArray()
+      const features = this.searchLayersGroup.getLayers().getArray()
         .filter(layer => layer.getVisible())
         .map(layer => layer.getSource())
         .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
-        .map(feature => feature.model)
         .concat(this.downloadSelectionLayerGroup.getLayers().getArray()
           .filter(layer => layer.getVisible())
           .map(layer => layer.getSource())
           .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
-          .map(feature => feature.model));
+        );
 
-      const features = models.map((model) => {
-        const feature = model.toJSON();
-        feature.layerId = model.collection.searchModel.get('layerModel').get('id');
-        return feature;
+      const rawFeatures = features.map((feature) => {
+        const rawFeature = feature.model.toJSON();
+        rawFeature.layerId = feature.searchModel.get('layerModel').get('id');
+        return rawFeature;
       });
-      this.highlightModel.highlight(features);
+      this.highlightModel.highlight(rawFeatures);
     }
   }
 
