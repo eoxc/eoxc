@@ -537,10 +537,10 @@ class OpenLayersMapView extends Marionette.ItemView {
       <div class="popover-content" style="padding: 3px;">
         <div class="btn-group" role="group">
           <button type="button" class="btn btn-default btn-xs deselect-feature">
-            <i class="fa fa-square-o" aria-hidden="true"></i>
+            <i class="fa fa-minus-circle" aria-hidden="true"></i>
           </button>
           <button type="button" class="btn btn-default btn-xs select-feature">
-            <i class="fa fa-check-square-o" aria-hidden="true"></i>
+            <i class="fa fa-plus-circle" aria-hidden="true"></i>
           </button>
           <button type="button" class="btn btn-default btn-xs feature-info">
             <i class="fa fa-info-circle" aria-hidden="true"></i>
