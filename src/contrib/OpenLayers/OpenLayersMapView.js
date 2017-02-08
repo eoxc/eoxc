@@ -165,7 +165,6 @@ class OpenLayersMapView extends Marionette.ItemView {
       const group = new Group({
         layers: collection.map(layerModel => this.createLayer(layerModel)),
       });
-      this.map.addLayer(group);
       return group;
     };
 
@@ -181,7 +180,6 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     const selectionLayer = createVectorLayer('rgba(255, 255, 255, 0.0)', '#ffcc33', 2, 7);
     this.selectionSource = selectionLayer.getSource();
-    this.map.addLayer(selectionLayer);
 
     const searchCollection = this.searchCollection || [];
     // create layer group to display footprints of search results
@@ -189,34 +187,76 @@ class OpenLayersMapView extends Marionette.ItemView {
       layers: searchCollection.map((searchModel) => {
         const searchLayer = createCollectionVectorLayer(
           searchModel.get('results'), searchModel,
-          this.footprintFillColor, this.footprintStrokeColor
+          'rgba(0, 0, 0, 0)', this.footprintStrokeColor
         );
         searchLayer.id = searchModel.get('layerModel').get('id');
         return searchLayer;
       }),
     });
-    this.map.addLayer(this.searchLayersGroup);
+
+    const searchLayersFillGroup = new GroupById({
+      layers: searchCollection.map((searchModel) => {
+        const searchLayer = createVectorLayer(
+          this.footprintFillColor, 'rgba(0, 0, 0, 0)', 1, 0,
+          this.searchLayersGroup.getLayerById(searchModel.get('layerModel').get('id')).getSource()
+        );
+        return searchLayer;
+      }),
+    });
 
     // create layer group to display footprints of download selection
     this.downloadSelectionLayerGroup = new GroupById({
       layers: searchCollection.map((searchModel) => {
         const downloadSelectionLayer = createCollectionVectorLayer(
           searchModel.get('downloadSelection'), searchModel,
-          this.selectedFootprintFillColor, this.selectedFootprintStrokeColor
+          'rgba(0, 0, 0, 0)', this.selectedFootprintStrokeColor
         );
         downloadSelectionLayer.id = searchModel.get('layerModel').get('id');
         return downloadSelectionLayer;
       })
     });
-    this.map.addLayer(this.downloadSelectionLayerGroup);
+
+    const downloadSelectionLayerFillGroup = new GroupById({
+      layers: searchCollection.map((searchModel) => {
+        const searchLayer = createVectorLayer(
+          this.selectedFootprintFillColor, 'rgba(0, 0, 0, 0)', 1, 0,
+          this.downloadSelectionLayerGroup.getLayerById(searchModel.get('layerModel').get('id')).getSource()
+        );
+        return searchLayer;
+      }),
+    });
 
     // create layer for highlighting features
     const highlightLayer = createVectorLayer(
-      this.highlightFillColor || 'rgba(255, 255, 255, 0.2)',
-      this.highlightStrokeColor || '#cccccc',
+      'rgba(0, 0, 0, 0)',
+      this.highlightStrokeColor,
       this.highlightStrokeWidth
     );
     this.highlightSource = highlightLayer.getSource();
+
+    const highlightFillLayer = createVectorLayer(
+      this.highlightFillColor,
+      'rgba(0, 0, 0, 0)',
+      this.highlightStrokeWidth,
+      0, this.highlightSource
+    );
+
+    // add the layers to the map
+
+    this.map.addLayer(this.groups.baseLayers);
+
+    this.map.addLayer(searchLayersFillGroup);
+    this.map.addLayer(downloadSelectionLayerFillGroup);
+    this.map.addLayer(highlightFillLayer);
+
+    this.map.addLayer(this.groups.layers);
+    this.map.addLayer(this.groups.overlayLayers);
+
+    this.map.addLayer(selectionLayer);
+
+    this.map.addLayer(this.searchLayersGroup);
+    this.map.addLayer(this.downloadSelectionLayerGroup);
+
     this.map.addLayer(highlightLayer);
 
     this.onHighlightChange(this.highlightModel);
@@ -439,69 +479,10 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.listenTo(this.filtersModel, 'change:area', this.onFiltersAreaChange);
 
     // setup map events
-
-    const self = this;
-    this.map.on('pointerdrag', () => {
-      // TODO: check if the currently selected tool is the panning tool
-      // TODO: improve this to allow
-      self.isPanning = true;
-    });
-
-    this.map.on('moveend', () => {
-      let bbox = self.map.getView().calculateExtent(self.map.getSize());
-      // wrap minX and maxX to fit -180, 180
-      bbox = wrapBox(bbox);
-
-      self.mapModel.set({
-        center: self.map.getView().getCenter(),
-        zoom: self.map.getView().getZoom(),
-        bbox,
-      });
-      self.isPanning = false;
-      self.isZooming = false;
-    });
-
-    this.map.on('pointermove', (event) => {
-      if (this.mapModel.get('tool')) {
-        return;
-      }
-      if (!this.staticHighlight && !this.isOverlayShown()) {
-        const coordinate = wrapCoordinate(event.coordinate);
-        const models = this.searchLayersGroup.getLayers().getArray()
-          .filter(layer => layer.getVisible())
-          .map(layer => layer.getSource())
-          .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
-          .map(feature => feature.model)
-          .concat(this.downloadSelectionLayerGroup.getLayers().getArray()
-            .filter(layer => layer.getVisible())
-            .map(layer => layer.getSource())
-            .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
-            .map(feature => feature.model));
-
-        const features = models.map((model) => {
-          const feature = model.toJSON();
-          feature.layerId = model.collection.searchModel.get('layerModel').get('id');
-          return feature;
-        });
-        this.highlightModel.highlight(features);
-      }
-    });
-
-    this.map.on('click', (event) => {
-      if (this.mapModel.get('tool')) {
-        return;
-      }
-      const coordinate = wrapCoordinate(event.coordinate);
-      const searchFeatures = this.searchLayersGroup.getLayers().getArray()
-        .filter(layer => layer.getVisible())
-        .map(layer => layer.getSource())
-        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
-      const selectedFeatures = this.downloadSelectionLayerGroup.getLayers().getArray()
-        .map(layer => layer.getSource())
-        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
-      this.highlightModel.highlight(searchFeatures.map(feature => feature.model));
-      this.showOverlay(coordinate, searchFeatures, selectedFeatures);
-    });
+    this.map.on('pointerdrag', this.onMapPointerDrag, this);
+    this.map.on('moveend', this.onMapMoveEnd, this);
+    this.map.on('pointermove', this.onMapPointerMove, this);
+    this.map.on('click', this.onMapClick, this);
   }
 
   /**
@@ -665,6 +646,68 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.highlightSource.clear();
     const features = highlightModel.get('highlightFeature');
     this.highlightSource.addFeatures(this.createMapFeatures(features));
+  }
+
+  onMapPointerDrag() {
+    // TODO: check if the currently selected tool is the panning tool
+    // TODO: improve this to allow
+    this.isPanning = true;
+  }
+
+  onMapMoveEnd() {
+    let bbox = this.map.getView().calculateExtent(this.map.getSize());
+    // wrap minX and maxX to fit -180, 180
+    bbox = wrapBox(bbox);
+
+    this.mapModel.set({
+      center: this.map.getView().getCenter(),
+      zoom: this.map.getView().getZoom(),
+      bbox,
+    });
+    this.isPanning = false;
+    this.isZooming = false;
+  }
+
+  onMapPointerMove(event) {
+    if (this.mapModel.get('tool')) {
+      return;
+    }
+    if (!this.staticHighlight && !this.isOverlayShown()) {
+      const coordinate = wrapCoordinate(event.coordinate);
+      const models = this.searchLayersGroup.getLayers().getArray()
+        .filter(layer => layer.getVisible())
+        .map(layer => layer.getSource())
+        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
+        .map(feature => feature.model)
+        .concat(this.downloadSelectionLayerGroup.getLayers().getArray()
+          .filter(layer => layer.getVisible())
+          .map(layer => layer.getSource())
+          .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
+          .map(feature => feature.model));
+
+      const features = models.map((model) => {
+        const feature = model.toJSON();
+        feature.layerId = model.collection.searchModel.get('layerModel').get('id');
+        return feature;
+      });
+      this.highlightModel.highlight(features);
+    }
+  }
+
+  onMapClick(event) {
+    if (this.mapModel.get('tool')) {
+      return;
+    }
+    const coordinate = wrapCoordinate(event.coordinate);
+    const searchFeatures = this.searchLayersGroup.getLayers().getArray()
+      .filter(layer => layer.getVisible())
+      .map(layer => layer.getSource())
+      .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
+    const selectedFeatures = this.downloadSelectionLayerGroup.getLayers().getArray()
+      .map(layer => layer.getSource())
+      .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
+    this.highlightModel.highlight(searchFeatures.map(feature => feature.model));
+    this.showOverlay(coordinate, searchFeatures, selectedFeatures);
   }
 
   /* helper to create OL features */

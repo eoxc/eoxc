@@ -41,7 +41,7 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
   });
 }
 
-export function createVectorLayer(fillColor, strokeColor, strokeWidth = 1, circleRadius = 0) {
+export function createVectorLayer(fillColor, strokeColor, strokeWidth = 1, circleRadius = 0, source = null) {
   const definition = {
     fill: new Fill({
       color: fillColor,
@@ -63,7 +63,7 @@ export function createVectorLayer(fillColor, strokeColor, strokeWidth = 1, circl
 
   const style = new Style(definition);
   return new VectorLayer({
-    source: new VectorSource(),
+    source: source || new VectorSource(),
     style,
     wrapX: true,
   });
@@ -71,12 +71,14 @@ export function createVectorLayer(fillColor, strokeColor, strokeWidth = 1, circl
 
 export function createCollectionVectorLayer(collection, searchModel, fillColor, strokeColor,
   strokeWidth = 1, circleRadius = 0) {
-  const layer = createVectorLayer(fillColor, strokeColor, strokeWidth, circleRadius);
-  layer.setSource(new CollectionSource({
-    collection,
-    searchModel,
-    format: new GeoJSON(),
-  }));
+  const layer = createVectorLayer(
+    fillColor, strokeColor, strokeWidth, circleRadius,
+    new CollectionSource({
+      collection,
+      searchModel,
+      format: new GeoJSON(),
+    })
+  );
   return layer;
 }
 
