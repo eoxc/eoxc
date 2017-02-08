@@ -57,7 +57,9 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   },
 
   onItemMouseOver() {
-    this.highlightModel.highlight(this.model.attributes);
+    const feature = this.model.toJSON();
+    feature.layerId = this.model.collection.searchModel.get('layerModel').get('id');
+    this.highlightModel.highlight(feature);
   },
 
   onItemMouseOut() {

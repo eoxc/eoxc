@@ -478,7 +478,12 @@ class OpenLayersMapView extends Marionette.ItemView {
             .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
             .map(feature => feature.model));
 
-        this.highlightModel.highlight(models);
+        const features = models.map((model) => {
+          const feature = model.toJSON();
+          feature.layerId = model.collection.searchModel.get('layerModel').get('id');
+          return feature;
+        });
+        this.highlightModel.highlight(features);
       }
     });
 

@@ -1,11 +1,9 @@
-window.d3 = require('d3/d3');
-
+import 'd3/d3';
 import Marionette from 'backbone.marionette';
-
-const TimeSlider = require('D3.TimeSlider/src/d3.timeslider.coffee');
-const WMSSource = require('D3.TimeSlider/src/sources/wms.coffee');
-const EOWCSSource = require('D3.TimeSlider/src/sources/eowcs.coffee');
-const WPSSource = require('D3.TimeSlider/src/sources/eoxserver-wps.coffee');
+import TimeSlider from 'D3.TimeSlider/src/d3.timeslider.coffee';
+import WMSSource from 'D3.TimeSlider/src/sources/wms.coffee';
+import EOWCSSource from 'D3.TimeSlider/src/sources/eowcs.coffee';
+import WPSSource from 'D3.TimeSlider/src/sources/eoxserver-wps.coffee';
 
 import { searchAllRecords, getCount } from '../../search';
 import FiltersModel from '../models/FiltersModel';
@@ -60,6 +58,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.mapModel = options.mapModel;
     this.highlightModel = options.highlightModel;
 
+    this.highlightFillColor = options.highlightFillColor;
+    this.highlightStrokeColor = options.highlightStrokeColor;
     this.filterFillColor = options.filterFillColor;
     this.filterStrokeColor = options.filterStrokeColor;
     this.filterOutsideColor = options.filterOutsideColor;
@@ -71,6 +71,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.displayInterval = options.displayInterval;
     this.selectableInterval = options.selectableInterval;
     this.maxTooltips = options.maxTooltips;
+
+    this.previousSearches = {};
   },
 
   onRender() {
@@ -78,8 +80,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   onAttach() {
-    const tooltipFormatter = (record) => (
-      record[2].id || `${record[0].toISOString() - record[1].toISOString()}`
+    const tooltipFormatter = record => (
+      (record && record[2] && record[2].id) ? record[2].id : `${record[0].toISOString() - record[1].toISOString()}`
     );
     const options = {
       domain: this.domain,
@@ -118,7 +120,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.timeSlider = new TimeSlider(this.el, options);
 
     const visibleLayers = this.layersCollection.filter(
-      layerModel => layerModel.get('display.visible')
+      layerModel => layerModel.get('display.visible') && layerModel.get('search.protocol')
     );
 
     if (visibleLayers.length > 0) {
@@ -129,10 +131,10 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
     this.listenTo(this.mapModel, 'change:time', this.onModelSelectionChanged);
     this.listenTo(this.filtersModel, 'change:time', () => {
-      const time = this.filtersModel.get('time');
-      if (time) {
+      const filterTime = this.filtersModel.get('time');
+      if (filterTime) {
         this.timeSlider.setHighlightInterval(
-          time[0], time[1],
+          filterTime[0], filterTime[1],
           this.filterFillColor, this.filterStrokeColor, this.filterOutsideColor
         );
       } else {
@@ -148,9 +150,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
       this.timeSlider.setRecordFilter(this.createRecordFilter(mapModel.get('bbox')));
     });
-    this.listenTo(this.highlightModel, 'change:highlightFeature', (highlightModel, feature) => {
-      // console.log("timesliderview", feature);
-    });
+    this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightFeatureChange);
   },
 
   addLayer(layerModel) {
@@ -216,6 +216,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.timeSlider.addDataset({
       id: layerModel.get('id'),
       color: layerModel.get('displayColor'),
+      highlightFillColor: this.highlightFillColor,
+      highlightStrokeColor: this.highlightStrokeColor,
       source,
       bucket: layerModel.get('search.lightweightBuckets'),
       bucketSource,
@@ -335,6 +337,29 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         this.removeLayer(layerModel);
       }
     }
+  },
+
+  onHighlightFeatureChange(highlightModel, feature) {
+    let features = [];
+    if (Array.isArray(feature)) {
+      features = feature;
+    } else if (feature) {
+      features = [feature];
+    }
+
+    const layerFeatures = {};
+    features.forEach((f) => {
+      if (f && f.layerId && f.properties.time) {
+        if (!layerFeatures[f.layerId]) {
+          layerFeatures[f.layerId] = [];
+        }
+        layerFeatures[f.layerId].push(f.properties.time);
+      }
+    });
+
+    this.layersCollection.forEach(layerModel => (
+      this.timeSlider.setRecordHighlights(layerModel.get('id'), layerFeatures[layerModel.get('id')] || [])
+    ));
   },
 });
 
