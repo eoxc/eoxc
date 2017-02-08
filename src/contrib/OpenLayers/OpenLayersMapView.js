@@ -721,9 +721,9 @@ class OpenLayersMapView extends Marionette.ItemView {
       .map((model) => {
         if (model) {
           let geometry = null;
-          if (model.geometry || model.get('geometry')) {
+          if (model.geometry || (model.get && model.get('geometry'))) {
             geometry = format.readGeometry(model.geometry || model.get('geometry'));
-          } else if (model.bbox || model.get('bbox')) {
+          } else if (model.bbox || (model.get && model.get('bbox'))) {
             geometry = Polygon.fromExtent(model.bbox || model.get('bbox'));
           }
 

@@ -38,8 +38,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     clusterMouseout: 'onRecordsMouseout',
     bucketClicked: 'onBucketClicked',
     // not required at the moment
-    // bucketMouseover: 'onBucketMouseover',
-    // bucketMouseout: 'onBucketMouseout',
+    bucketMouseover: 'onBucketMouseover',
+    bucketMouseout: 'onBucketMouseout',
   },
 
   /**
@@ -268,7 +268,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onRecordMouseover(event) {
     const record = event.originalEvent.detail;
-    this.highlightModel.highlight(record.params);
+    const feature = Object.assign({}, record.params, { layerId: record.dataset });
+    this.highlightModel.highlight(feature);
   },
 
   onRecordMouseout(event) {
@@ -300,13 +301,37 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onRecordsMouseover(event) {
     const detail = event.originalEvent.detail;
-    const bin = (detail.bin || detail.records).map(record => record[2]);
+    const bin = (detail.bin || detail.records).map(record =>
+      Object.assign({}, record[2], { layerId: detail.dataset })
+    );
     this.currentBin = bin;
     this.highlightModel.highlight(bin);
   },
 
   onRecordsMouseout() {
     this.highlightModel.unHighlight(this.currentBin);
+  },
+
+  onBucketMouseover(event) {
+    const detail = event.originalEvent.detail;
+    this.highlightModel.highlight({
+      id: `detail.dataset-${detail.start.toISOString()}-${detail.end.toISOString()}`,
+      layerId: detail.dataset,
+      properties: {
+        time: [
+          new Date(detail.start.getTime() + 1),
+          new Date(detail.end.getTime() - 1)
+        ],
+      },
+    });
+  },
+
+  onBucketMouseout(event) {
+    const detail = event.originalEvent.detail;
+    this.highlightModel.unHighlight({
+      id: `detail.dataset-${detail.start.toISOString()}-${detail.end.toISOString()}`,
+      layerId: detail.dataset,
+    });
   },
 
   onBucketClicked(event) {
