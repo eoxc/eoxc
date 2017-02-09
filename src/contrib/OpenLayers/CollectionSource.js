@@ -1,26 +1,32 @@
 import ol from 'openlayers';
 
 const VectorSource = ol.source.Vector;
-const Polygon = ol.geom.Polygon;
-const Feature = ol.Feature;
 
 /**
  * Vector source to map a Backbone collection of result records to openlayers
  * features.
  */
 export default class CollectionSource extends VectorSource {
-  constructor(options = {}) {
+  /**
+   * Creates a new CollectionSource
+   * @param {object} options The options
+   * @param {function} options.transformModel The transformation function to
+   *                                          create a feature from a model
+   * @param {Backbone.Collection} options.collection The collection to map
+   */
+  constructor(options) {
     super(options);
+    this.transformModel = options.transformModel;
     this.setCollection(options.collection, false);
-    this.format = options.format;
-    this.searchModel = options.searchModel;
   }
 
-  setCollection(collection, reset = true) {
-    if (reset) {
-      this.clear();
-    }
-
+  /**
+   * Sets the collection to watch for this source.
+   * @param {Backbone.Collection} collection The collection to observe
+   * @param {boolean} [clear=true] Whether to clear the current features of this
+   *                               source when the new collection is set
+   */
+  setCollection(collection, clear = true) {
     const prevCollection = this.collection;
     if (prevCollection) {
       prevCollection.off(null, null, this);
@@ -31,19 +37,25 @@ export default class CollectionSource extends VectorSource {
       collection.on('remove', this.onCollectionRemove, this);
     }
     this.collection = collection;
+    this.onCollectionReset(this.collection, {}, clear);
   }
 
   // collection event handlers
-  onCollectionReset() {
-    this.clear();
-    const features = this.collection
-      .map(model => this._modelToFeature(model))
+  onCollectionReset(collection, options, clear = true) {
+    if (clear) {
+      this.clear();
+    }
+    const features = collection
+      .map(model => this.transformModel(model))
       .filter(feature => !!feature);
     this.addFeatures(features);
   }
 
   onCollectionAdd(model) {
-    this.addFeature(this._modelToFeature(model));
+    const feature = this.transformModel(model);
+    if (feature) {
+      this.addFeature(feature);
+    }
   }
 
   onCollectionRemove(model) {
@@ -51,28 +63,5 @@ export default class CollectionSource extends VectorSource {
     if (feature) {
       this.removeFeature(feature);
     }
-  }
-
-  // private
-  _modelToFeature(model) {
-    const format = this.getFormat();
-    if (model) {
-      let geometry = null;
-      if (model.geometry || model.get('geometry')) {
-        geometry = format.readGeometry(model.geometry || model.get('geometry'));
-      } else if (model.bbox || model.get('bbox')) {
-        geometry = Polygon.fromExtent(model.bbox || model.get('bbox'));
-      }
-
-      if (geometry) {
-        const feature = new Feature();
-        feature.setGeometry(geometry);
-        feature.model = model;
-        feature.searchModel = this.searchModel;
-        feature.setId(model.get('id'));
-        return feature;
-      }
-    }
-    return null;
   }
 }

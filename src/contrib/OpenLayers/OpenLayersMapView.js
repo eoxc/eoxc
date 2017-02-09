@@ -1,23 +1,18 @@
 import Marionette from 'backbone.marionette';
 import ol from 'openlayers';
 import $ from 'jquery';
-import _ from 'underscore';
 import 'openlayers/dist/ol.css';
 
 import { getISODateTimeString, uniqueBy } from '../../core/util';
-import { createMap, createVectorLayer, createCollectionVectorLayer, createCutOut, moveBy, wrapToBounds } from './utils';
+import { createMap, createRasterLayer, createVectorLayer, createCutOut, wrapToBounds } from './utils';
+import CollectionSource from './CollectionSource';
+import ModelAttributeSource from './ModelAttributeSource';
 
 const Collection = ol.Collection;
 const Group = ol.layer.Group;
-const getProjection = ol.proj.get;
-const getExtentWidth = ol.extent.getWidth;
-const getExtentTopLeft = ol.extent.getTopLeft;
 
 const WMTSSource = ol.source.WMTS;
 const WMSTileSource = ol.source.TileWMS;
-const WMTSTileGrid = ol.tilegrid.WMTS;
-const TileLayer = ol.layer.Tile;
-const Attribution = ol.Attribution;
 
 const GeoJSON = ol.format.GeoJSON;
 
@@ -163,7 +158,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     const createGroupForCollection = (collection) => {
       const group = new Group({
-        layers: collection.map(layerModel => this.createLayer(layerModel)),
+        layers: collection.map(layerModel => createRasterLayer(layerModel)),
       });
       return group;
     };
@@ -178,17 +173,25 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.applyLayerFilters(layer, this.mapModel, this.filtersModel);
     }, this);
 
-    const selectionLayer = createVectorLayer('rgba(255, 255, 255, 0.0)', '#ffcc33', 2, 7);
+    const selectionLayer = createVectorLayer({
+      fillColor: 'rgba(255, 255, 255, 0.0)',
+      strokeColor: '#ffcc33',
+      strokeWidth: 2,
+      circleRadius: 7,
+    });
     this.selectionSource = selectionLayer.getSource();
 
     const searchCollection = this.searchCollection || [];
     // create layer group to display footprints of search results
     this.searchLayersGroup = new GroupById({
       layers: searchCollection.map((searchModel) => {
-        const searchLayer = createCollectionVectorLayer(
-          searchModel.get('results'), searchModel,
-          'rgba(0, 0, 0, 0)', this.footprintStrokeColor
-        );
+        const searchLayer = createVectorLayer({
+          strokeColor: this.footprintStrokeColor
+        },
+        new CollectionSource({
+          collection: searchModel.get('results'),
+          transformModel: model => this.createMapFeatures(model, searchModel)[0],
+        }));
         searchLayer.id = searchModel.get('layerModel').get('id');
         return searchLayer;
       }),
@@ -196,10 +199,9 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     const searchLayersFillGroup = new GroupById({
       layers: searchCollection.map((searchModel) => {
-        const searchLayer = createVectorLayer(
-          this.footprintFillColor, 'rgba(0, 0, 0, 0)', 1, 0,
-          this.searchLayersGroup.getLayerById(searchModel.get('layerModel').get('id')).getSource()
-        );
+        const searchLayer = createVectorLayer({
+          fillColor: this.footprintFillColor,
+        }, this.searchLayersGroup.getLayerById(searchModel.get('layerModel').get('id')).getSource());
         return searchLayer;
       }),
     });
@@ -207,10 +209,12 @@ class OpenLayersMapView extends Marionette.ItemView {
     // create layer group to display footprints of download selection
     this.downloadSelectionLayerGroup = new GroupById({
       layers: searchCollection.map((searchModel) => {
-        const downloadSelectionLayer = createCollectionVectorLayer(
-          searchModel.get('downloadSelection'), searchModel,
-          'rgba(0, 0, 0, 0)', this.selectedFootprintStrokeColor
-        );
+        const downloadSelectionLayer = createVectorLayer({
+          strokeColor: this.selectedFootprintStrokeColor,
+        }, new CollectionSource({
+          collection: searchModel.get('downloadSelection'),
+          transformModel: model => this.createMapFeatures(model, searchModel)[0],
+        }));
         downloadSelectionLayer.id = searchModel.get('layerModel').get('id');
         return downloadSelectionLayer;
       })
@@ -218,28 +222,28 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     const downloadSelectionLayerFillGroup = new GroupById({
       layers: searchCollection.map((searchModel) => {
-        const searchLayer = createVectorLayer(
-          this.selectedFootprintFillColor, 'rgba(0, 0, 0, 0)', 1, 0,
-          this.downloadSelectionLayerGroup.getLayerById(searchModel.get('layerModel').get('id')).getSource()
-        );
-        return searchLayer;
+        const downloadSelectionLayer = createVectorLayer({
+          fillColor: this.selectedFootprintFillColor,
+        }, this.downloadSelectionLayerGroup.getLayerById(searchModel.get('layerModel').get('id')).getSource());
+        return downloadSelectionLayer;
       }),
     });
 
     // create layer for highlighting features
-    const highlightLayer = createVectorLayer(
-      'rgba(0, 0, 0, 0)',
-      this.highlightStrokeColor,
-      this.highlightStrokeWidth
-    );
-    this.highlightSource = highlightLayer.getSource();
+    const highlightSource = new ModelAttributeSource({
+      model: this.highlightModel,
+      attributeName: 'highlightFeature',
+      transformAttribute: attr => this.createMapFeatures(attr),
+    });
 
-    const highlightFillLayer = createVectorLayer(
-      this.highlightFillColor,
-      'rgba(0, 0, 0, 0)',
-      this.highlightStrokeWidth,
-      0, this.highlightSource
-    );
+    const highlightLayer = createVectorLayer({
+      strokeColor: this.highlightStrokeColor,
+      strokeWidth: this.highlightStrokeWidth,
+    }, highlightSource);
+    const highlightFillLayer = createVectorLayer({
+      fillColor: this.highlightFillColor,
+      strokeWidth: this.highlightStrokeWidth,
+    }, highlightSource);
 
     // add the layers to the map
 
@@ -259,98 +263,11 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.map.addLayer(highlightLayer);
 
-    this.onHighlightChange(this.highlightModel);
-
     // attach to signals of the collections
     this.setupEvents();
     this.setupControls();
 
     return this;
-  }
-
-  /**
-   * Creates an OpenLayers layer from a given LayerModel.
-   *
-   * @param {core/models.LayerModel} layerModel The layerModel to create a layer for.
-   * @returns {ol.Layer} The OpenLayers layer object
-   */
-  createLayer(layerModel) {
-    const params = layerModel.get('display');
-    let layer;
-
-    const projection = getProjection('EPSG:4326');
-    const projectionExtent = projection.getExtent();
-    const size = getExtentWidth(projectionExtent) / 256;
-    const resolutions = new Array(18);
-    const matrixIds = new Array(18);
-
-    for (let z = 0; z < 18; ++z) {
-      // generate resolutions and matrixIds arrays for this WMTS
-      resolutions[z] = size / Math.pow(2, z + 1);
-      let id = z;
-
-      if (params.matrixIdPrefix) {
-        id = params.matrixIdPrefix + id;
-      }
-      if (params.matrixIdPostfix) {
-        id += params.matrixIdPostfix;
-      }
-      matrixIds[z] = id;
-    }
-
-    switch (params.protocol) {
-      case 'WMTS':
-        layer = new TileLayer({
-          visible: params.visible,
-          source: new WMTSSource({
-            urls: (params.url) ? [params.url] : params.urls,
-            layer: params.id,
-            matrixSet: params.matrixSet,
-            format: params.format,
-            projection: params.projection,
-            tileGrid: new WMTSTileGrid({
-              origin: getExtentTopLeft(projectionExtent),
-              resolutions,
-              matrixIds,
-            }),
-            style: params.style,
-            attributions: [
-              new Attribution({
-                html: params.attribution,
-              }),
-            ],
-            wrapX: true,
-            dimensions: {
-              time: '',
-            }
-          }),
-        });
-        break;
-      case 'WMS':
-        layer = new TileLayer({
-          visible: params.visible,
-          source: new WMSTileSource({
-            crossOrigin: 'anonymous',
-            params: {
-              LAYERS: params.id,
-              VERSION: '1.1.0',
-              FORMAT: params.format, // TODO: use format here?
-            },
-            url: params.url || params.urls[0],
-            wrapX: true,
-            attributions: [
-              new Attribution({
-                html: params.attribution,
-              }),
-            ],
-          }),
-        });
-        break;
-      default:
-        throw new Error('Unsupported view protocol');
-    }
-    layer.id = layerModel.get('id');
-    return layer;
   }
 
   applyLayerFilters(layer, mapModel) {
@@ -472,8 +389,6 @@ class OpenLayersMapView extends Marionette.ItemView {
       }
       this.map.getView().fit(geometry, this.map.getSize(), { duration: 250 });
     });
-
-    this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightChange);
 
     // setup filters signals
     this.listenTo(this.filtersModel, 'change:area', this.onFiltersAreaChange);
@@ -642,12 +557,6 @@ class OpenLayersMapView extends Marionette.ItemView {
     }
   }
 
-  onHighlightChange(highlightModel) {
-    this.highlightSource.clear();
-    const features = highlightModel.get('highlightFeature');
-    this.highlightSource.addFeatures(this.createMapFeatures(features));
-  }
-
   onMapPointerDrag() {
     // TODO: check if the currently selected tool is the panning tool
     // TODO: improve this to allow
@@ -732,6 +641,7 @@ class OpenLayersMapView extends Marionette.ItemView {
             olFeature.setGeometry(geometry);
             olFeature.model = model;
             olFeature.searchModel = searchModel;
+            olFeature.setId(model.get ? model.get('id') : model.id);
             return olFeature;
           }
         }

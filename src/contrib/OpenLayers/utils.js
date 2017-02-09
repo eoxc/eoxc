@@ -8,8 +8,19 @@ import CollectionSource from './CollectionSource';
 const Map = ol.Map;
 const Attribution = ol.control.Attribution;
 const Zoom = ol.control.Zoom;
+
+const WMTSSource = ol.source.WMTS;
+const WMSTileSource = ol.source.TileWMS;
 const VectorLayer = ol.layer.Vector;
 const VectorSource = ol.source.Vector;
+
+const getProjection = ol.proj.get;
+const getExtentWidth = ol.extent.getWidth;
+const getExtentTopLeft = ol.extent.getTopLeft;
+
+const WMTSTileGrid = ol.tilegrid.WMTS;
+const TileLayer = ol.layer.Tile;
+
 const Style = ol.style.Style;
 const Fill = ol.style.Fill;
 const Stroke = ol.style.Stroke;
@@ -41,13 +52,98 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
   });
 }
 
-export function createVectorLayer(fillColor, strokeColor, strokeWidth = 1, circleRadius = 0, source = null) {
+/**
+ * Creates an OpenLayers layer from a given LayerModel.
+ *
+ * @param {core/models.LayerModel} layerModel The layerModel to create a layer for.
+ * @returns {ol.Layer} The OpenLayers layer object
+ */
+export function createRasterLayer(layerModel) {
+  const params = layerModel.get('display');
+  let layer;
+
+  const projection = getProjection('EPSG:4326');
+  const projectionExtent = projection.getExtent();
+  const size = getExtentWidth(projectionExtent) / 256;
+  const resolutions = new Array(18);
+  const matrixIds = new Array(18);
+
+  for (let z = 0; z < 18; ++z) {
+    // generate resolutions and matrixIds arrays for this WMTS
+    resolutions[z] = size / Math.pow(2, (z + 1));
+    let id = z;
+
+    if (params.matrixIdPrefix) {
+      id = params.matrixIdPrefix + id;
+    }
+    if (params.matrixIdPostfix) {
+      id += params.matrixIdPostfix;
+    }
+    matrixIds[z] = id;
+  }
+
+  switch (params.protocol) {
+    case 'WMTS':
+      layer = new TileLayer({
+        visible: params.visible,
+        source: new WMTSSource({
+          urls: (params.url) ? [params.url] : params.urls,
+          layer: params.id,
+          matrixSet: params.matrixSet,
+          format: params.format,
+          projection: params.projection,
+          tileGrid: new WMTSTileGrid({
+            origin: getExtentTopLeft(projectionExtent),
+            resolutions,
+            matrixIds,
+          }),
+          style: params.style,
+          attributions: [
+            new Attribution({
+              html: params.attribution,
+            }),
+          ],
+          wrapX: true,
+          dimensions: {
+            time: '',
+          }
+        }),
+      });
+      break;
+    case 'WMS':
+      layer = new TileLayer({
+        visible: params.visible,
+        source: new WMSTileSource({
+          crossOrigin: 'anonymous',
+          params: {
+            LAYERS: params.id,
+            VERSION: '1.1.0',
+            FORMAT: params.format, // TODO: use format here?
+          },
+          url: params.url || params.urls[0],
+          wrapX: true,
+          attributions: [
+            new Attribution({
+              html: params.attribution,
+            }),
+          ],
+        }),
+      });
+      break;
+    default:
+      throw new Error('Unsupported view protocol');
+  }
+  layer.id = layerModel.get('id');
+  return layer;
+}
+
+function createStyle({ fillColor, strokeColor, strokeWidth = 1, circleRadius = 0 } = { }) {
   const definition = {
     fill: new Fill({
-      color: fillColor,
+      color: fillColor || 'rgba(0, 0, 0, 0)',
     }),
     stroke: new Stroke({
-      color: strokeColor,
+      color: strokeColor || 'rgba(0, 0, 0, 0)',
       width: strokeWidth,
     }),
   };
@@ -56,15 +152,17 @@ export function createVectorLayer(fillColor, strokeColor, strokeWidth = 1, circl
     definition.image = new Circle({
       radius: circleRadius,
       fill: new Fill({
-        color: '#ffcc33',
+        color: fillColor || 'rgba(0, 0, 0, 0)',
       }),
     });
   }
+  return new Style(definition);
+}
 
-  const style = new Style(definition);
+export function createVectorLayer(styleDefinition = {}, source = null) {
   return new VectorLayer({
     source: source || new VectorSource(),
-    style,
+    style: createStyle(styleDefinition),
     wrapX: true,
   });
 }
