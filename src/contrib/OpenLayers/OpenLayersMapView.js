@@ -148,10 +148,10 @@ class OpenLayersMapView extends Marionette.ItemView {
     // create the map object
     this.map = createMap(
       this.mapModel.get('center') || [0, 0],
-      this.mapModel.get('zoom') || 2,
+      this.mapModel.get('zoom')+1 || 2,
       options.mapRenderer || 'canvas',
-      this.mapModel.get('minZoom'),
-      this.mapModel.get('maxZoom')
+      this.mapModel.get('minZoom')+1,
+      this.mapModel.get('maxZoom')+1
     );
 
     // create layer groups for base, normal and overlay layers
