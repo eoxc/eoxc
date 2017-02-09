@@ -6,8 +6,8 @@ import turfIntersect from '@turf/intersect';
 import CollectionSource from './CollectionSource';
 
 const Map = ol.Map;
-const Attribution = ol.control.Attribution;
-const Zoom = ol.control.Zoom;
+const AttributionControl = ol.control.Attribution;
+const ZoomControl = ol.control.Zoom;
 
 const WMTSSource = ol.source.WMTS;
 const WMSTileSource = ol.source.TileWMS;
@@ -27,12 +27,13 @@ const Stroke = ol.style.Stroke;
 const Circle = ol.style.Circle;
 const GeoJSON = ol.format.GeoJSON;
 
+const Attribution = ol.Attribution;
 
 export function createMap(center, zoom, renderer, minZoom, maxZoom) {
   return new Map({
     controls: [
-      new Attribution(),
-      new Zoom(),
+      new AttributionControl(),
+      new ZoomControl(),
       // new ol.control.MousePosition({
       //   coordinateFormat: ol.coordinate.createStringXY(4),
       //   projection: 'EPSG:4326',
