@@ -1,19 +1,3 @@
-import { discover, config } from 'opensearch-browser';
-import { DOMParser } from 'xmldom';
-import BluebirdPromise from 'bluebird';
-
-BluebirdPromise.config({
-  cancellation: true,
-});
-config({
-  useXHR: true,
-});
-
-self.Promise = BluebirdPromise;
-self.DOMParser = DOMParser;
-
-self.services = {};
-self.promises = {};
 
 function prepareBox(bbox) {
   const b = [...bbox];
@@ -31,7 +15,7 @@ function prepareBox(bbox) {
   return b;
 }
 
-function prepareRecords(records) {
+export function prepareRecords(records) {
   return records.map((record) => {
     if (record.geometry && record.geometry.type === 'Polygon') {
       for (let ringIndex = 0; ringIndex < record.geometry.coordinates.length; ++ringIndex) {
@@ -59,7 +43,7 @@ function prepareRecords(records) {
  * Convert a filters model, map model, and options to an OpenSearch parameters
  * object
  */
-function convertFilters(filterParams, mapParams, options, format, service) {
+export function convertFilters(filterParams, mapParams, options, format, service) {
   const description = service.getDescription();
   const url = description.getUrl(null, format || null);
 
@@ -85,11 +69,14 @@ function convertFilters(filterParams, mapParams, options, format, service) {
       if (geometry.type === 'Point' && url.hasParameter('geo:lon') && url.hasParameter('geo:lat')) {
         parameters['geo:lon'] = geometry.coordinates[0];
         parameters['geo:lat'] = geometry.coordinates[1];
+        if (url.hasParameter('geo:radius')) {
+          parameters['geo:radius'] = 0;
+        }
       } else {
         parameters['geo:geometry'] = geometry;
       }
     }
-  } else if (mapParams) {
+  } else if (mapParams.bbox) {
     // use the maps BBox by default
     parameters['geo:box'] = prepareBox(mapParams.bbox);
   }
@@ -114,77 +101,3 @@ function convertFilters(filterParams, mapParams, options, format, service) {
 
   return parameters;
 }
-
-
-function getService(url) {
-  if (!self.services[url]) {
-    // add a new promise
-    self.services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise });
-    // self.services[url] = discover(url, { useXHR: true });
-  }
-  return self.services[url];
-}
-
-
-function searchAll(url, method, filterParams, mapParams, options, format) {
-  const maxCount = options.maxCount;
-
-  return getService(url)
-    .then((service) => {
-      const parameters = convertFilters(filterParams, mapParams, options, format, service);
-      const paginator = service.getPaginator(parameters, format, method, true);
-      if (maxCount) {
-        return paginator.fetchFirstRecords(maxCount)
-          .then(result => ({
-            totalResults: result.totalResults,
-            itemsPerPage: result.itemsPerPage,
-            startIndex: result.startIndex,
-            records: prepareRecords(result.records),
-          }));
-      }
-      return paginator.fetchAllRecords()
-        .then(result => ({
-          totalResults: result.totalResults,
-          itemsPerPage: result.itemsPerPage,
-          startIndex: result.startIndex,
-          records: prepareRecords(result.records),
-        }));
-    });
-}
-
-
-self.onmessage = function onMessage({ data }) {
-  const [operation, id, params] = data;
-  let promise = null;
-  switch (operation) {
-    case 'searchAll': {
-      const { url, method, filterParams, mapParams, options, format } = params;
-      promise = searchAll(url, method, filterParams, mapParams, options, format);
-      break;
-    }
-    case 'cancel': {
-      const previousPromise = self.promises[id];
-      if (previousPromise) {
-        delete self.promises[id];
-        previousPromise.cancel();
-      }
-      break;
-    }
-    default:
-      break;
-  }
-
-  if (promise) {
-    self.promises[id] = promise;
-    promise
-      .then((result) => {
-        delete self.promises[id];
-        this.postMessage(['success', id, result]);
-      })
-      .catch((error) => {
-        delete self.promises[id];
-        this.postMessage(['error', id, error.toString()]);
-        throw error;
-      });
-  }
-};
