@@ -2,7 +2,6 @@ import 'd3/d3';
 import Marionette from 'backbone.marionette';
 import TimeSlider from 'D3.TimeSlider/src/d3.timeslider.coffee';
 import WMSSource from 'D3.TimeSlider/src/sources/wms.coffee';
-import EOWCSSource from 'D3.TimeSlider/src/sources/eowcs.coffee';
 import WPSSource from 'D3.TimeSlider/src/sources/eoxserver-wps.coffee';
 
 import { searchAllRecords, getCount } from '../../search';
@@ -209,6 +208,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         });
         break;
       default:
+        // eslint-disable-next-line
         console.warn(`Unexpected search protocol ${layerModel.get('search').protocol}`);
         break;
     }
@@ -245,7 +245,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
           return intersects(bbox, params.bbox);
         }
         return intersects([-180, bbox[1], bbox[2], bbox[2]], params.bbox)
-          | intersects([bbox[0], bbox[1], 180, bbox[2]], params.bbox);
+          || intersects([bbox[0], bbox[1], 180, bbox[2]], params.bbox);
       }
       return true;
     };
@@ -340,8 +340,16 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   onModelSelectionChanged(mapModel) {
-    const selection = mapModel.get('time');
-    this.timeSlider.select(selection[0], selection[1]);
+    // eslint-disable-next-line
+    let [low, high] = mapModel.get('time');
+    if (this.timeSlider.options.selectionLimit) {
+      const maxTime = (this.timeSlider.options.selectionLimit * 1000);
+      const dt = high.getTime() - low.getTime();
+      if (dt > maxTime) {
+        high = new Date(low.getTime() + maxTime);
+      }
+    }
+    this.timeSlider.select(low, high);
   },
 
   // collection events
