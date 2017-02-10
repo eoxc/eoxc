@@ -1,3 +1,4 @@
+/* eslint-disable */
 import Marionette from 'backbone.marionette';
 require('jquery-ui/draggable');
 require('font-awesome-webpack');

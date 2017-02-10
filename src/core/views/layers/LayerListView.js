@@ -1,12 +1,13 @@
 import Marionette from 'backbone.marionette';
-require('jquery-ui/ui/widgets/sortable.js');
+import 'jquery-ui/ui/widgets/sortable';
 import 'font-awesome-webpack';
+import $ from 'jquery';
 
 import LayerListItemView from './LayerListItemView';
 
-require('./LayerListView.css');
+import './LayerListView.css';
 
-
+// eslint-disable-next-line max-len
 const LayerListView = Marionette.CollectionView.extend(/** @lends core/views/layers.LayerListView# */{
   tagName: 'ul',
   className: 'layer-list',
@@ -63,7 +64,7 @@ const LayerListView = Marionette.CollectionView.extend(/** @lends core/views/lay
 
   onSortStop() {
     // get the new order of the layers from the DOM
-    this.children.map((view) => [
+    this.children.map(view => [
       view.$('.input-group').attr('id').substr(11),
       view.$el.index(),
     ])

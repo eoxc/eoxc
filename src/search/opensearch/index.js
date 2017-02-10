@@ -1,8 +1,9 @@
 import { discover, config as configureOpenSearch } from 'opensearch-browser';
 import BluebirdPromise from 'bluebird';
 
+// eslint-disable-next-line
+import OpenSearchWorker from 'worker-loader?inline!./OpenSearchWorker';
 import { convertFilters, prepareRecords } from './common';
-import OpenSearchWorker from 'worker-loader?inline!./OpenSearchWorker.js';
 
 BluebirdPromise.config({
   cancellation: true,
@@ -38,6 +39,7 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
       return service.search(parameters, format, method || 'GET', false, true);
     })
     .then((result) => {
+      // eslint-disable-next-line no-param-reassign
       result.records = prepareRecords(result.records);
       return result;
     });

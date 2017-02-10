@@ -1,5 +1,5 @@
-import LayerModel from './LayerModel';
 import Backbone from 'backbone';
+import LayerModel from './LayerModel';
 
 const LayersCollection = Backbone.Collection.extend(/** @lends core/models.LayersCollection# */{
   model: LayerModel,
@@ -27,9 +27,11 @@ const LayersCollection = Backbone.Collection.extend(/** @lends core/models.Layer
   add(layerDefinition, options) {
     if (Array.isArray(layerDefinition)) {
       for (let i = 0; i < layerDefinition.length; ++i) {
+        // eslint-disable-next-line no-param-reassign
         layerDefinition[i].ordinal = this.size() + i;
       }
     } else {
+      // eslint-disable-next-line no-param-reassign
       layerDefinition.ordinal = this.size();
     }
     return Backbone.Collection.prototype.add.call(this, layerDefinition, options);

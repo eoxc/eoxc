@@ -6,6 +6,7 @@ import template from './SearchResultListView.hbs';
 import './SearchResultListView.css';
 import SearchResultItemView from './SearchResultItemView';
 
+// eslint-disable-next-line max-len
 const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/views/layers.SearchResultListView# */{
   initialLowerBound: 0,
   initialUpperBound() {
@@ -18,7 +19,7 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
   getUpperBound() {
     const height = this.$el.height();
     const elemHeight = this.$el.find('li').outerHeight(true);
-    const upper = Math.ceil((this.$el.scrollTop() + height) * 3 / elemHeight) + 3;
+    const upper = Math.ceil(((this.$el.scrollTop() + height) * 3) / elemHeight) + 3;
     if (upper > this.prevUpper) {
       this.prevUpper = upper;
     }
@@ -74,7 +75,7 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
   },
 
   _updateCollection() {
-    // eslint-ignore-next-line
+    // eslint-disable-next-line
     Marionette.SlidingView.prototype._updateCollection.call(this);
     this.adjustSpacer();
   },

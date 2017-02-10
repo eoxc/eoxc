@@ -71,6 +71,7 @@ export function createRasterLayer(layerModel) {
 
   for (let z = 0; z < 18; ++z) {
     // generate resolutions and matrixIds arrays for this WMTS
+    // eslint-disable-next-line no-restricted-properties
     resolutions[z] = size / Math.pow(2, (z + 1));
     let id = z;
 
@@ -363,6 +364,7 @@ const globalPolygon = featureFromExtent([-180, -90, 180, 90]);
 /*
  * Create OL coutout features.
  */
+// eslint-disable-next-line max-len
 export function createCutOut(geometry, format, fillColor, outerColor, strokeColor, strokeWidth = 1) {
   const [origFeature, optimized] = toNormalizedFeature(geometry);
   const bbox = turfBBox(origFeature);

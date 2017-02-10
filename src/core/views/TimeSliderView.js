@@ -167,8 +167,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       case 'OpenSearch':
         source = (start, end, params, callback) => {
           const filtersModel = new FiltersModel({ time: [start, end] });
-          searchAllRecords(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' }).then(result => {
-            callback(result.records.map(record => {
+          searchAllRecords(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' }).then((result) => {
+            callback(result.records.map((record) => {
               let time = null;
               const properties = record.properties;
               if (record.time) {

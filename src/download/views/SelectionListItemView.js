@@ -2,6 +2,7 @@ import RecordItemView from '../../core/views/RecordItemView';
 import template from './SelectionListItemView.hbs';
 import './SelectionListItemView.css';
 
+// eslint-disable-next-line max-len
 const SelectionListItemView = RecordItemView.extend(/** @lends download/views/layers.SelectionListItemView */{
   template,
   className: 'selection-list-item record-item',

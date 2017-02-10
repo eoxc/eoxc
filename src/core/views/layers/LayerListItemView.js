@@ -1,9 +1,9 @@
 import Marionette from 'backbone.marionette';
 
-const template = require('./LayerListItemView.hbs');
-require('./LayerListItemView.css');
+import template from './LayerListItemView.hbs';
+import './LayerListItemView.css';
 
-
+// eslint-disable-next-line max-len
 const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layers.LayerListItemView# */{
   tagName: 'li',
   className: 'layer-list-item',

@@ -27,9 +27,10 @@ export function padLeft(str, pad, size) {
  */
 
 export function getDateString(date) {
-  return date.getUTCFullYear() + '-'
-    + padLeft(String(date.getUTCMonth() + 1), '0', 2) + '-'
-    + padLeft(String(date.getUTCDate()), '0', 2);
+  const year = date.getUTCFullYear();
+  const month = padLeft(String(date.getUTCMonth() + 1), '0', 2);
+  const day = padLeft(String(date.getUTCDate()), '0', 2);
+  return `${year}-${month}-${day}`;
 }
 
 /**
@@ -40,7 +41,7 @@ export function getDateString(date) {
  */
 
 export function getISODateString(date) {
-  return getDateString(date) + 'T';
+  return `${getDateString(date)}T`;
 }
 
 /**
@@ -51,10 +52,10 @@ export function getISODateString(date) {
  */
 
 export function getISODateTimeString(date) {
-  return getISODateString(date)
-    + padLeft(String(date.getUTCHours()), '0', 2) + ':'
-    + padLeft(String(date.getUTCMinutes()), '0', 2) + ':'
-    + padLeft(String(date.getUTCSeconds()), '0', 2) + 'Z';
+  const hours = padLeft(String(date.getUTCHours()), '0', 2);
+  const minutes = padLeft(String(date.getUTCMinutes()), '0', 2);
+  const seconds = padLeft(String(date.getUTCSeconds()), '0', 2);
+  return `${getISODateString(date)}${hours}:${minutes}:${seconds}Z`;
 }
 
 /*

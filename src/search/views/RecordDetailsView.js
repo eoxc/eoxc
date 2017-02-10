@@ -3,7 +3,7 @@ import Marionette from 'backbone.marionette';
 const template = require('./RecordDetailsView.hbs');
 require('./RecordDetailsView.css');
 
-
+// eslint-disable-next-line max-len
 const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/layers.RecordDetailsView# */{
   template,
   regions: {

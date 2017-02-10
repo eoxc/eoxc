@@ -1,6 +1,5 @@
 import Backbone from 'backbone';
 import Marionette from 'backbone.marionette';
-import i18next from 'i18next';
 import SearchResultListView from './SearchResultListView';
 
 import './SearchResultView.css';
@@ -10,6 +9,7 @@ import noLayerSelectedTemplate from './NoLayerSelected.hbs';
 import noLayersAvailableTemplate from './NoLayersAvailable.hbs';
 import nLayersSelectedTemplate from './NLayersSelected.hbs';
 
+// eslint-disable-next-line max-len
 const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/layers.SearchResultView# */{
   template,
   templateHelpers() {

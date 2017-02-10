@@ -1,8 +1,8 @@
 import Marionette from 'backbone.marionette';
-const template = require('./LayerControlLayoutView.hbs');
+import template from './LayerControlLayoutView.hbs';
 import LayerListView from './LayerListView';
 
-
+// eslint-disable-next-line max-len
 const LayerControlLayoutView = Marionette.LayoutView.extend(/** @lends core/views/layers.LayerControlLayoutView# */{
   template,
   regions: {

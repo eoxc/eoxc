@@ -1,6 +1,6 @@
 import RecordItemView from '../../core/views/RecordItemView';
-// import './SearchResultItemView.css';
 
+// eslint-disable-next-line max-len
 const SearchResultItemView = RecordItemView.extend(/** @lends search/views/layers.SearchResultItemView# */{
   className: 'result-list-item record-item',
 

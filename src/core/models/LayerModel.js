@@ -1,5 +1,5 @@
 import Backbone from 'backbone';
-require('backbone-nested');
+import 'backbone-nested';
 
 
 const LayerModel = Backbone.NestedModel.extend(/** @lends core/models.LayerModel# */{
@@ -64,7 +64,7 @@ const LayerModel = Backbone.NestedModel.extend(/** @lends core/models.LayerModel
 
   },
 
-  validate(attrs) {
+  validate() {
     // TODO: validate attributes
     // if (!attrs.id) {
     //   return 'missing mandatory identifier';
