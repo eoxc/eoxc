@@ -1,4 +1,3 @@
-
 function prepareBox(bbox) {
   const b = [...bbox];
   b[1] = Math.max(b[1], -90);
@@ -76,7 +75,7 @@ export function convertFilters(filterParams, mapParams, options, format, service
         parameters['geo:geometry'] = geometry;
       }
     }
-  } else if (mapParams.bbox) {
+  } else if (mapParams && mapParams.bbox) {
     // use the maps BBox by default
     parameters['geo:box'] = prepareBox(mapParams.bbox);
   }
