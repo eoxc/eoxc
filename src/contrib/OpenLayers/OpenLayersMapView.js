@@ -1,6 +1,7 @@
 import Marionette from 'backbone.marionette';
 import ol from 'openlayers';
 import $ from 'jquery';
+import _ from 'underscore';
 import 'openlayers/dist/ol.css';
 
 import { getISODateTimeString, uniqueBy } from '../../core/util';
@@ -396,7 +397,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     // setup map events
     this.map.on('pointerdrag', this.onMapPointerDrag, this);
     this.map.on('moveend', this.onMapMoveEnd, this);
-    this.map.on('pointermove', this.onMapPointerMove, this);
+    this.map.on('pointermove', _.throttle(this.onMapPointerMove, 200), this);
     this.map.on('click', this.onMapClick, this);
   }
 
