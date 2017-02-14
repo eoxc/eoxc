@@ -134,7 +134,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       if (filterTime) {
         this.timeSlider.setHighlightInterval(
           filterTime[0], filterTime[1],
-          this.filterFillColor, this.filterStrokeColor, this.filterOutsideColor
+          this.filterFillColor, this.filterStrokeColor, this.filterOutsideColor,
+          true
         );
       } else {
         this.timeSlider.setHighlightInterval(null);
