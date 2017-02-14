@@ -1,33 +1,34 @@
-import ol from 'openlayers';
 import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
 
+import Map from 'ol/map';
+import View from 'ol/view';
+import proj from 'ol/proj';
+import extent from 'ol/extent';
+import Attribution from 'ol/attribution';
+
+import AttributionControl from 'ol/control/attribution';
+import ZoomControl from 'ol/control/zoom';
+
+import TileLayer from 'ol/layer/tile';
+import VectorLayer from 'ol/layer/vector';
+
+import WMTSSource from 'ol/source/wmts';
+import WMSTileSource from 'ol/source/tilewms';
+import VectorSource from 'ol/source/vector';
+
+import WMTSTileGrid from 'ol/tilegrid/wmts';
+
+import Style from 'ol/style/style';
+import Fill from 'ol/style/fill';
+import Stroke from 'ol/style/stroke';
+import Circle from 'ol/style/circle';
+
+import GeoJSON from 'ol/format/geojson';
+
 import CollectionSource from './CollectionSource';
 
-const Map = ol.Map;
-const AttributionControl = ol.control.Attribution;
-const ZoomControl = ol.control.Zoom;
-
-const WMTSSource = ol.source.WMTS;
-const WMSTileSource = ol.source.TileWMS;
-const VectorLayer = ol.layer.Vector;
-const VectorSource = ol.source.Vector;
-
-const getProjection = ol.proj.get;
-const getExtentWidth = ol.extent.getWidth;
-const getExtentTopLeft = ol.extent.getTopLeft;
-
-const WMTSTileGrid = ol.tilegrid.WMTS;
-const TileLayer = ol.layer.Tile;
-
-const Style = ol.style.Style;
-const Fill = ol.style.Fill;
-const Stroke = ol.style.Stroke;
-const Circle = ol.style.Circle;
-const GeoJSON = ol.format.GeoJSON;
-
-const Attribution = ol.Attribution;
 
 export function createMap(center, zoom, renderer, minZoom, maxZoom) {
   return new Map({
@@ -41,8 +42,8 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
       // }),
     ],
     renderer: renderer || 'canvas',
-    view: new ol.View({
-      projection: ol.proj.get('EPSG:4326'),
+    view: new View({
+      projection: proj.get('EPSG:4326'),
       center,
       zoom,
       enableRotation: false,
@@ -63,9 +64,9 @@ export function createRasterLayer(layerModel) {
   const params = layerModel.get('display');
   let layer;
 
-  const projection = getProjection('EPSG:4326');
+  const projection = proj.get('EPSG:4326');
   const projectionExtent = projection.getExtent();
-  const size = getExtentWidth(projectionExtent) / 256;
+  const size = extent.getWidth(projectionExtent) / 256;
   const resolutions = new Array(18);
   const matrixIds = new Array(18);
 
@@ -95,7 +96,7 @@ export function createRasterLayer(layerModel) {
           format: params.format,
           projection: params.projection,
           tileGrid: new WMTSTileGrid({
-            origin: getExtentTopLeft(projectionExtent),
+            origin: extent.getTopLeft(projectionExtent),
             resolutions,
             matrixIds,
           }),

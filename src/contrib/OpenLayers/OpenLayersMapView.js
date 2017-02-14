@@ -1,26 +1,28 @@
 import Marionette from 'backbone.marionette';
-import ol from 'openlayers';
+
 import $ from 'jquery';
 import _ from 'underscore';
-import 'openlayers/dist/ol.css';
+
+import Feature from 'ol/feature';
+import Collection from 'ol/collection';
+import Overlay from 'ol/overlay';
+
+import Draw from 'ol/interaction/draw';
+
+import Group from 'ol/layer/group';
+
+import WMTSSource from 'ol/source/wmts';
+import WMSTileSource from 'ol/source/tilewms';
+
+import GeoJSON from 'ol/format/geojson';
+
+import Polygon from 'ol/geom/polygon';
 
 import { getISODateTimeString, uniqueBy } from '../../core/util';
 import { createMap, createRasterLayer, createVectorLayer, createCutOut, wrapToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
-
-const Collection = ol.Collection;
-const Group = ol.layer.Group;
-
-const WMTSSource = ol.source.WMTS;
-const WMSTileSource = ol.source.TileWMS;
-
-const GeoJSON = ol.format.GeoJSON;
-
-const Draw = ol.interaction.Draw;
-
-const Polygon = ol.geom.Polygon;
-const Feature = ol.Feature;
+import './ol.css';
 
 class GroupById extends Group {
   constructor(options = {}) {
@@ -388,7 +390,7 @@ class OpenLayersMapView extends Marionette.ItemView {
           geometry = format.readGeometry(feature.geometry);
         }
       }
-      this.map.getView().fit(geometry, this.map.getSize(), { duration: 250 });
+      this.map.getView().fit(geometry, { duration: 250 });
     });
 
     // setup filters signals
@@ -397,7 +399,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     // setup map events
     this.map.on('pointerdrag', this.onMapPointerDrag, this);
     this.map.on('moveend', this.onMapMoveEnd, this);
-    this.map.on('pointermove', _.throttle(this.onMapPointerMove, 200), this);
+    this.map.on('pointermove', _.throttle(this.onMapPointerMove, 100), this);
     this.map.on('click', this.onMapClick, this);
   }
 
@@ -464,7 +466,7 @@ class OpenLayersMapView extends Marionette.ItemView {
         </div>
       </div>
     </div>`);
-    this.marker = new ol.Overlay({
+    this.marker = new Overlay({
       positioning: 'top-center',
       element: $html[0],
       stopEvent: true,

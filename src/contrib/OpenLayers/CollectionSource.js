@@ -1,6 +1,4 @@
-import ol from 'openlayers';
-
-const VectorSource = ol.source.Vector;
+import VectorSource from 'ol/source/vector';
 
 /**
  * Vector source to map a Backbone collection of result records to openlayers
