@@ -14,13 +14,14 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
     if (typeof a.download !== 'undefined') {
       const url = getDownloadUrlUrl(recordModel);
       a.style.display = 'none';
-      a.target = '_blank';
+      a.setAttribute('target', '_blank');
       a.setAttribute('href', url);
+      a.setAttribute('rel', 'noopener noreferrer');
 
       document.body.appendChild(a);
       a.click();
 
-      setTimeout(() => document.body.removeChild(a));
+      setTimeout(() => document.body.removeChild(a), 10000);
 
       return null;
     }
