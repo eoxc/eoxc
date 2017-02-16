@@ -183,8 +183,8 @@ export function createCollectionVectorLayer(collection, searchModel, fillColor, 
   return layer;
 }
 
-function featureFromExtent(extent) {
-  const [minx, miny, maxx, maxy] = extent;
+function featureFromExtent(extentArray) {
+  const [minx, miny, maxx, maxy] = extentArray;
   return {
     type: 'Feature',
     geometry: {
@@ -200,8 +200,8 @@ function featureFromExtent(extent) {
   };
 }
 
-function linesFromExtent(extent) {
-  const [minx, miny, maxx, maxy] = extent;
+function linesFromExtent(extentArray) {
+  const [minx, miny, maxx, maxy] = extentArray;
   return {
     type: 'Feature',
     geometry: {
@@ -317,31 +317,31 @@ export function toNormalizedFeature(geometry) {
 
 export function wrapToBounds(featureOrExtent, bounds) {
   let geom;
-  let extent;
+  let extentArray;
   const maxWidth = bounds[2] - bounds[0];
 
   if (Array.isArray(featureOrExtent)) {
-    extent = featureOrExtent;
+    extentArray = featureOrExtent;
     // check that bbox is within bounds and adjust
-    if (extent[2] - extent[0] >= maxWidth) {
-      extent[0] = bounds[0];
-      extent[2] = bounds[2];
+    if (extentArray[2] - extentArray[0] >= maxWidth) {
+      extentArray[0] = bounds[0];
+      extentArray[2] = bounds[2];
     }
-    extent[1] = Math.max(extent[1], bounds[1]);
-    extent[3] = Math.min(extent[3], bounds[3]);
-    if (extent[1] > extent[3]) {
+    extentArray[1] = Math.max(extentArray[1], bounds[1]);
+    extentArray[3] = Math.min(extentArray[3], bounds[3]);
+    if (extentArray[1] > extentArray[3]) {
       geom = null;
     } else {
-      geom = extent;
+      geom = extentArray;
     }
   } else {
     // check that feature is within bounds
     geom = featureOrExtent;
-    extent = turfBBox(geom);
+    extentArray = turfBBox(geom);
   }
 
   if (geom) {
-    const dx = Math.ceil((extent[0] + 180) / -maxWidth) * maxWidth;
+    const dx = Math.ceil((extentArray[0] + 180) / -maxWidth) * maxWidth;
     geom = moveBy(geom, dx, 0);
   }
 
