@@ -13,9 +13,15 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
     const a = document.createElement('a');
     if (typeof a.download !== 'undefined') {
       const url = getDownloadUrlUrl(recordModel);
+      a.style.display = 'none';
+      a.target = '_blank';
       a.setAttribute('href', url);
-      a.setAttribute('download', 'true');
+
+      document.body.appendChild(a);
       a.click();
+
+      setTimeout(() => document.body.removeChild(a));
+
       return null;
     }
     element = downloadUrl(recordModel);
