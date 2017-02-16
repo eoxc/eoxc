@@ -518,6 +518,10 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (searchLayer) {
         searchLayer.setVisible(display.visible);
       }
+      const searchFillLayer = this.searchLayersFillGroup.getLayerById(layerModel.get('id'));
+      if (searchFillLayer) {
+        searchFillLayer.setVisible(display.visible);
+      }
     }
   }
 
