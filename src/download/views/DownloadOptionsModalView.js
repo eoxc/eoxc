@@ -80,7 +80,7 @@ export default ModalView.extend({
       filtersModel.set('area', this.bbox);
     }
 
-    const [recordModel, searchModel] = this.records[0];
+    // const [recordModel, searchModel] = this.records[0];
     // $.ajax({
     //   type: "GET",
     //   async: true,
@@ -88,9 +88,17 @@ export default ModalView.extend({
     // }).done(() => {
     //   alert(arguments)
     // })
-    this.records.forEach(([recordModel, searchModel]) => downloadRecord(
-        searchModel.get('layerModel'), filtersModel, recordModel, options, this.$('#download-elements')
-      )
-    );
+    // this.records.forEach(([recordModel, searchModel]) => downloadRecord(
+    //     searchModel.get('layerModel'), filtersModel, recordModel, options, this.$('#download-elements')
+    //   )
+    // );
+
+    this.records.forEach(([recordModel, searchModel], i) => {
+      setTimeout(() =>
+        downloadRecord(
+          searchModel.get('layerModel'), filtersModel, recordModel, options, this.$('#download-elements')
+        ), i * 0
+      );
+    });
   }
 });
