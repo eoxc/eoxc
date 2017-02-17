@@ -42,19 +42,6 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
       $iframe.remove();
     }, 20000);
   }
-
-  // TODO: other download implementations
-  if (element) {
-    const $element = $(element);
-
-    if (elementContainer) {
-      $(elementContainer).append($element);
-    }
-    if ($element.is('form')) {
-      $element.submit();
-    }
-  }
-  return element;
 }
 
 export function downloadCustom(filename, mediaType, content) {
