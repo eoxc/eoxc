@@ -200,11 +200,12 @@ class OpenLayersMapView extends Marionette.ItemView {
       }),
     });
 
-    const searchLayersFillGroup = new GroupById({
+    this.searchLayersFillGroup = new GroupById({
       layers: searchCollection.map((searchModel) => {
         const searchLayer = createVectorLayer({
           fillColor: this.footprintFillColor,
         }, this.searchLayersGroup.getLayerById(searchModel.get('layerModel').get('id')).getSource());
+        searchLayer.id = searchModel.get('layerModel').get('id');
         return searchLayer;
       }),
     });
@@ -252,7 +253,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.map.addLayer(this.groups.baseLayers);
 
-    this.map.addLayer(searchLayersFillGroup);
+    this.map.addLayer(this.searchLayersFillGroup);
     this.map.addLayer(downloadSelectionLayerFillGroup);
     this.map.addLayer(highlightFillLayer);
 
