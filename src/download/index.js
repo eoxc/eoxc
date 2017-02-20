@@ -9,14 +9,18 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
   if (layerModel.get('download.protocol') === 'EO-WCS') {
     element = downloadEOWCS(layerModel, filtersModel, recordModel, options);
   } else {
-    // element = downloadUrl(recordModel);
     const a = document.createElement('a');
+
+    // This works in Chrome and Firefox
     if (typeof a.download !== 'undefined') {
       const url = getDownloadUrlUrl(recordModel);
       a.style.display = 'none';
       a.setAttribute('target', '_blank');
       a.setAttribute('href', url);
-      a.setAttribute('rel', 'noopener noreferrer');
+
+      // Needed for multiple downloads in Chrome.
+      // Adding 'noreferrer' breaks multiple downloads in Firefox
+      a.setAttribute('rel', 'noopener');
 
       document.body.appendChild(a);
       a.click();
@@ -25,21 +29,20 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
 
       return null;
     }
-    element = downloadUrl(recordModel);
-  }
+    // element = downloadUrl(recordModel);
 
-  // TODO: other download implementations
-  if (element) {
-    const $element = $(element);
-
-    if (elementContainer) {
-      $(elementContainer).append($element);
-    }
-    if ($element.is('form')) {
-      $element.submit();
-    }
+    // This works in IE11, but not for SSO
+    const url = getDownloadUrlUrl(recordModel);
+    const $iframe = $('<iframe style="visibility: collapse;"></iframe>');
+    $('body').append($iframe);
+    const content = $iframe[0].contentDocument;
+    const form = `<form action="${url}" method="GET"></form>`;
+    content.write(form);
+    $('form', content).submit();
+    setTimeout(() => {
+      $iframe.remove();
+    }, 20000);
   }
-  return element;
 }
 
 export function downloadCustom(filename, mediaType, content) {
