@@ -3,22 +3,23 @@ import { saveAs } from 'file-saver';
 
 import { download as downloadEOWCS, getDownloadUrl as getDownloadUrlEOWCS } from './eowcs';
 import { download as downloadUrl, getDownloadUrl as getDownloadUrlUrl } from './url';
-import { getIEVersion } from '../core/util';
 
 export function downloadRecord(layerModel, filtersModel, recordModel, options, elementContainer) {
   let element = null;
   if (layerModel.get('download.protocol') === 'EO-WCS') {
     element = downloadEOWCS(layerModel, filtersModel, recordModel, options);
   } else {
-    // // element = downloadUrl(recordModel);
     const a = document.createElement('a');
+
+    // This works in Chrome and Firefox
     if (typeof a.download !== 'undefined') {
-    // if (true) {
       const url = getDownloadUrlUrl(recordModel);
       a.style.display = 'none';
       a.setAttribute('target', '_blank');
       a.setAttribute('href', url);
 
+      // Needed for multiple downloads in Chrome.
+      // Adding 'noreferrer' breaks multiple downloads in Firefox
       a.setAttribute('rel', 'noopener');
 
       document.body.appendChild(a);
@@ -30,7 +31,7 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
     }
     // element = downloadUrl(recordModel);
 
-    // This works, but not for SSO
+    // This works in IE11, but not for SSO
     const url = getDownloadUrlUrl(recordModel);
     const $iframe = $('<iframe style="visibility: collapse;"></iframe>');
     $('body').append($iframe);
