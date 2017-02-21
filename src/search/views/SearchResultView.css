@@ -13,12 +13,6 @@
   margin-bottom: 5px;
 }
 
-.form-control {
-  min-width: 0;
-  width: auto;
-  display: inline;
-}
-
 .panel-footer {
   padding: 5px !important;
 }
