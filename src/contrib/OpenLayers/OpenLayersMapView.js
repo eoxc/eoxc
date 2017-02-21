@@ -378,8 +378,10 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (feature.bbox) {
         geometry = feature.bbox;
       } else if (Array.isArray(feature)) {
+        const [minx, miny, maxx, maxy] = feature;
+
         geometry = Polygon.fromExtent([
-          feature[0], feature[1], feature[2], feature[3],
+          minx, miny, maxx > minx ? maxx : maxx + 360, maxy,
         ]);
       } else {
         const format = new GeoJSON();
