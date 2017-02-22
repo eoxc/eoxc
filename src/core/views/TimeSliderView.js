@@ -39,6 +39,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     // not required at the moment
     bucketMouseover: 'onBucketMouseover',
     bucketMouseout: 'onBucketMouseout',
+    loadStart: 'onLoadStart',
+    loadEnd: 'onLoadEnd',
   },
 
   /**
@@ -117,6 +119,14 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     }
 
     this.timeSlider = new TimeSlider(this.el, options);
+
+    // replace the markup for the timeslider controls
+
+    this.$('.control#pan-left .arrow-left').replaceWith('<i class="fa fa-caret-left" />');
+    this.$('.control#pan-right .arrow-right').replaceWith('<i class="fa fa-caret-right" />');
+    this.$('.control#zoom-out').html('<i class="fa fa-minus" />');
+    this.$('.control#zoom-in').html('<i class="fa fa-plus" />');
+    this.$('.control#reload .reload-arrow').replaceWith('<i class="fa fa-refresh fa-fw" />');
 
     const visibleLayers = this.layersCollection.filter(
       layerModel => layerModel.get('display.visible') && layerModel.get('search.protocol')
@@ -351,6 +361,14 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       }
     }
     this.timeSlider.select(low, high);
+  },
+
+  onLoadStart() {
+    this.$('.control#reload i').addClass('fa-spin');
+  },
+
+  onLoadEnd() {
+    this.$('.control#reload i').removeClass('fa-spin');
   },
 
   // collection events
