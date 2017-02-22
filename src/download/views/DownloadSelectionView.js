@@ -42,7 +42,7 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   onAttach() {
-    this.triggerMethod('update:status', '<span class="badge">0</span>');
+    this.triggerMethod('update:status', this._infoBadge());
   },
 
   onStartDownloadClicked() {
@@ -78,7 +78,11 @@ const DownloadView = Marionette.CompositeView.extend({
       .find('button,select,input')
       .prop('disabled', totalCount === 0);
 
-    this.triggerMethod('update:status', `<span class="badge">${totalCount}</span>`);
+    this.triggerMethod('update:status', this._infoBadge(totalCount));
+  },
+
+  _infoBadge(totalCount = 0) {
+    return `<span>(${totalCount})</span>`;
   },
 
   _getDownloadInfos(options) {
