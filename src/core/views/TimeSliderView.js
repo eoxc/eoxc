@@ -382,7 +382,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   onLayerChanged(layerModel) {
-    if (layerModel.hasChanged('display')) {
+    if (layerModel.hasChanged('display') && layerModel.get('search.protocol')) {
       if (layerModel.get('display.visible') && !this.timeSlider.hasDataset(layerModel.get('id'))) {
         this.addLayer(layerModel);
       } else {
