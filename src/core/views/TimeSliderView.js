@@ -132,11 +132,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       layerModel => layerModel.get('display.visible') && layerModel.get('search.protocol')
     );
 
-    if (visibleLayers.length > 0) {
-      visibleLayers.forEach(layerModel => this.addLayer(layerModel));
-    } else {
-      this.$el.css('display', 'none');
-    }
+    visibleLayers.forEach(layerModel => this.addLayer(layerModel));
+    this.checkVisible(false);
 
     this.listenTo(this.mapModel, 'change:time', this.onModelSelectionChanged);
     this.listenTo(this.filtersModel, 'change:time', () => {
@@ -164,7 +161,6 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   addLayer(layerModel) {
-    this.$el.fadeIn();
     let source;
     let bucketSource;
     switch (layerModel.get('search').protocol) {
@@ -242,9 +238,23 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   removeLayer(layerModel) {
     this.timeSlider.removeDataset(layerModel.get('id'));
-    const visibleLayers = this.layersCollection.filter(m => m.get('display.visible'));
-    if (visibleLayers.length === 0) {
-      this.$el.fadeOut();
+  },
+
+  checkVisible(fade = true) {
+    const visibleLayers = this.layersCollection
+      .filter(m => m.get('display.visible') && m.get('search.protocol'));
+    if (visibleLayers.length) {
+      if (fade) {
+        this.$el.fadeIn();
+      } else {
+        this.$el.show();
+      }
+    } else {
+      if (fade) {
+        this.$el.fadeOut();
+      } else {
+        this.$el.hide();
+      }
     }
   },
 
@@ -375,10 +385,12 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onLayerAdded(layerModel) {
     this.addLayer(layerModel);
+    this.checkVisible();
   },
 
   onLayerRemoved(layerModel) {
     this.removeLayer(layerModel);
+    this.checkVisible();
   },
 
   onLayerChanged(layerModel) {
@@ -389,6 +401,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         this.removeLayer(layerModel);
       }
     }
+    this.checkVisible();
   },
 
   onHighlightFeatureChange(highlightModel, feature) {
