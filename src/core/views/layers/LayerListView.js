@@ -13,9 +13,6 @@ const LayerListView = Marionette.CollectionView.extend(/** @lends core/views/lay
   className: 'layer-list',
   childView: LayerListItemView,
 
-  events: {
-  },
-
   /**
     @constructs
     @param {Object} options
@@ -42,19 +39,13 @@ const LayerListView = Marionette.CollectionView.extend(/** @lends core/views/lay
   onAttach() {
     if (this.sortable) {
       $(this.$el).sortable({
-        revert: true,
-        // delay: 90,
         containment: this.$el,
         axis: 'y',
         forceHelperSize: true,
         forcePlaceHolderSize: true,
         placeholder: 'sortable-placeholder',
         handle: '.fa-sort',
-        start: () => {
-          this.$('.ui-slider').detach();
-          this.$('.fa-adjust').toggleClass('active');
-          // this.$('.fa-adjust').popover('hide');
-        },
+        tolerance: 'pointer',
         stop: (event, ui) => {
           this.onSortStop(event, ui);
         },
@@ -64,13 +55,14 @@ const LayerListView = Marionette.CollectionView.extend(/** @lends core/views/lay
 
   onSortStop() {
     // get the new order of the layers from the DOM
-    this.children.map(view => [
-      view.$('.input-group').attr('id').substr(11),
-      view.$el.index(),
-    ])
-    .forEach((item) => {
-      this.collection.get(item[0]).set('ordinal', item[1], { silent: true });
-    });
+    this.children
+      .map(view => [
+        view.$('.input-group').attr('id').substr(11),
+        view.$el.index(),
+      ])
+      .forEach(([id, index]) => {
+        this.collection.get(id).set('ordinal', index, { silent: true });
+      });
     this.collection.sort();
   },
 });
