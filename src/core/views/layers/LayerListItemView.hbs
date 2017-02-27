@@ -1,34 +1,35 @@
 {{#if fullDisplay}}
 <div class="input-group" id="layer-item-{{id}}">
-    <span class="input-group-addon">
-        <input type="checkbox" id="{{id}}-visible" class="layer-visible" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
-    </span>
-    <span class="form-control display-name">
-      {{# if link}}
-        <a href="{{link}}" target="_blank">{{displayName}}</a>
-      {{else}}
-        {{displayName}}
-      {{/if}}
-    </span>
-    <span class="input-group-addon">
-        <i class="fa fa-sort"></i>
-        <i class="fa fa-square" style="color: {{displayColor}}"></i>
-    </span>
+  <span class="input-group-addon">
+    <input type="checkbox" id="{{id}}-visible" class="layer-visible" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
+  </span>
+  <span class="form-control display-name">
+    {{# if link}}
+      <a href="{{link}}" target="_blank">{{displayName}}</a>
+    {{else}}
+      {{displayName}}
+    {{/if}}
+  </span>
+  <span class="input-group-addon">
+    <i class="fa fa-sort"></i>
+    <i class="fa fa-square" style="color: {{displayColor}}"></i>
+    <i class="fa fa-adjust layer-adjust-opacity" data-toggle="popover" data-container="body"></i>
+  </span>
 </div>
 {{else}}
-    {{#if singleChoice}}
-    <div class="radio">
-        <label for="{{id}}-visible">
-            <input type="radio" id="{{id}}-visible" class="layer-visible" name="singleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
-            {{displayName}}
-        </label>
-    </div>
-    {{else}}
-    <div class="checkbox">
-        <label for="{{id}}-visible">
-            <input type="checkbox" id="{{id}}-visible" class="layer-visible" name="multipleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
-            {{displayName}}
-        </label>
-    </div>
-    {{/if}}
+  {{#if singleChoice}}
+  <div class="radio">
+    <label for="{{id}}-visible">
+      <input type="radio" id="{{id}}-visible" class="layer-visible" name="singleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
+      {{displayName}}
+    </label>
+  </div>
+  {{else}}
+  <div class="checkbox">
+    <label for="{{id}}-visible">
+      <input type="checkbox" id="{{id}}-visible" class="layer-visible" name="multipleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
+      {{displayName}}
+    </label>
+  </div>
+  {{/if}}
 {{/if}}

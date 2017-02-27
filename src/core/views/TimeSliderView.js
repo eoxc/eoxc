@@ -153,7 +153,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     });
     this.listenTo(this.layersCollection, 'add', this.onLayerAdded);
     this.listenTo(this.layersCollection, 'remove', this.onLayerRemoved);
-    this.listenTo(this.layersCollection, 'change', this.onLayerChanged);
+    this.listenTo(this.layersCollection, 'change:display.visible', this.onLayerVisibleChanged);
+
     this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
       this.timeSlider.setRecordFilter(this.createRecordFilter(mapModel.get('bbox')));
     });
@@ -393,7 +394,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.checkVisible();
   },
 
-  onLayerChanged(layerModel) {
+  onLayerVisibleChanged(layerModel) {
     if (layerModel.hasChanged('display') && layerModel.get('search.protocol')) {
       if (layerModel.get('display.visible') && !this.timeSlider.hasDataset(layerModel.get('id'))) {
         this.addLayer(layerModel);
