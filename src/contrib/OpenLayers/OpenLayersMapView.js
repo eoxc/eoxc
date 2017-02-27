@@ -19,7 +19,7 @@ import GeoJSON from 'ol/format/geojson';
 import Polygon from 'ol/geom/polygon';
 
 import { getISODateTimeString, uniqueBy } from '../../core/util';
-import { createMap, createRasterLayer, createVectorLayer, createCutOut, wrapToBounds } from './utils';
+import { createMap, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import './ol.css';
@@ -161,7 +161,9 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     const createGroupForCollection = (collection) => {
       const group = new Group({
-        layers: collection.map(layerModel => createRasterLayer(layerModel)),
+        layers: sortLayers(
+          collection, collection.map(layerModel => createRasterLayer(layerModel))
+        ),
       });
       return group;
     };
@@ -503,11 +505,9 @@ class OpenLayersMapView extends Marionette.ItemView {
   // collection/model signal handlers
 
   onLayersSorted(layersCollection) {
-    const ids = layersCollection.pluck('id');
-    const layers = this.groups.layers.getLayers();
-
+    const layers = this.groups.layers.getLayers().getArray();
     this.groups.layers.setLayers(
-      new Collection(layers.getArray().sort(layer => ids.indexOf(layer.id)))
+      new Collection(sortLayers(layersCollection, layers))
     );
   }
 

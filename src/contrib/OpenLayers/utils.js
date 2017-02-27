@@ -183,6 +183,21 @@ export function createCollectionVectorLayer(collection, searchModel, fillColor, 
   return layer;
 }
 
+export function sortLayers(collection, layers) {
+  const ids = collection.pluck('id').reverse();
+  return layers.sort((a, b) => {
+    const ia = ids.indexOf(a.id);
+    const ib = ids.indexOf(b.id);
+    if (ia < ib) {
+      return -1;
+    } else if (ia > ib) {
+      return 1;
+    }
+    return 0;
+  });
+}
+
+
 function featureFromExtent(extentArray) {
   const [minx, miny, maxx, maxy] = extentArray;
   return {
