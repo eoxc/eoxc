@@ -625,7 +625,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       .map(layer => layer.getSource())
       .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
     this.highlightModel.highlight(searchFeatures.map(feature => feature.model));
-    this.showOverlay(coordinate, searchFeatures, selectedFeatures);
+    this.showOverlay(event.coordinate, searchFeatures, selectedFeatures);
   }
 
   /* helper to create OL features */
