@@ -153,6 +153,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     });
     this.listenTo(this.layersCollection, 'add', this.onLayerAdded);
     this.listenTo(this.layersCollection, 'remove', this.onLayerRemoved);
+    this.listenTo(this.layersCollection, 'sort', this.onLayersSorted);
     this.listenTo(this.layersCollection, 'change:display.visible', this.onLayerVisibleChanged);
 
     this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
@@ -392,6 +393,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   onLayerRemoved(layerModel) {
     this.removeLayer(layerModel);
     this.checkVisible();
+  },
+
+  onLayersSorted(layersCollection) {
+    const ids = layersCollection.pluck('id');
+    this.timeSlider.reorderDatasets(ids);
   },
 
   onLayerVisibleChanged(layerModel) {
