@@ -140,7 +140,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
         .find('.search-status');
 
       if (searchModel.get('isSearching')) {
-        $status.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+        $status.html('<i class="fa fa-circle-o-notch fa-spin fa-fw"></i>');
       } else if (searchModel.get('hasError')) {
         $status.html('<i class="fa fa-exclamation"></i>');
       } else {
@@ -156,7 +156,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
     if (hasError) {
       $globalStatus.html('<i class="fa fa-exclamation"></i>');
     } else if (isSearching) {
-      $globalStatus.html('<i class="fa fa-circle-o-notch fa-spin"></i>');
+      $globalStatus.html('<i class="fa fa-circle-o-notch fa-spin fa-fw"></i>');
     } else if (this.selectedSearchModels.length) {
       const sumTotalResults = this.selectedSearchModels.reduce(
         (current, model) => (current + model.get('totalResults')), 0
@@ -178,7 +178,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
     if (hasError) {
       this.triggerMethod('update:status', '<i class="fa fa-exclamation"></i>');
     } else if (isSearching) {
-      this.triggerMethod('update:status', '<i class="fa fa-circle-o-notch fa-spin"></i>');
+      this.triggerMethod('update:status', '<i class="fa fa-circle-o-notch fa-spin fa-fw"></i>');
     } else {
       this.triggerMethod('update:status', '');
     }
