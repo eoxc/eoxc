@@ -3,6 +3,8 @@ import Marionette from 'backbone.marionette';
 import template from './RecordItemView.hbs';
 import './RecordItemView.css';
 
+import imageError from './RecordItemViewImageError.hbs';
+
 const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.RecordItemView# */{
   template,
   tagName: 'li',
@@ -33,8 +35,8 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     // TODO: this flickers the image
     this.$('img')
       // .css({ opacity: 0 })
-      .one('load', () => this.$('img').fadeIn('slow'));
-      // .one('error', () => this.$('img').css({ opacity: 1 }));
+      .one('load', () => this.$('img').fadeIn('slow'))
+      .one('error', () => this.$('img').attr('alt', imageError()));
   },
 
   onAttach() {
