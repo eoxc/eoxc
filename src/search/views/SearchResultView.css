@@ -2,10 +2,7 @@
   height: 100%;
 }
 .result-contents {
-  height: -moz-calc(100% - 39px);
-  height: -webkit-calc(100% - 39px);
-  height: -o-calc(100% - 39px);
-  height: calc(100% - 39px);
+  height: calc(100% - 65px);
 }
 
 .download-control {
@@ -20,4 +17,11 @@
 .dropdown-menu {
   padding-left: 10px;
   padding-right: 10px;
+}
+
+.select-all {
+  position: absolute;
+  width: calc(100% - 10px);
+  bottom: 0;
+  margin-bottom: 5px;
 }

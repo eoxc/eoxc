@@ -28,6 +28,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
 
   events: {
     'change input[data-layer]': 'onLayerSelectionChange',
+    'click .select-all': 'onSelectAllClick',
   },
   regions: {
     'search-results': '.result-contents',
@@ -183,6 +184,12 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
       this.triggerMethod('update:status', '');
     }
   },
+
+  onSelectAllClick() {
+    this.selectedSearchModels.forEach((searchModel) => {
+      searchModel.get('results').forEach(recordModel => recordModel.selectForDownload());
+    });
+  }
 });
 
 export default SearchResultView;
