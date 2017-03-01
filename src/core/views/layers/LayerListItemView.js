@@ -24,7 +24,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     @constructs
     @param {Object} options
     @param {core/models.LayersCollection} options.collection The layers to display
-    @param {boolean} options.singleChoive Whether the visibility of the layers
+    @param {boolean} options.singleChoice Whether the visibility of the layers
                                           is mutually exclusive.
     @param {boolean} options.fullDisplay Whether the layers shall be displayed
                                          with options, colors, etc.
@@ -69,7 +69,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     let opacity = this.model.get('display.opacity');
     opacity = typeof opacity === 'undefined' ? 1 : opacity;
 
-    this.$slider = $('<div/>')
+    this.$slider = $('<input/>')
       .appendTo($popoverContent)
       .slider({
         min: 0,
@@ -82,18 +82,30 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     this.$slider.on('slide', (event) => {
       this.model.set('display.opacity', event.value / 100);
     });
+    this.$slider.on('change', () => {
+      this.model.set('display.opacity', parseInt(this.$slider.val(), 10) / 100);
+    });
 
     $popover.attr('tabindex', '0');
     $popover.focus();
 
-    $popover[0].onblur = () => {
-      this.$popoverButton.popover('hide');
-      $popover[0].onblur = null;
+    $popover[0].onblur = (event) => {
+      // fix for IE, as the blur event is also raised when a child gets focused:
+      // check if the currently targeted element is a descendant. Only hide the
+      // popover when the new target is outside of the popover.
+      const $target = $(event.explicitOriginalTarget || document.activeElement);
+      if ($target.closest($popover).length === 0) {
+        this.$popoverButton.popover('hide');
+        $popover[0].onblur = null;
+      } else {
+        $popover.focus();
+      }
     };
   },
   onPopoverHidden() {
     this.isPopoverShown = false;
     this.$slider.off('slide');
+    this.$slider.off('change');
     this.$slider.slider('destroy');
   },
 
