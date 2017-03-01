@@ -14,7 +14,9 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   events: {
     'change .layer-visible': 'onLayerVisibleChange',
     'click .layer-options': 'onLayerOptionsClick',
-    'shown.bs.popover': 'onPopoverShown',
+
+    'click .layer-adjust-opacity': 'onLayerAdjustOpacityClick',
+    'inserted.bs.popover': 'onPopoverInserted',
     'hidden.bs.popover': 'onPopoverHidden',
   },
 
@@ -40,14 +42,26 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   },
 
   onAttach() {
-    this.$('[data-toggle="popover"]').popover({
+    this.$popoverButton = this.$('[data-toggle="popover"]');
+    this.$popoverButton.popover({
+      container: 'body',
       content: 'x',
-      animation: false,
+      trigger: 'manual',
     });
   },
 
-  onPopoverShown() {
-    const $popoverContent = $(`#${this.$('.layer-adjust-opacity').attr('aria-describedby')} .popover-content`);
+  onLayerAdjustOpacityClick() {
+    if (!this.isPopoverShown) {
+      this.$popoverButton.popover('show');
+    }
+  },
+
+  onPopoverInserted() {
+    this.isPopoverShown = true;
+    const popoverId = this.$('.layer-adjust-opacity').attr('aria-describedby');
+    const $popover = $(`#${popoverId}`);
+    const $popoverContent = $popover.find('.popover-content');
+    $popover.addClass('layer-adjust-opacity-popover');
     $popoverContent
       .empty().text('')
       .css('width', '200px');
@@ -68,8 +82,17 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     this.$slider.on('slide', (event) => {
       this.model.set('display.opacity', event.value / 100);
     });
+
+    $popover.attr('tabindex', '0');
+    $popover.focus();
+
+    $popover[0].onblur = () => {
+      this.$popoverButton.popover('hide');
+      $popover[0].onblur = null;
+    };
   },
   onPopoverHidden() {
+    this.isPopoverShown = false;
     this.$slider.off('slide');
     this.$slider.slider('destroy');
   },
