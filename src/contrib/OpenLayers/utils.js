@@ -7,6 +7,7 @@ import View from 'ol/view';
 import proj from 'ol/proj';
 import extent from 'ol/extent';
 import Attribution from 'ol/attribution';
+import Collection from 'ol/collection';
 
 import AttributionControl from 'ol/control/attribution';
 import ZoomControl from 'ol/control/zoom';
@@ -164,7 +165,7 @@ function createStyle({ fillColor, strokeColor, strokeWidth = 1, circleRadius = 0
 
 export function createVectorLayer(styleDefinition = {}, source = null) {
   return new VectorLayer({
-    source: source || new VectorSource(),
+    source: source || new VectorSource({ features: new Collection() }),
     style: createStyle(styleDefinition),
     wrapX: true,
   });

@@ -8,6 +8,7 @@ import Collection from 'ol/collection';
 import Overlay from 'ol/overlay';
 
 import Draw from 'ol/interaction/draw';
+import Modify from 'ol/interaction/modify';
 
 import Group from 'ol/layer/group';
 
@@ -453,6 +454,12 @@ class OpenLayersMapView extends Marionette.ItemView {
       });
     });
 
+    const modify = new Modify({
+      features: this.selectionSource.getFeaturesCollection(),
+    });
+    this.map.addInteraction(modify);
+    modify.on('modifyend', this.onFeatureModifyEnd, this);
+
     const $html = $(`
     <div class="popover top in" role="tooltip"
          style="width: 75px; height: 32px; top: -32px; left: -37px; z-index: unset">
@@ -626,6 +633,13 @@ class OpenLayersMapView extends Marionette.ItemView {
       .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
     this.highlightModel.highlight(searchFeatures.map(feature => feature.model));
     this.showOverlay(event.coordinate, searchFeatures, selectedFeatures);
+  }
+
+  onFeatureModifyEnd(event) {
+    const format = new GeoJSON();
+    const feature = event.features.item(1);
+    const geom = wrapToBounds(format.writeFeatureObject(feature), [-180, -90, 180, 90]);
+    this.filtersModel.set('area', geom);
   }
 
   /* helper to create OL features */
