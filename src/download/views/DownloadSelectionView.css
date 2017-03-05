@@ -3,13 +3,17 @@
 }
 
 .download-view .selection-lists {
-  height: calc(100% - 30px);
+  height: calc(100% - 60px);
   overflow-y: auto;
 }
 
 .download-control {
-    position: absolute;
-    width: calc(100% - 10px);
-    margin-bottom: 5px;
-    bottom: 0px;
+  position: absolute;
+  width: calc(100% - 10px);
+  margin-bottom: 5px;
+  bottom: 0px;
+}
+
+.download-control .checkbox {
+  width: 100%;
 }

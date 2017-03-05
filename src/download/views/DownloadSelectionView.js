@@ -10,6 +10,11 @@ import metalinkTemplate from '../Metalink.hbs';
 
 const DownloadView = Marionette.CompositeView.extend({
   template,
+  templateHelpers() {
+    return {
+      termsAndConditionsUrl: this.termsAndConditionsUrl,
+    };
+  },
   className: 'download-view',
   childView: SelectionListView,
   childViewContainer: '.selection-lists',
@@ -26,11 +31,13 @@ const DownloadView = Marionette.CompositeView.extend({
     'click .download-as-metalink': 'onDownloadAsMetalinkClicked',
     'click .download-as-url-list': 'onDownloadAsUrlListClicked',
     'click .deselect-all': 'onDeselectAllClicked',
+    'change .terms-and-conditions': 'onTermsAndAndConditionsChange',
   },
 
   initialize(options) {
     this.filtersModel = options.filtersModel;
     this.highlightModel = options.highlightModel;
+    this.termsAndConditionsUrl = options.termsAndConditionsUrl;
 
     this.collection.each((searchModel) => {
       this.listenTo(
@@ -69,14 +76,28 @@ const DownloadView = Marionette.CompositeView.extend({
     );
   },
 
+  onTermsAndAndConditionsChange() {
+    this.hasAcceptedTerms = this.$('.terms-and-conditions').is(':checked');
+    this.checkButtons();
+  },
+
   onDownloadSelectionChange() {
+    this.checkButtons();
+  },
+
+  checkButtons() {
     const totalCount = this.collection.reduce((count, searchModel) => (
       count + searchModel.get('downloadSelection').length
     ), 0);
 
+    let enabled = totalCount > 0;
+    if (this.termsAndConditionsUrl) {
+      enabled = enabled && this.hasAcceptedTerms;
+    }
+
     this.$('.download-control')
-      .find('button,select,input')
-      .prop('disabled', totalCount === 0);
+      .find('button')
+      .prop('disabled', !enabled);
 
     this.triggerMethod('update:status', this._infoBadge(totalCount));
   },

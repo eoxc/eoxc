@@ -1,20 +1,12 @@
 <div class="selection-lists"></div>
-
 <div class="input-group download-control">
-  {{#if showDownloadOptions}}
-  <span class="input-group-addon">{{t 'Format'}}:</span>
-  <select class="form-control input-sm">
-    <option selected>{{t 'native format'}}</option>
-    <option value="image/tiff">TIFF</option>
-    <option value="image/png">PNG</option>
-  </select>
-  <span class="input-group-btn">
-    <button class="btn btn-default btn-sm start-download" type="button" disabled>{{t 'Download'}}</button>
-  </span>
-  <div class="btn-group" role="group">
-    <button class="btn btn-default btn-sm btn-danger deselect-all" type="button" disabled>{{t 'Deselect all'}}</button>
+  {{#if termsAndConditionsUrl}}
+  <div class="checkbox">
+    <label>
+      <input type="checkbox" class="terms-and-conditions"> {{{t 'terms_and_conditions' termsAndConditionsUrl}}}
+    </label>
   </div>
-  {{else}}
+  {{/if}}
   <span class="btn-group btn-group-justified">
     <div class="btn-group" role="group">
       <button class="btn btn-default btn-sm start-download" type="button" disabled>{{t 'Download'}}</button>
@@ -30,6 +22,5 @@
       <button class="btn btn-default btn-sm btn-danger deselect-all" type="button" disabled>{{t 'Deselect all'}}</button>
     </div>
   </span>
-  {{/if}}
 </div>
 <div id="download-elements" style="display: none;"></div>
