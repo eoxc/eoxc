@@ -9,8 +9,8 @@
       <form>
         {{#each layers}}
         <div class="checkbox">
-          <label>
-            <input type="checkbox" {{#if this.display.visible}}checked{{/if}} data-layer="{{this.id}}">
+          <label {{#unless this.display.visible}}style="display:none;"{{/unless}}>
+            <input type="checkbox" checked data-layer="{{this.id}}">
             {{this.displayName}}
             <span class="search-status"></span>
           </label>

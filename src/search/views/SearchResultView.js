@@ -52,13 +52,13 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
           if (!this.selectedSearchModels.find(m => m === searchModel)) {
             newSelectedSearchModels = this.selectedSearchModels.concat([searchModel]);
           }
-          $checkbox.parent().show();
+          $checkbox.closest('label').show();
           $checkbox.prop('checked', true);
         } else {
           newSelectedSearchModels = this.selectedSearchModels.filter(
             model => model !== searchModel
           );
-          $checkbox.parent().hide();
+          $checkbox.closest('label').hide();
         }
         this.setSelectedSearchModels(newSelectedSearchModels);
         this.onSearchModelsChange();
@@ -126,6 +126,7 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
 
     // filter selected
     const selectedSearchModels = this.collection.filter(searchModel => (
+      searchModel.get('layerModel').get('display.visible') &&
       ids.indexOf(searchModel.get('layerModel').get('id')) > -1
     ));
     this.setSelectedSearchModels(selectedSearchModels);
