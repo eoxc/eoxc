@@ -3,8 +3,11 @@
 }
 
 .download-view .selection-lists {
-  height: calc(100% - 60px);
+  height: calc(100% - 30px);
   overflow-y: auto;
+}
+.download-view .selection-lists.with-terms {
+  height: calc(100% - 60px);
 }
 
 .download-control {
