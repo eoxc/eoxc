@@ -198,6 +198,10 @@ class OpenLayersMapView extends Marionette.ItemView {
           transformModel: model => this.createMapFeatures(model, searchModel)[0],
         }));
         searchLayer.id = searchModel.get('layerModel').get('id');
+        searchLayer.searchModel = searchModel;
+        this.listenTo(searchModel, 'change:automaticSearch', () => (
+          this.onLayerChange(searchModel.get('layerModel'), this.groups.layers)
+        ));
         return searchLayer;
       }),
     });
@@ -513,18 +517,22 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   onLayerChange(layerModel, group) {
     const layer = this.getLayerOfGroup(layerModel, group);
-    if (layerModel.hasChanged('display')) {
-      const display = layerModel.get('display');
-      layer.setVisible(display.visible);
-      layer.setOpacity(display.opacity);
-      const searchLayer = this.searchLayersGroup.getLayerById(layerModel.get('id'));
-      if (searchLayer) {
-        searchLayer.setVisible(display.visible);
-      }
-      const searchFillLayer = this.searchLayersFillGroup.getLayerById(layerModel.get('id'));
-      if (searchFillLayer) {
-        searchFillLayer.setVisible(display.visible);
-      }
+    const display = layerModel.get('display');
+    layer.setVisible(display.visible);
+    layer.setOpacity(display.opacity);
+
+    const searchLayer = this.searchLayersGroup.getLayerById(layerModel.get('id'));
+    let searchModel = null;
+    if (searchLayer) {
+      searchModel = searchLayer.searchModel;
+    }
+
+    if (searchLayer && searchModel) {
+      searchLayer.setVisible(display.visible && searchModel.get('automaticSearch'));
+    }
+    const searchFillLayer = this.searchLayersFillGroup.getLayerById(layerModel.get('id'));
+    if (searchFillLayer && searchModel) {
+      searchFillLayer.setVisible(display.visible && searchModel.get('automaticSearch'));
     }
   }
 

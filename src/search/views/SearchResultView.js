@@ -63,6 +63,8 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
         this.setSelectedSearchModels(newSelectedSearchModels);
         this.onSearchModelsChange();
       });
+
+      this.listenTo(searchModel.get('results'), 'reset add', this.onResultsChange);
     });
   },
 
@@ -91,12 +93,14 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
     const previousSearchModels = this.selectedSearchModels;
     previousSearchModels.forEach((previousSearchModel) => {
       if (!searchModels.indexOf(previousSearchModel) !== -1) {
-        this.stopListening(previousSearchModel.get('results'));
+        // this.stopListening(previousSearchModel.get('results'));
+        previousSearchModel.stopSearching();
       }
     });
     searchModels.forEach((searchModel) => {
       if (!previousSearchModels.indexOf(searchModel) !== -1) {
-        this.listenTo(searchModel.get('results'), 'reset add', this.onResultsChange);
+        // this.listenTo(searchModel.get('results'), 'reset add', this.onResultsChange);
+        searchModel.continueSearching();
       }
     });
 
@@ -145,6 +149,8 @@ const SearchResultView = Marionette.LayoutView.extend(/** @lends search/views/la
         $status.html('<i class="fa fa-circle-o-notch fa-spin fa-fw"></i>');
       } else if (searchModel.get('hasError')) {
         $status.html('<i class="fa fa-exclamation"></i>');
+      } else if (searchModel.get('isCancelled')) {
+        $status.html('');
       } else {
         $status.html(`${searchModel.get('hasLoaded')}/${searchModel.get('totalResults')}`);
       }

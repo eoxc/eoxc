@@ -20,7 +20,10 @@ class SearchModel extends Backbone.Model {
       maxCount: 200,
       totalResults: undefined,
       isSearching: false,
+      isCancelled: false,
       hasError: false,
+
+      hasChanges: false,
 
       downloadSelection: new Backbone.Collection(),
 
@@ -67,16 +70,15 @@ class SearchModel extends Backbone.Model {
   }
 
   doSearch(layerModel, filtersModel, mapModel) {
-    if (this.prevRequest && this.prevRequest.cancel) {
-      this.prevRequest.cancel();
-    }
-    this.prevRequest = searchAllRecords(layerModel, filtersModel, mapModel, {
+    this.cancelSearch();
+    const request = searchAllRecords(layerModel, filtersModel, mapModel, {
       itemsPerPage: this.get('defaultPageSize'),
       maxCount: this.get('maxCount'),
     });
-
+    this.prevRequest = request;
     this.set({
       isSearching: true,
+      isCancelled: false,
       hasError: false,
       hasLoaded: 0,
     });
@@ -98,6 +100,15 @@ class SearchModel extends Backbone.Model {
       });
       this.get('results').reset([]);
       this.trigger('search:error', error);
+    }).finally(() => {
+      if (request.isCancelled()) {
+        this.set({
+          isSearching: false,
+          isCancelled: true,
+        });
+        this.trigger('search:cancelled');
+        // this.get('results').reset([]);
+      }
     });
   }
 
@@ -108,8 +119,11 @@ class SearchModel extends Backbone.Model {
   }
 
   onAutomaticSearchChange() {
-    if (this.get('automaticSearch')) {
+    if (this.get('automaticSearch') && (this.get('hasChanges') || this.get('hasError') || this.get('isCancelled'))) {
       this.search();
+      this.set('hasChanges', false);
+    } else {
+      this.cancelSearch();
     }
   }
 
@@ -125,12 +139,18 @@ class SearchModel extends Backbone.Model {
   onFiltersModelChange() {
     if (this.get('automaticSearch')) {
       this.search();
+    } else {
+      this.set('hasChanges', true);
     }
   }
 
   onMapBBOXChange() {
-    if (this.get('automaticSearch') && !this.get('filtersModel').get('area')) {
-      this.search();
+    if (!this.get('filtersModel').get('area')) {
+      if (this.get('automaticSearch')) {
+        this.search();
+      } else {
+        this.set('hasChanges', true);
+      }
     }
   }
 
@@ -142,6 +162,20 @@ class SearchModel extends Backbone.Model {
 
   triggerShowInfo(records) {
     this.trigger('showInfo', Array.isArray(records) ? records : [records]);
+  }
+
+  stopSearching() {
+    this.set('automaticSearch', false);
+  }
+
+  continueSearching() {
+    this.set('automaticSearch', true);
+  }
+
+  cancelSearch() {
+    if (this.prevRequest && this.prevRequest.cancel) {
+      this.prevRequest.cancel();
+    }
   }
 }
 
