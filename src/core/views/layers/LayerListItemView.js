@@ -85,6 +85,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     this.$slider.on('change', () => {
       this.model.set('display.opacity', parseInt(this.$slider.val(), 10) / 100);
     });
+    this.$slider.on('slideStop', () => $popover.focus());
 
     $popover.attr('tabindex', '0');
     $popover.focus();
