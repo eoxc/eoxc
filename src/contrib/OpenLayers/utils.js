@@ -7,9 +7,11 @@ import View from 'ol/view';
 import proj from 'ol/proj';
 import extent from 'ol/extent';
 import Attribution from 'ol/attribution';
+import coordinate from 'ol/coordinate';
 
 import AttributionControl from 'ol/control/attribution';
 import ZoomControl from 'ol/control/zoom';
+import MousePositionControl from 'ol/control/mouseposition';
 
 import TileLayer from 'ol/layer/tile';
 import VectorLayer from 'ol/layer/vector';
@@ -35,11 +37,12 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
     controls: [
       new AttributionControl(),
       new ZoomControl(),
-      // new ol.control.MousePosition({
-      //   coordinateFormat: ol.coordinate.createStringXY(4),
-      //   projection: 'EPSG:4326',
-      //   undefinedHTML: '&nbsp;',
-      // }),
+      new MousePositionControl({
+        className: 'ol-mouse-position-eoxc',
+        coordinateFormat: coordinate.createStringXY(2),
+        projection: 'EPSG:4326',
+        undefinedHTML: '',
+      }),
     ],
     renderer: renderer || 'canvas',
     view: new View({
