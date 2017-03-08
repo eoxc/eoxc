@@ -126,7 +126,7 @@ export function createRasterLayer(layerModel) {
             VERSION: '1.1.0',
             FORMAT: params.format, // TODO: use format here?
           },
-          url: params.url || params.urls[0],
+          urls: (params.url) ? [params.url] : params.urls,
           wrapX: true,
           attributions: [
             new Attribution({
