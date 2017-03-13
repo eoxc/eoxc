@@ -236,6 +236,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       cacheIdField: 'id',
       cluster: true,
     });
+    this.onLayersSorted(this.layersCollection);
   },
 
   removeLayer(layerModel) {
