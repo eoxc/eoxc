@@ -100,15 +100,6 @@ class SearchModel extends Backbone.Model {
       });
       this.get('results').reset([]);
       this.trigger('search:error', error);
-    }).finally(() => {
-      if (request.isCancelled()) {
-        this.set({
-          isSearching: false,
-          isCancelled: true,
-        });
-        this.trigger('search:cancelled');
-        // this.get('results').reset([]);
-      }
     });
   }
 
@@ -173,7 +164,11 @@ class SearchModel extends Backbone.Model {
   }
 
   cancelSearch() {
-    if (this.prevRequest && this.prevRequest.cancel) {
+    if (this.prevRequest && this.prevRequest.cancel && this.get('isSearching') && !this.get('isCancelled')) {
+      this.set({
+        isSearching: false,
+        isCancelled: true,
+      });
       this.prevRequest.cancel();
     }
   }
