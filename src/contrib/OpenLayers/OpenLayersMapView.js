@@ -281,7 +281,10 @@ class OpenLayersMapView extends Marionette.ItemView {
   }
 
   applyLayerFilters(layer, mapModel) {
-    const time = mapModel.get('time');
+    let time = mapModel.get('time');
+    if (Array.isArray(time)) {
+      time = Array.from(time).sort();
+    }
     const isoTime = (time !== null) ?
         `${getISODateTimeString(time[0])}/${getISODateTimeString(time[1])}` : null;
 
