@@ -3,6 +3,8 @@
 }
 .result-contents {
   height: calc(100% - 65px);
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .download-control {

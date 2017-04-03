@@ -1,7 +1,7 @@
 <div class="panel panel-default">
   <div class="panel-heading" role="tab">
     <h4 class="panel-title">
-      <a role="button" data-toggle="collapse" href="#collapse-{{layerId}}" aria-expanded="true">
+      <a role="button" data-toggle="collapse" href="#collapse-{{layerId}}" {{#unless isClosed}}aria-expanded="true"{{else}}class="collapsed"{{/unless}}>
         {{layerName}}
         {{#if isSearching}}
           <i class="fa fa-circle-o-notch fa-spin"></i>
@@ -20,11 +20,12 @@
       </a>
     </h4>
   </div>
-  <div id="collapse-{{layerId}}" class="panel-collapse panel-result-list collapse in" role="tabpanel">
+  <div id="collapse-{{layerId}}" class="panel-collapse panel-result-list collapse {{#unless isClosed}}in{{/unless}}" role="tabpanel">
     <div class="panel-body">
+      <div class="spacer spacer-top"/>
       <ul id="result-list-{{layerId}}" class="result-list list-inline list-unstyled"></ul>
+      <div class="spacer spacer-bottom"/>
     </div>
-
     {{#if hasMore}}
       <div class="panel-footer">
         Showing {{maxCount}} of {{totalResults}} records.
