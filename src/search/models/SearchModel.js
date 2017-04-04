@@ -69,38 +69,79 @@ class SearchModel extends Backbone.Model {
     this.doSearchDebounced(layerModel, filtersModel, mapModel);
   }
 
-  doSearch(layerModel, filtersModel, mapModel) {
+  searchMore() {
+    const layerModel = this.get('layerModel');
+    const filtersModel = this.get('filtersModel');
+    const mapModel = this.get('mapModel');
+
+    this.doSearchDebounced(layerModel, filtersModel, mapModel, false, this.get('hasLoaded'));
+  }
+
+  doSearch(layerModel, filtersModel, mapModel, reset = true, startIndex = 0) {
     this.cancelSearch();
     const request = searchAllRecords(layerModel, filtersModel, mapModel, {
       itemsPerPage: this.get('defaultPageSize'),
       maxCount: this.get('maxCount'),
+      startIndex,
     });
     this.prevRequest = request;
+    if (reset) {
+      this.set('hasLoaded', 0);
+      this.get('results').reset([]);
+    }
     this.set({
       isSearching: true,
       isCancelled: false,
       hasError: false,
-      hasLoaded: 0,
     });
-    this.get('results').reset([]);
 
-    return this.prevRequest.then((result) => {
-      this.set({
-        totalResults: result.totalResults,
-        startIndex: result.startIndex,
-        itemsPerPage: result.itemsPerPage,
-        isSearching: false,
-        hasLoaded: result.records.length,
+    // return this.prevRequest.then((result) => {
+    //   this.set({
+    //     totalResults: result.totalResults,
+    //     startIndex: result.startIndex,
+    //     itemsPerPage: result.itemsPerPage,
+    //     isSearching: false,
+    //     hasLoaded: result.records.length,
+    //   });
+    //   this.get('results').reset(result.records);
+    // }).catch((error) => {
+    //   this.set({
+    //     isSearching: false,
+    //     hasError: true,
+    //   });
+    //   this.get('results').reset([]);
+    //   this.trigger('search:error', error);
+    // });
+
+    return this.prevRequest
+      .on('progress', (page) => {
+        this.set({
+          totalResults: page.totalResults,
+          startIndex: page.startIndex,
+          itemsPerPage: page.itemsPerPage
+        });
+        this.get('results').add(page.records);
+      })
+      .on('success', (result) => {
+        const hasLoaded = reset ? 0 : this.get('hasLoaded');
+        this.set({
+          totalResults: result.totalResults,
+          startIndex: result.startIndex,
+          itemsPerPage: result.itemsPerPage,
+          isSearching: false,
+          hasLoaded: hasLoaded + result.records.length,
+        });
+        // this is set before?
+        // this.get('results').reset(result.records);
+      })
+      .on('error', (error) => {
+        this.set({
+          isSearching: false,
+          hasError: true,
+        });
+        this.get('results').reset([]);
+        this.trigger('search:error', error);
       });
-      this.get('results').reset(result.records);
-    }).catch((error) => {
-      this.set({
-        isSearching: false,
-        hasError: true,
-      });
-      this.get('results').reset([]);
-      this.trigger('search:error', error);
-    });
   }
 
   onDebounceTimeChange() {
@@ -164,12 +205,12 @@ class SearchModel extends Backbone.Model {
   }
 
   cancelSearch() {
-    if (this.prevRequest && this.prevRequest.cancel && this.get('isSearching') && !this.get('isCancelled')) {
+    if (this.prevRequest && this.get('isSearching') && !this.get('isCancelled')) {
       this.set({
         isSearching: false,
         isCancelled: true,
       });
-      this.prevRequest.cancel();
+      this.prevRequest.emit('cancel');
     }
   }
 }
