@@ -176,32 +176,33 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       case 'OpenSearch':
         source = (start, end, params, callback) => {
           const filtersModel = new FiltersModel({ time: [start, end] });
-          searchAllRecords(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' }).then((result) => {
-            callback(result.records.map((record) => {
-              let time = null;
-              const properties = record.properties;
-              if (record.time) {
-                time = record.time;
-              } else if (properties) {
-                // TODO: other property names than begin_time/end_time
-                if (properties.begin_time && properties.end_time) {
-                  time = [new Date(properties.begin_time), new Date(properties.end_time)];
-                } else if (properties.time) {
-                  if (Array.isArray(properties.time)) {
-                    time = properties.time;
-                  } else {
-                    time = [properties.time];
+          searchAllRecords(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' })
+            .on('progress', (result) => {
+              callback(result.records.map((record) => {
+                let time = null;
+                const properties = record.properties;
+                if (record.time) {
+                  time = record.time;
+                } else if (properties) {
+                  // TODO: other property names than begin_time/end_time
+                  if (properties.begin_time && properties.end_time) {
+                    time = [new Date(properties.begin_time), new Date(properties.end_time)];
+                  } else if (properties.time) {
+                    if (Array.isArray(properties.time)) {
+                      time = properties.time;
+                    } else {
+                      time = [properties.time];
+                    }
                   }
                 }
-              }
 
-              if (time === null) {
-                return null;
-              }
+                if (time === null) {
+                  return null;
+                }
 
-              return [...time, record];
-            }).filter(item => item !== null));
-          });
+                return [...time, record];
+              }).filter(item => item !== null));
+            });
         };
 
         bucketSource = (start, end, params, callback) => {
