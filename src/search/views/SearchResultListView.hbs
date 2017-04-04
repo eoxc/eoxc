@@ -10,7 +10,7 @@
             <i class="fa fa-exclamation text-danger"></i>
           {{else}}
             {{#if hasMore}}
-              ({{maxCount}}/{{totalResults}})
+              ({{hasLoaded}}/{{totalResults}})
             {{else}}
               ({{totalResults}})
             {{/if}}
@@ -25,11 +25,21 @@
       <div class="spacer spacer-top"/>
       <ul id="result-list-{{layerId}}" class="result-list list-inline list-unstyled"></ul>
       <div class="spacer spacer-bottom"/>
+      {{#if isSearching}}
+        <p class="text-center" style="margin-top: 5px"><i class="fa fa-circle-o-notch fa-spin fa-4x" style="color: white"></i></p>
+      {{/if}}
     </div>
-    {{#if hasMore}}
-      <div class="panel-footer">
-        Showing {{maxCount}} of {{totalResults}} records.
-      </div>
-    {{/if}}
+    {{#unless isSearching}}
+      {{#if hasMore}}
+        <div class="panel-footer">
+          <div class="input-group">
+            <input type="text" class="form-control" disabled value="{{hasLoaded}}/{{totalResults}}">
+            <span class="input-group-btn">
+              <button class="btn btn-default btn-load-more" type="button">{{t 'Load more'}}</button>
+            </span>
+          </div>
+        </div>
+      {{/if}}
+    {{/unless}}
   </div>
 </div>

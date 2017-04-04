@@ -10,7 +10,7 @@
         {{#each layers}}
         <div class="checkbox">
           <label {{#unless this.display.visible}}style="display:none;"{{/unless}}>
-            <input type="checkbox" checked data-layer="{{this.id}}">
+            <input type="checkbox" {{#if this.automaticSearch}}checked{{/if}} data-layer="{{this.id}}">
             {{this.displayName}}
             <span class="search-status"></span>
           </label>

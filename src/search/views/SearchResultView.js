@@ -1,5 +1,6 @@
 import Marionette from 'backbone.marionette';
 import _ from 'underscore';
+import $ from 'jquery';
 
 import SearchResultListView from './SearchResultListView';
 
@@ -15,7 +16,9 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
   template,
   templateHelpers() {
     return {
-      layers: this.collection.map(model => model.get('layerModel').toJSON()),
+      layers: this.collection.map(model =>
+        Object.assign(model.toJSON(), model.get('layerModel').toJSON())
+      ),
     };
   },
   className: 'search-result-view',
@@ -62,9 +65,19 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     });
   },
 
+  filter(model) {
+    return model.get('automaticSearch');
+  },
+
   onAttach() {
     this.onLayerSelectionChange();
+  },
 
+  onBeforeRender() {
+    this.$('.result-contents').off('scroll resize');
+  },
+
+  onRender() {
     this.$('.result-contents').on('scroll resize', _.throttle((...args) => {
       this.updateViews(...args);
     }, 1000 / 60));
@@ -99,7 +112,16 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     });
   },
 
-  onLayerSelectionChange() {
+  onLayerSelectionChange(event) {
+    if (event) {
+      const $changed = $(event.target);
+      const searchModel = this.collection.find(
+        model => model.get('layerModel').get('id') === $changed.data('layer')
+      );
+      searchModel.set('automaticSearch', $changed.is(':checked'));
+      this.render();
+    }
+
     this.onSearchModelsChange();
   },
 
@@ -127,7 +149,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     const isSearching = this.collection.any(model => model.get('isSearching'));
     const hasError = this.collection.any(model => model.get('hasError'));
 
-    const selectedSearchModels = this.collection.filter(model => model.get('')); // TODO
+    const selectedSearchModels = this.collection.filter(model => model.get('automaticSearch'));
 
     if (hasError) {
       $globalStatus.html('<i class="fa fa-exclamation"></i>');
@@ -179,7 +201,8 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
   },
 
   onSelectAllClick() {
-    this.selectedSearchModels.forEach((searchModel) => {
+    const selectedSearchModels = this.collection.filter(model => model.get('automaticSearch'));
+    selectedSearchModels.forEach((searchModel) => {
       searchModel.get('results').forEach(recordModel => recordModel.selectForDownload());
     });
   }

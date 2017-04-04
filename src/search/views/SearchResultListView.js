@@ -1,3 +1,4 @@
+import Backbone from 'backbone';
 import Marionette from 'backbone.marionette';
 import 'jquery-lazyload';
 
@@ -9,14 +10,13 @@ import SearchResultItemView from './SearchResultItemView';
 const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultListView# */{
   template,
   templateHelpers() {
-    const totalResults = this.model.get('totalResults');
-    const hasLoaded = this.model.get('hasLoaded');
-    const hasMore = typeof totalResults !== 'undefined' && typeof hasLoaded !== 'undefined' ? totalResults > hasLoaded : false;
+    const hasMore = this.hasMore();
     return {
       layerName: this.model.get('layerModel').get('displayName'),
       layerId: this.model.cid,
       isClosed: this.isClosed,
-      hasMore
+      hasMore,
+      hasMoreOrIsSearching: hasMore || this.model.get('isSearching'),
     };
   },
   tagName: 'ul',
@@ -28,14 +28,13 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   buildChildView(child, ChildViewClass) {
     return new ChildViewClass({
       model: child,
-      searchModel: this.searchModel,
+      searchModel: this.model,
       highlightModel: this.highlightModel,
     });
   },
 
   events: {
     'click .btn-load-more': 'onLoadMoreClicked',
-    scroll: 'onUpdateEvent',
     'shown.bs.collapse': 'onShown',
     'hidden.bs.collapse': 'onHidden'
   },
@@ -48,8 +47,9 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   constructor(options) {
-    options.collection = new Backbone.Collection();
-    Marionette.CompositeView.prototype.constructor.call(this, options);
+    Marionette.CompositeView.prototype.constructor.call(this, Object.assign({}, options, {
+      collection: new Backbone.Collection(),
+    }));
   },
 
   initialize(options) {
@@ -66,6 +66,10 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     this.referenceCollection = options.referenceCollection;
 
     this.listenTo(this.model, 'change', this.render, this);
+  },
+
+  onLoadMoreClicked() {
+    this.model.searchMore();
   },
 
   onShown() {
@@ -97,7 +101,6 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   /*
-
                     /----------\        -
     headerHeight    |  title   |        |
                     |          |        |- scrollTop
@@ -142,11 +145,13 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
                     |          |
                     |          |
                     \----------/
-
-
   */
 
   setSlice(offset, sliceHeight) {
+
+    console.log(this.model.get('layerModel').get('id'), this.referenceCollection.length);
+    console.log(offset, sliceHeight);
+
     const size = this.calculateSize();
     const headerHeight = 37;
     const itemHeight = 143;
@@ -185,6 +190,15 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     return this._calculateItemsSize(this.referenceCollection.length)
       + headerHeight + footerHeight;
   },
+
+  hasMore() {
+    const totalResults = this.model.get('totalResults');
+    const hasLoaded = this.model.get('hasLoaded');
+    return (
+      typeof totalResults !== 'undefined'
+      && typeof hasLoaded !== 'undefined' ? totalResults > hasLoaded : false
+    );
+  }
 
 });
 
