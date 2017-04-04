@@ -26,30 +26,16 @@ function getService(url) {
   return self.services[url];
 }
 
-
 function searchAll(url, method, filterParams, mapParams, options, format) {
   const maxCount = options.maxCount;
 
   return getService(url)
     .then((service) => {
       const parameters = convertFilters(filterParams, mapParams, options, format, service);
-      const paginator = service.getPaginator(parameters, format, method, true);
-      if (maxCount) {
-        return paginator.fetchFirstRecords(maxCount)
-          .then(result => ({
-            totalResults: result.totalResults,
-            itemsPerPage: result.itemsPerPage,
-            startIndex: result.startIndex,
-            records: prepareRecords(result.records),
-          }));
-      }
-      return paginator.fetchAllRecords()
-        .then(result => ({
-          totalResults: result.totalResults,
-          itemsPerPage: result.itemsPerPage,
-          startIndex: result.startIndex,
-          records: prepareRecords(result.records),
-        }));
+      const paginator = service.getPaginator(parameters, format, method, {
+        baseOffset: options.startIndex,
+      });
+      return paginator.searchFirstRecords(maxCount);
     });
 }
 
@@ -87,5 +73,48 @@ self.onmessage = function onMessage({ data }) {
         this.postMessage(['error', id, error.toString()]);
         throw error;
       });
+  }
+};
+
+function cancel() {
+  if (self.search) {
+    self.search.cancel();
+    self.search = null;
+  }
+  // if (self.emitter && typeof self.emitter.cancel === 'function') {
+  //   self.emitter.cancel();
+  //   self.emitter = null;
+  // }
+  if (self.emitter) {
+    self.emitter.emit('cancel');
+    self.emitter = null;
+  }
+}
+
+self.onmessage = function onMessage({ data }) {
+  const [operation, params] = data;
+  switch (operation) {
+    case 'searchAll': {
+      const { url, method, filterParams, mapParams, options, format } = params;
+      self.search = searchAll(url, method, filterParams, mapParams, options, format);
+      self.search
+        .then((emitter) => {
+          self.emitter = emitter;
+          emitter
+            .on('page', page => self.postMessage(['progress', page]))
+            .on('success', result => self.postMessage(['success', result]))
+            .on('error', error => self.postMessage(['error', error.toString()]));
+        });
+      break;
+    }
+    case 'cancel':
+      cancel();
+      break;
+    case 'terminate':
+      cancel();
+      self.close();
+      break;
+    default:
+      break;
   }
 };

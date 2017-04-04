@@ -1,4 +1,5 @@
 import { discover, config as configureOpenSearch } from 'opensearch-browser';
+import { PagedSearchProgressEmitter } from 'opensearch-browser/src/paginator';
 import BluebirdPromise from 'bluebird';
 
 // eslint-disable-next-line
@@ -74,44 +75,40 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
 //     });
 // }
 
-const worker = new OpenSearchWorker();
-let id = 0;
+// const worker = new OpenSearchWorker();
 
 export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
   const url = layerModel.get('search.url');
   const method = layerModel.get('search.method');
   const format = options.mimeType || layerModel.get('search.format') || null;
 
-  const currentId = ++id;
-
   const filterParams = filtersModel.toJSON();
   const mapParams = mapModel ? mapModel.toJSON() : null;
 
-  return new BluebirdPromise((resolve, reject, onCancel) => {
-    const cb = (event) => {
-      const [status, resultId, result] = event.data;
-      if (currentId === resultId) {
-        worker.removeEventListener('message', cb);
+  const emitter = new PagedSearchProgressEmitter();
 
-        if (status === 'success') {
-          resolve(result);
-        } else {
-          reject(result);
-        }
-      }
-    };
-    if (onCancel && typeof onCancel === 'function') {
-      onCancel(() => {
-        worker.postMessage(['cancel', currentId]);
-      });
+  let worker = new OpenSearchWorker();
+  worker.postMessage(['searchAll', {
+    url, method, filterParams, mapParams, options, format,
+  }]);
+
+  worker.onmessage = ({ data }) => {
+    emitter.emit(...data);
+  };
+
+  const terminate = () => {
+    if (worker) {
+      worker.postMessage(['terminate']);
+      worker = null;
     }
-    worker.addEventListener('message', cb);
-    worker.postMessage([
-      'searchAll', currentId, {
-        url, method, filterParams, mapParams, options, format,
-      },
-    ]);
-  });
+  };
+
+  // TODO: does this cancel the requests? sure hope so
+  emitter.on('cancel', () => terminate());
+  emitter.on('success', () => terminate());
+  emitter.on('error', () => terminate());
+
+  return emitter;
 }
 
 
