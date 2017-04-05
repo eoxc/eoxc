@@ -58,6 +58,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
         } else {
           $checkbox.closest('label').hide();
         }
+        this.render();
         this.onSearchModelsChange();
       });
 
@@ -66,7 +67,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
   },
 
   filter(model) {
-    return model.get('automaticSearch');
+    return model.get('automaticSearch') && model.get('layerModel').get('display.visible');
   },
 
   onAttach() {
