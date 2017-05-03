@@ -283,9 +283,7 @@ class OpenLayersMapView extends Marionette.ItemView {
   applyLayerFilters(layer, mapModel) {
     let time = mapModel.get('time');
     if (Array.isArray(time)) {
-      console.log("before", time);
-      time = time[0] < time[1] ? time : [time[1], time[0]]
-      console.log("after", time);
+      time = time[0] < time[1] ? time : [time[1], time[0]];
     } else if (time instanceof Date) {
       time = [time, time];
     }
