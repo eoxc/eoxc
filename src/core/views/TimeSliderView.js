@@ -183,6 +183,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
                 const properties = record.properties;
                 if (record.time) {
                   time = record.time;
+                  if (time instanceof Date) {
+                    time = [time, time];
+                  }
                 } else if (properties) {
                   // TODO: other property names than begin_time/end_time
                   if (properties.begin_time && properties.end_time) {
@@ -427,7 +430,12 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         if (!layerFeatures[f.layerId]) {
           layerFeatures[f.layerId] = [];
         }
-        layerFeatures[f.layerId].push(f.properties.time);
+
+        let time = f.properties.time;
+        if (time instanceof Date) {
+          time = [time, time];
+        }
+        layerFeatures[f.layerId].push(time);
       }
     });
 
