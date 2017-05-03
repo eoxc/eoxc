@@ -55,6 +55,12 @@ export function getISODateTimeString(date) {
   const hours = padLeft(String(date.getUTCHours()), '0', 2);
   const minutes = padLeft(String(date.getUTCMinutes()), '0', 2);
   const seconds = padLeft(String(date.getUTCSeconds()), '0', 2);
+
+  const ms = date.getUTCMilliseconds();
+  if (ms !== 0) {
+    const milliseconds = padLeft(String(ms), '0', 3);
+    return `${getISODateString(date)}${hours}:${minutes}:${seconds}.${milliseconds}Z`;
+  }
   return `${getISODateString(date)}${hours}:${minutes}:${seconds}Z`;
 }
 
