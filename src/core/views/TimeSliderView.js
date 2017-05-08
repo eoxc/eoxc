@@ -205,7 +205,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
                 return [...time, record];
               }).filter(item => item !== null));
-            });
+            })
+            .on('error', () => callback([]));
         };
 
         bucketSource = (start, end, params, callback) => {
