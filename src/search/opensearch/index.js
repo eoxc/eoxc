@@ -16,11 +16,16 @@ configureOpenSearch({
 
 // cached services
 const services = {};
+const serializedServices = {};
 
 function getService(url) {
   if (!services[url]) {
     // add a new promise
-    services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise });
+    services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise })
+      .then((service) => {
+        serializedServices[url] = service.serialize();
+        return service;
+      });
   }
   return services[url];
 }
@@ -87,9 +92,11 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
 
   const emitter = new PagedSearchProgressEmitter();
 
+  const description = serializedServices[url];
+
   let worker = new OpenSearchWorker();
   worker.postMessage(['searchAll', {
-    url, method, filterParams, mapParams, options, format,
+    url, method, filterParams, mapParams, options, format, description
   }]);
 
   worker.onmessage = ({ data }) => {
