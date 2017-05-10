@@ -195,8 +195,9 @@ class SearchModel extends Backbone.Model {
   }
 
   onMapToolChange() {
-    if (this.get('automaticSearch') && !this.get('mapModel').get('tool')) {
+    if (this.get('automaticSearch') && this.get('hasChanges') && !this.get('mapModel').get('tool')) {
       this.search();
+      this.set('hasChanges', false);
     }
   }
 
