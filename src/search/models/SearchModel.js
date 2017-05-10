@@ -18,6 +18,7 @@ class SearchModel extends Backbone.Model {
       automaticSearch: false,
       defaultPageSize: 9,
       maxCount: 200,
+      loadMore: 50,
       totalResults: undefined,
       isSearching: false,
       isCancelled: false,
@@ -81,7 +82,7 @@ class SearchModel extends Backbone.Model {
     this.cancelSearch();
     const request = searchAllRecords(layerModel, filtersModel, mapModel, {
       itemsPerPage: this.get('defaultPageSize'),
-      maxCount: this.get('maxCount'),
+      maxCount: (startIndex === 0) ? this.get('maxCount') : this.get('loadMore'),
       startIndex,
     });
     this.prevRequest = request;
