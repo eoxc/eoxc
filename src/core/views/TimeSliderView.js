@@ -257,12 +257,10 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       } else {
         this.$el.show();
       }
+    } else if (fade) {
+      this.$el.fadeOut();
     } else {
-      if (fade) {
-        this.$el.fadeOut();
-      } else {
-        this.$el.hide();
-      }
+      this.$el.hide();
     }
   },
 
