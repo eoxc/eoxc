@@ -41,6 +41,25 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
 
   childEvents: {
     'collapse:change': 'updateViews',
+    'before:render': 'onChildBeforeRender',
+    render: 'onChildRender',
+  },
+
+  onChildBeforeRender() {
+    // save the scrolling position for later to get around bug in FF and other
+    // browsers. Prevent additional updates to scrolling position.
+    if (typeof this.savedScrollTop === 'undefined') {
+      this.savedScrollTop = this.$('.result-contents')[0].scrollTop;
+    }
+  },
+
+  onChildRender() {
+    if (typeof this.savedScrollTop !== 'undefined') {
+      setTimeout(() => {
+        this.$('.result-contents').scrollTop(this.savedScrollTop);
+        this.savedScrollTop = undefined;
+      });
+    }
   },
 
   initialize(options) {

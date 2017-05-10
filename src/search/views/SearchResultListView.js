@@ -148,10 +148,6 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   */
 
   setSlice(offset, sliceHeight) {
-
-    console.log(this.model.get('layerModel').get('id'), this.referenceCollection.length);
-    console.log(offset, sliceHeight);
-
     const size = this.calculateSize();
     const headerHeight = 37;
     const itemHeight = 143;
