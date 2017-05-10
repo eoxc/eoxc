@@ -578,6 +578,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (this.drawControls.hasOwnProperty(toolName)) {
       this.map.addInteraction(this.drawControls[toolName]);
     }
+
+    this.searchLayersGroup.setVisible(toolName === null);
+    this.searchLayersFillGroup.setVisible(toolName === null);
   }
 
   onMapPointerDrag() {

@@ -179,7 +179,7 @@ class SearchModel extends Backbone.Model {
 
   onMapBBOXChange() {
     if (!this.get('filtersModel').get('area')) {
-      if (this.get('automaticSearch')) {
+      if (this.get('automaticSearch') && !this.get('mapModel').get('tool')) {
         this.search();
       } else {
         this.set('hasChanges', true);
@@ -188,7 +188,7 @@ class SearchModel extends Backbone.Model {
   }
 
   onMapTimeChange() {
-    if (this.get('automaticSearch') && !this.get('filtersModel').get('time')) {
+    if (this.get('automaticSearch') && !this.get('filtersModel').get('time') && !this.get('mapModel').get('tool')) {
       this.search();
     }
   }
