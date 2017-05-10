@@ -20,7 +20,6 @@ self.promises = {};
 function getService(url, description) {
   if (!self.services[url]) {
     if (description) {
-      console.log('deserialize');
       self.services[url] = BluebirdPromise.resolve(deserialize(description));
     } else {
       self.services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise });
