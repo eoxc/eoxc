@@ -95,6 +95,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       displayLimit: this.displayInterval,
       selectionLimit: this.selectableInterval,
       recordFilter: this.createRecordFilter(this.mapModel.get('bbox')),
+      brushTooltip: true,
       tooltipFormatter,
       binTooltipFormatter: (bin) => {
         let records = bin;
