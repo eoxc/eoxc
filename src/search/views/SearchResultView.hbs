@@ -12,7 +12,16 @@
           <label {{#unless this.display.visible}}style="display:none;"{{/unless}}>
             <input type="checkbox" {{#if this.automaticSearch}}checked{{/if}} data-layer="{{this.id}}">
             {{this.displayName}}
-            <span class="search-status"></span>
+            <span class="search-status">
+              {{#if this.isSearching}}
+                <i class="fa fa-circle-o-notch fa-spin fa-fw"></i>
+              {{else if this.hasError}}
+                <i class="fa fa-exclamation"></i>
+              {{else if this.isCancelled}}
+              {{else}}
+                {{this.hasLoaded}}/{{this.totalResults}}
+              {{/if}}
+            </span>
           </label>
         </div>
         {{/each}}
