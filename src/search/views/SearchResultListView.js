@@ -188,6 +188,9 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   hasMore() {
+    if (this.model.get('hasError')) {
+      return false;
+    }
     const totalResults = this.model.get('totalResults');
     const hasLoaded = this.model.get('hasLoaded');
     return (
