@@ -46,10 +46,6 @@ function cancel() {
     self.search.cancel();
     self.search = null;
   }
-  // if (self.emitter && typeof self.emitter.cancel === 'function') {
-  //   self.emitter.cancel();
-  //   self.emitter = null;
-  // }
   if (self.emitter) {
     self.emitter.emit('cancel');
     self.emitter = null;
@@ -69,8 +65,7 @@ self.onmessage = function onMessage({ data }) {
             .on('page', page => self.postMessage(['progress', page]))
             .on('success', result => self.postMessage(['success', result]))
             .on('error', error => self.postMessage(['error', error.toString()]));
-        })
-        .catch(error => self.postMessage(['error', error.toString()]));
+        }, error => self.postMessage(['error', error.toString()]));
       break;
     }
     case 'cancel':

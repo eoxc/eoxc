@@ -21,25 +21,29 @@
     </h4>
   </div>
   <div id="collapse-{{layerId}}" class="panel-collapse panel-result-list collapse {{#unless isClosed}}in{{/unless}}" role="tabpanel">
-    <div class="panel-body">
-      <div class="spacer spacer-top"/>
-      <ul id="result-list-{{layerId}}" class="result-list list-inline list-unstyled"></ul>
-      <div class="spacer spacer-bottom"/>
-      {{#if isSearching}}
-        <p class="text-center" style="margin-top: 5px"><i class="fa fa-circle-o-notch fa-spin fa-4x" style="color: white"></i></p>
-      {{/if}}
-    </div>
-    {{#unless isSearching}}
-      {{#if hasMore}}
-        <div class="panel-footer">
-          <div class="input-group">
-            <input type="text" class="form-control" disabled value="{{hasLoaded}}/{{totalResults}}">
-            <span class="input-group-btn">
-              <button class="btn btn-default btn-load-more" type="button">{{t 'load_more' loadMore }}</button>
-            </span>
+    {{#unless hasError}}
+      <div class="panel-body">
+        <div class="spacer spacer-top"/>
+        <ul id="result-list-{{layerId}}" class="result-list list-inline list-unstyled"></ul>
+        <div class="spacer spacer-bottom"/>
+        {{#if isSearching}}
+          <p class="text-center" style="margin-top: 5px"><i class="fa fa-circle-o-notch fa-spin fa-4x" style="color: white"></i></p>
+        {{/if}}
+      </div>
+      {{#unless isSearching}}
+        {{#if hasMore}}
+          <div class="panel-footer">
+            <div class="input-group">
+              <input type="text" class="form-control" disabled value="{{hasLoaded}}/{{totalResults}}">
+              <span class="input-group-btn">
+                <button class="btn btn-default btn-load-more" type="button">{{t 'load_more' loadMore }}</button>
+              </span>
+            </div>
           </div>
-        </div>
-      {{/if}}
+        {{/if}}
+      {{/unless}}
+    {{else}}
+      <div class="panel-body" style="color: white">{{errorMessage}}</div>
     {{/unless}}
   </div>
 </div>

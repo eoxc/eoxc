@@ -23,6 +23,7 @@ class SearchModel extends Backbone.Model {
       isSearching: false,
       isCancelled: false,
       hasError: false,
+      errorMessage: null,
 
       hasChanges: false,
 
@@ -95,6 +96,7 @@ class SearchModel extends Backbone.Model {
       isSearching: true,
       isCancelled: false,
       hasError: false,
+      errorMessage: null,
     });
 
     // return this.prevRequest.then((result) => {
@@ -140,6 +142,7 @@ class SearchModel extends Backbone.Model {
         this.set({
           isSearching: false,
           hasError: true,
+          errorMessage: error.toString(),
         });
         this.get('results').reset([]);
         this.trigger('search:error', error);
