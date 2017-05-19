@@ -1,7 +1,7 @@
 <div class="panel panel-default">
   <div class="panel-heading" role="tab">
     <h4 class="panel-title">
-      <a role="button" data-toggle="collapse" href="#collapse-{{layerId}}" aria-expanded="true">
+      <a role="button" data-toggle="collapse" href="#collapse-{{layerId}}" {{#unless isClosed}}aria-expanded="true"{{else}}class="collapsed"{{/unless}}>
         {{layerName}}
         {{#if isSearching}}
           <i class="fa fa-circle-o-notch fa-spin"></i>
@@ -10,7 +10,7 @@
             <i class="fa fa-exclamation text-danger"></i>
           {{else}}
             {{#if hasMore}}
-              ({{maxCount}}/{{totalResults}})
+              ({{hasLoaded}}/{{totalResults}})
             {{else}}
               ({{totalResults}})
             {{/if}}
@@ -20,15 +20,30 @@
       </a>
     </h4>
   </div>
-  <div id="collapse-{{layerId}}" class="panel-collapse panel-result-list collapse in" role="tabpanel">
-    <div class="panel-body">
-      <ul id="result-list-{{layerId}}" class="result-list list-inline list-unstyled"></ul>
-    </div>
-
-    {{#if hasMore}}
-      <div class="panel-footer">
-        Showing {{maxCount}} of {{totalResults}} records.
+  <div id="collapse-{{layerId}}" class="panel-collapse panel-result-list collapse {{#unless isClosed}}in{{/unless}}" role="tabpanel">
+    {{#unless hasError}}
+      <div class="panel-body">
+        <div class="spacer spacer-top"/>
+        <ul id="result-list-{{layerId}}" class="result-list list-inline list-unstyled"></ul>
+        <div class="spacer spacer-bottom"/>
+        {{#if isSearching}}
+          <p class="text-center" style="margin-top: 5px"><i class="fa fa-circle-o-notch fa-spin fa-4x" style="color: white"></i></p>
+        {{/if}}
       </div>
-    {{/if}}
+      {{#unless isSearching}}
+        {{#if hasMore}}
+          <div class="panel-footer">
+            <div class="input-group">
+              <input type="text" class="form-control" disabled value="{{hasLoaded}}/{{totalResults}}">
+              <span class="input-group-btn">
+                <button class="btn btn-default btn-load-more" type="button">{{t 'load_more' loadMore }}</button>
+              </span>
+            </div>
+          </div>
+        {{/if}}
+      {{/unless}}
+    {{else}}
+      <div class="panel-body" style="color: white">{{errorMessage}}</div>
+    {{/unless}}
   </div>
 </div>

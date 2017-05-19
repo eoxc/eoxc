@@ -2,7 +2,10 @@
   height: 100%;
 }
 .result-contents {
+  margin-top: 5px;
   height: calc(100% - 65px);
+  overflow-y: scroll;
+  overflow-x: hidden;
 }
 
 .download-control {

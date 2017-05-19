@@ -283,7 +283,9 @@ class OpenLayersMapView extends Marionette.ItemView {
   applyLayerFilters(layer, mapModel) {
     let time = mapModel.get('time');
     if (Array.isArray(time)) {
-      time = Array.from(time).sort();
+      time = time[0] < time[1] ? time : [time[1], time[0]];
+    } else if (time instanceof Date) {
+      time = [time, time];
     }
     const isoTime = (time !== null) ?
         `${getISODateTimeString(time[0])}/${getISODateTimeString(time[1])}` : null;
@@ -576,6 +578,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (this.drawControls.hasOwnProperty(toolName)) {
       this.map.addInteraction(this.drawControls[toolName]);
     }
+
+    this.searchLayersGroup.setVisible(toolName === null);
+    this.searchLayersFillGroup.setVisible(toolName === null);
   }
 
   onMapPointerDrag() {

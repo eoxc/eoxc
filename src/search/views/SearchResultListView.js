@@ -1,5 +1,5 @@
+import Backbone from 'backbone';
 import Marionette from 'backbone.marionette';
-import 'marionette.sliding-view';
 import 'jquery-lazyload';
 
 import template from './SearchResultListView.hbs';
@@ -7,30 +7,18 @@ import './SearchResultListView.css';
 import SearchResultItemView from './SearchResultItemView';
 
 // eslint-disable-next-line max-len
-const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/views/layers.SearchResultListView# */{
-  initialLowerBound: 0,
-  initialUpperBound() {
-    const elemHeight = 157;
-    return Math.max(Math.ceil(this.availableSpace / elemHeight) * 3, 24);
-  },
-  getLowerBound() {
-    return 0;
-  },
-  getUpperBound() {
-    const height = this.$el.height();
-    const elemHeight = this.$el.find('li').outerHeight(true);
-    const upper = Math.ceil(((this.$el.scrollTop() + height) * 3) / elemHeight) + 3;
-    if (upper > this.prevUpper) {
-      this.prevUpper = upper;
-    }
-    return this.prevUpper;
-  },
-
-  pruneCollection(lowerBound, upperBound) {
-    return this.referenceCollection.slice(lowerBound, upperBound);
-  },
-
+const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultListView# */{
   template,
+  templateHelpers() {
+    const hasMore = this.hasMore();
+    return {
+      layerName: this.model.get('layerModel').get('displayName'),
+      layerId: this.model.cid,
+      isClosed: this.isClosed,
+      hasMore,
+      hasMoreOrIsSearching: hasMore || this.model.get('isSearching'),
+    };
+  },
   tagName: 'ul',
   className: 'search-result-list list-unstyled list-inline',
 
@@ -40,14 +28,15 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
   buildChildView(child, ChildViewClass) {
     return new ChildViewClass({
       model: child,
-      searchModel: this.searchModel,
+      searchModel: this.model,
       highlightModel: this.highlightModel,
     });
   },
 
   events: {
     'click .btn-load-more': 'onLoadMoreClicked',
-    scroll: 'onUpdateEvent',
+    'shown.bs.collapse': 'onShown',
+    'hidden.bs.collapse': 'onHidden'
   },
 
   childEvents: {
@@ -55,6 +44,12 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
     'item:info': 'onItemInfo',
     'item:hover': 'onItemHover',
     'item:hover:end': 'onItemHoverEnd',
+  },
+
+  constructor(options) {
+    Marionette.CompositeView.prototype.constructor.call(this, Object.assign({}, options, {
+      collection: new Backbone.Collection(),
+    }));
   },
 
   initialize(options) {
@@ -65,30 +60,26 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
     this.previousCollapsed = false;
     this.prevUpper = 0;
     this.availableSpace = options.availableSpace;
+
+    this.isClosed = false;
+
+    this.referenceCollection = options.referenceCollection;
+
+    this.listenTo(this.model, 'change', this.render, this);
   },
 
-  onRender() {
-    // create spacer
-    // const height = Math.ceil(this.referenceCollection.length / 3) * 157;
-    this.$el.append('<div class="spacer"></div>');
-    this.adjustSpacer();
+  onLoadMoreClicked() {
+    this.model.searchMore();
   },
 
-  _updateCollection() {
-    // eslint-disable-next-line
-    Marionette.SlidingView.prototype._updateCollection.call(this);
-    this.adjustSpacer();
+  onShown() {
+    this.isClosed = false;
+    this.triggerMethod('collapse:change');
   },
 
-  adjustSpacer() {
-    const $spacer = this.$('.spacer');
-    // .outerHeight gives wrong size on FF. Use the hardcoded value until better option
-    // const elemHeight = this.$el.find('li').outerHeight(true) || 157;
-    const elemHeight = 157;
-    const totalHeight = Math.ceil(this.referenceCollection.size() / 3) * elemHeight;
-    const displayedHeight = Math.ceil(this.collection.size() / 3) * elemHeight;
-    $spacer.height(totalHeight - displayedHeight);
-    this.$el.append($spacer);
+  onHidden() {
+    this.isClosed = true;
+    this.triggerMethod('collapse:change');
   },
 
   onItemClicked(childView) {
@@ -108,6 +99,106 @@ const SearchResultListView = Marionette.SlidingView.extend(/** @lends search/vie
   onItemHoverEnd(childView) {
     this.highlightModel.unHighlight(childView.model.attributes);
   },
+
+  /*
+                    /----------\        -
+    headerHeight    |  title   |        |
+                    |          |        |- scrollTop
+                    |          |        |
+                  /----------------\    - -
+                  | |          |   |    | |
+                  | |          | = |    | |- offset
+                  | |          | = |    | |
+                  | \----------/ = |    | -
+                  | /----------\ = |    |
+                  | |  title   | = |    |- sliceHeight
+                  | \----------/ = |    |
+                  | /----------\   |    |
+                  | |  title   |   |    |
+                  | |          |   |    |
+                  \----------------/    -
+                    |          |
+                    |          |
+                    \----------/
+
+
+                    /----------\        -
+    headerHeight    |  title   |        |
+                    |          |        |- scrollTop
+                    |          |        |
+                  /----------------\    - -
+                  | |          |   |    | |
+                  | |          | = |    | |- offset + titleHeight
+                  | |          | = |    | |
+                  | \----------/ = |    | |
+                  | /----------\ = |    | |
+                  | |  title   | = |    | |
+                  | |          |   |    | -
+                  | |          |   |    |
+                  | |          |   |    |
+                  | |          |   |    |
+                  | \----------/ = |    |
+                  | /----------\   |    |
+                  | |  title   |   |    |
+                  | |          |   |    |
+                  \----------------/    -
+                    |          |
+                    |          |
+                    \----------/
+  */
+
+  setSlice(offset, sliceHeight) {
+    const size = this.calculateSize();
+    const headerHeight = 37;
+    const itemHeight = 143;
+    const numItems = this.referenceCollection.length;
+    let first = 0;
+    let last = 0;
+    if (offset + size < 0 // this view is completely above the current window
+        || offset > sliceHeight) { // this view is completely below the current window
+      first = last = numItems;
+    } else {
+      const firstOffset = offset + headerHeight;
+      if (firstOffset < -itemHeight) {
+        const firstRow = Math.floor(Math.abs(firstOffset) / itemHeight);
+        first = firstRow * 3;
+      }
+      const lastRow = Math.ceil(Math.abs(-firstOffset + sliceHeight) / itemHeight);
+      last = lastRow * 3;
+    }
+    this.collection.set(this.referenceCollection.slice(first, last));
+    this.$('.spacer-top').css('height', Math.ceil(first / 3) * itemHeight);
+    this.$('.spacer-bottom').css('height', Math.ceil((numItems - last) / 3) * itemHeight);
+  },
+
+  _calculateItemsSize(numItems) {
+    const itemHeight = 143;
+    return Math.ceil(numItems / 3) * itemHeight;
+  },
+
+  calculateSize() {
+    const headerHeight = 37;
+    const footerHeight = 0;
+    if (this.isClosed) {
+      return headerHeight;
+    }
+    // TODO: footer size
+    return this._calculateItemsSize(this.referenceCollection.length)
+      + headerHeight + footerHeight;
+  },
+
+  hasMore() {
+    if (this.model.get('hasError')) {
+      return false;
+    }
+    const totalResults = this.model.get('totalResults');
+    const hasLoaded = this.model.get('hasLoaded');
+    return (
+      typeof totalResults !== 'undefined'
+      && typeof hasLoaded !== 'undefined' ? totalResults > hasLoaded : false
+    );
+  }
+
 });
 
 export default SearchResultListView;
