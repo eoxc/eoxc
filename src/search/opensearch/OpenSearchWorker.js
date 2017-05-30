@@ -1,3 +1,5 @@
+import from from "core-js/fn/array/from";
+
 import { discover, config, deserialize } from 'opensearch-browser';
 import { DOMParser } from 'xmldom';
 import BluebirdPromise from 'bluebird';
