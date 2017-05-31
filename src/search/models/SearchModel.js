@@ -119,12 +119,12 @@ class SearchModel extends Backbone.Model {
 
     return this.prevRequest
       .on('progress', (page) => {
+        this.get('results').add(page.records);
         this.set({
           totalResults: page.totalResults,
           startIndex: page.startIndex,
           itemsPerPage: page.itemsPerPage
         });
-        this.get('results').add(page.records);
       })
       .on('success', (result) => {
         const hasLoaded = reset ? 0 : this.get('hasLoaded');
