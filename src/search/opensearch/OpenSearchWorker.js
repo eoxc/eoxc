@@ -62,8 +62,8 @@ self.onmessage = function onMessage({ data }) {
         .then((emitter) => {
           self.emitter = emitter;
           emitter
-            .on('page', page => self.postMessage(['progress', page]))
-            .on('success', result => self.postMessage(['success', result]))
+            .on('page', page => self.postMessage(['progress', Object.assign(page, { records: prepareRecords(page.records) })]))
+            .on('success', result => self.postMessage(['success', Object.assign(result, { records: prepareRecords(result.records) })]))
             .on('error', error => self.postMessage(['error', error.toString()]));
         }, error => self.postMessage(['error', error.toString()]));
       break;
