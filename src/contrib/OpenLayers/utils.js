@@ -39,7 +39,15 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
       new ZoomControl(),
       new MousePositionControl({
         className: 'ol-mouse-position-eoxc',
-        coordinateFormat: coordinate.createStringXY(2),
+        coordinateFormat([x, y]) {
+          while (x > 180) {
+            x -= 360; // eslint-disable-line no-param-reassign
+          }
+          while (x < -180) {
+            x += 360; // eslint-disable-line no-param-reassign
+          }
+          return `${x.toFixed(2)}, ${y.toFixed(2)}`;
+        },
         projection: 'EPSG:4326',
         undefinedHTML: '',
       }),
