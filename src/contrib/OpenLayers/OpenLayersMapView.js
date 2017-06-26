@@ -608,22 +608,29 @@ class OpenLayersMapView extends Marionette.ItemView {
       return;
     }
     if (!this.staticHighlight && !this.isOverlayShown()) {
-      const coordinate = wrapCoordinate(event.coordinate);
-      const features = this.searchLayersGroup.getLayers().getArray()
-        .filter(layer => layer.getVisible())
-        .map(layer => layer.getSource())
-        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
-        .concat(this.downloadSelectionLayerGroup.getLayers().getArray()
+      const wrappedCoordinate = wrapCoordinate(event.coordinate);
+
+
+      const rawFeatures = [0, 360].map((offset) => {
+        const coordinate = [wrappedCoordinate[0] + offset, wrappedCoordinate[1]];
+        const features = this.searchLayersGroup.getLayers().getArray()
           .filter(layer => layer.getVisible())
           .map(layer => layer.getSource())
           .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
-        );
+          .concat(this.downloadSelectionLayerGroup.getLayers().getArray()
+            .filter(layer => layer.getVisible())
+            .map(layer => layer.getSource())
+            .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
+          );
 
-      const rawFeatures = features.map((feature) => {
-        const rawFeature = feature.model.toJSON();
-        rawFeature.layerId = feature.searchModel.get('layerModel').get('id');
-        return rawFeature;
-      });
+        return features.map((feature) => {
+          const rawFeature = feature.model.toJSON();
+          rawFeature.layerId = feature.searchModel.get('layerModel').get('id');
+          return rawFeature;
+        });
+      })
+      .reduce((acc, source) => acc.concat(source), []);
+
       this.highlightModel.highlight(rawFeatures);
     }
   }
