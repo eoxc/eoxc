@@ -14,9 +14,17 @@ function prepareBox(bbox) {
   return b;
 }
 
+/**
+ * Prepares the records retrieved from OpenSearch. This involves "unwrapping" of
+ * dateline wrapped geometries and adjusting the bbox.
+ * @param {object[]} records the retrieved records
+ * @returns {object[]} the adjusted records.
+ */
 export function prepareRecords(records) {
   return records.map((record) => {
+    let adjustedGeometry = false;
     if (record.geometry && record.geometry.type === 'Polygon') {
+      // normalize the geometry, so that wrapped polygons are unwrapped
       for (let ringIndex = 0; ringIndex < record.geometry.coordinates.length; ++ringIndex) {
         const ring = record.geometry.coordinates[ringIndex];
         let last = null;
@@ -25,13 +33,34 @@ export function prepareRecords(records) {
           if (last) {
             if (current[0] - last[0] < -180) {
               current[0] += 360;
+              adjustedGeometry = true;
             }
             if (current[0] - last[0] > 180) {
               current[0] -= 360;
+              adjustedGeometry = true;
             }
           }
           last = current;
         }
+      }
+
+      // (re-)calculate the bounding box when not available or when the geometry
+      // was adjusted in the step before
+      if (!record.bbox || adjustedGeometry) {
+        const outer = record.geometry.coordinates[0];
+        let minx = outer[0][0];
+        let miny = outer[0][1];
+        let maxx = outer[0][0];
+        let maxy = outer[0][1];
+
+        for (let i = 1; i < outer.length; ++i) {
+          minx = Math.min(minx, outer[i][0]);
+          miny = Math.min(miny, outer[i][1]);
+          maxx = Math.max(maxx, outer[i][0]);
+          maxy = Math.max(maxy, outer[i][1]);
+        }
+        // eslint-disable-next-line no-param-reassign
+        record.bbox = [minx, miny, maxx, maxy];
       }
     }
     return record;
