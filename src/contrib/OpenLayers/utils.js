@@ -1,13 +1,16 @@
 import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
-import turfIntersect from '@turf/intersect';
+// import turfIntersect from '@turf/intersect';
+import turfBboxClip from '@turf/bbox-clip';
+import turfCombine from '@turf/combine';
+import { featureCollection as turfFeatureCollection } from '@turf/helpers';
 
 import Map from 'ol/map';
 import View from 'ol/view';
 import proj from 'ol/proj';
 import extent from 'ol/extent';
 import Attribution from 'ol/attribution';
-import coordinate from 'ol/coordinate';
+// import coordinate from 'ol/coordinate';
 
 import AttributionControl from 'ol/control/attribution';
 import ZoomControl from 'ol/control/zoom';
@@ -369,14 +372,24 @@ export function wrapToBounds(featureOrExtent, bounds) {
   if (geom) {
     const dx = Math.ceil((extentArray[0] + 180) / -maxWidth) * maxWidth;
     geom = moveBy(geom, dx, 0);
+    extentArray = moveBy(extentArray, dx, 0);
   }
 
   if (geom && geom.type === 'Feature') {
-    const boundsFeature = featureFromExtent(bounds);
-    // check that geom is within bounds
-    if (!turfIntersect(geom, boundsFeature)) {
-      geom = null;
+    const features = [];
+    const bbox = bounds;
+    let i = 0;
+    while ((bounds[2] - maxWidth) < extentArray[2]) {
+      let clipped = turfBboxClip(geom, bbox);
+      if (i > 0) {
+        clipped = moveBy(clipped, -i * maxWidth, 0);
+      }
+      features.push(clipped);
+      bbox[0] += maxWidth;
+      bbox[2] += maxWidth;
+      ++i;
     }
+    return turfCombine(turfFeatureCollection(features)).features[0];
   } else if (Array.isArray(geom)) {
     if (geom[2] > 180) {
       geom[2] -= 360;
