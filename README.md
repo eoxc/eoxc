@@ -1,6 +1,6 @@
 # EOxC client framework
 
-[![Build Status](https://travis-ci.org/eoxc/eoxc.svg?branch=master)](https://travis-ci.org/eoxc/eoxc)
+<!--[![Build Status](https://travis-ci.org/eoxc/eoxc.svg?branch=master)](https://travis-ci.org/eoxc/eoxc)-->
 
 
 The full documentation is available [here](http://eoxc.github.io/eoxc/).
