@@ -640,13 +640,23 @@ class OpenLayersMapView extends Marionette.ItemView {
       return;
     }
     const coordinate = wrapCoordinate(event.coordinate);
-    const searchFeatures = this.searchLayersGroup.getLayers().getArray()
-      .filter(layer => layer.getVisible())
-      .map(layer => layer.getSource())
-      .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
-    const selectedFeatures = this.downloadSelectionLayerGroup.getLayers().getArray()
-      .map(layer => layer.getSource())
-      .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), []);
+
+    const searchFeatures = [];
+    const selectedFeatures = [];
+    [0, 360].forEach((offset) => {
+      const offsetCoordinate = [coordinate[0] + offset, coordinate[1]];
+      this.searchLayersGroup.getLayers().getArray()
+        .filter(layer => layer.getVisible())
+        .map(layer => layer.getSource())
+        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(offsetCoordinate)), [])
+        .forEach(feature => searchFeatures.indexOf(feature) === -1 ? searchFeatures.push(feature) : null);
+
+      this.downloadSelectionLayerGroup.getLayers().getArray()
+        .map(layer => layer.getSource())
+        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(offsetCoordinate)), [])
+        .forEach(feature => selectedFeatures.indexOf(feature) === -1 ? selectedFeatures.push(feature) : null);
+    });
+
     this.highlightModel.highlight(searchFeatures.map(feature => feature.model));
     this.showOverlay(event.coordinate, searchFeatures, selectedFeatures);
   }
