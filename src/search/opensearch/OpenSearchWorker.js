@@ -1,4 +1,5 @@
 import 'core-js/fn/array/from';
+import 'core-js/fn/object/assign';
 
 import { discover, config, deserialize } from 'opensearch-browser';
 import { DOMParser } from 'xmldom';
