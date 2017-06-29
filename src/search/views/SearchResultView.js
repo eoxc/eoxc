@@ -93,6 +93,10 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     this.onLayerSelectionChange();
   },
 
+  onShown() {
+    this.updateViews();
+  },
+
   onBeforeRender() {
     this.$('.result-contents').off('scroll resize');
   },
