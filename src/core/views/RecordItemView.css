@@ -4,7 +4,7 @@
 
 .record-item {
   width: 112px;
-  position: relative;
+/* Don't use because of Edge (see #196)  position: relative; */
   padding: 5px !important;
   margin: 5px 0 0 5px;
   border: 1px solid transparent;
