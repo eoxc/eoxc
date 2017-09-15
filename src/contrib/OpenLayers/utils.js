@@ -446,3 +446,41 @@ export function createCutOut(geometry, format, fillColor, outerColor, strokeColo
 
   return [outerFeature, innerFeature];
 }
+
+/**
+ * Converts the filters of a filters model to the CQL expressions. When a mapping
+ * is provided, the filter names are translated and only filters of entailed
+ * name are used. When no mapping is passed, only filters with types of 'eo:...'
+ * are used and the name (without namespace prefix) is used as the CQL attribute
+ * name.
+ */
+export function filtersToCQL(filtersModel, mapping = null) {
+  const attributes = filtersModel.attributes;
+  return Object.keys(attributes)
+    .map((key) => {
+      if (mapping && mapping.hasOwnProperty(key)) {
+        return [mapping[key], attributes[key]];
+      } else if (mapping) {
+        return null;
+      }
+      if (key.startsWith('eo:')) {
+        return [key.split(':')[1], attributes[key]];
+      }
+      return null;
+    })
+    .filter(keyValue => !!keyValue)
+    .map(([key, value]) => {
+      if (value.min && value.max) {
+        return `${key} BETWEEN ${value.min} AND ${value.max}`;
+      } else if (value.min) {
+        return `${key} >= ${value.min}`;
+      } else if (value.max) {
+        return `${key} <= ${value.max}`;
+      }
+      if (typeof value === 'string') {
+        return `${key} = '${value}'`;
+      }
+      return `${key} = ${value}`;
+    })
+    .join(' AND ');
+}

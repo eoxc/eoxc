@@ -19,7 +19,7 @@ import GeoJSON from 'ol/format/geojson';
 import Polygon from 'ol/geom/polygon';
 
 import { getISODateTimeString, uniqueBy } from '../../core/util';
-import { createMap, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
+import { createMap, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, filtersToCQL } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import './ol.css';
@@ -287,8 +287,19 @@ class OpenLayersMapView extends Marionette.ItemView {
     } else if (time instanceof Date) {
       time = [time, time];
     }
-    const isoTime = (time !== null) ?
-        `${getISODateTimeString(time[0])}/${getISODateTimeString(time[1])}` : null;
+
+    let isoTime = null;
+    if (time !== null) {
+      let beginISO = getISODateTimeString(time[0]);
+      let endISO = getISODateTimeString(time[1]);
+
+      if (layer.xxx) { // TODO: check if layer does not support ISO time
+        beginISO = beginISO.slice(0, -1);
+        endISO = endISO.slice(0, -1);
+      }
+
+      isoTime = `${beginISO}/${endISO}`;
+    }
 
     const source = layer.getSource();
     if (source instanceof WMSTileSource) {
@@ -409,6 +420,22 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     // setup filters signals
     this.listenTo(this.filtersModel, 'change:area', this.onFiltersAreaChange);
+    this.listenTo(this.filtersModel, 'change', (filtersModel) => {
+      this.groups.layers.getLayers().forEach((layer) => {
+        const layerModel = this.layersCollection.get(layer.id);
+        const cqlParameterName = layerModel.get('display.cqlParameterName');
+        if (cqlParameterName) {
+          const cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
+          const params = layer.getSource().getParams();
+          if (cql && cql.length) {
+            params[cqlParameterName] = cql;
+          } else {
+            delete params[cqlParameterName];
+          }
+          layer.getSource().updateParams(params);
+        }
+      });
+    });
 
     // setup map events
     this.map.on('pointerdrag', this.onMapPointerDrag, this);
