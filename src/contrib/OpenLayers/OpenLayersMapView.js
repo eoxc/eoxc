@@ -425,14 +425,17 @@ class OpenLayersMapView extends Marionette.ItemView {
         const layerModel = this.layersCollection.get(layer.id);
         const cqlParameterName = layerModel.get('display.cqlParameterName');
         if (cqlParameterName) {
+          const source = layer.getSource();
           const cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
-          const params = layer.getSource().getParams();
+          const params = source.getParams();
           if (cql && cql.length) {
             params[cqlParameterName] = cql;
           } else {
             delete params[cqlParameterName];
           }
-          layer.getSource().updateParams(params);
+          source.updateParams(params);
+          // Workaround to make sure tiles are reloaded when parameters change
+          source.setTileLoadFunction(source.getTileLoadFunction());
         }
       });
     });
