@@ -77,7 +77,7 @@ export function convertFilters(filterParams, mapParams, options, format, service
 
   const parameters = {};
 
-  const time = filterParams.time || mapParams.time;
+  const time = filterParams.time || mapParams.extendedTime || mapParams.time;
   if (time) {
     if (Array.isArray(time)) {
       parameters['time:start'] = time[0];

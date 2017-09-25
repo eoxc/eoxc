@@ -42,6 +42,7 @@ MapModel.prototype.defaults = {
 
   // the current start/end time selection
   time: [null, null],
+  extendedTime: null,
 
   tool: null,
 

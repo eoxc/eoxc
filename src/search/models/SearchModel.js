@@ -59,6 +59,7 @@ class SearchModel extends Backbone.Model {
     this.listenTo(this.get('mapModel'), 'change:bbox', this.onMapBBOXChange);
     this.listenTo(this.get('mapModel'), 'change:area', this.onMapAreaChange);
     this.listenTo(this.get('mapModel'), 'change:time', this.onMapTimeChange);
+    this.listenTo(this.get('mapModel'), 'change:extendedTime', this.onMapExtendedTimeChange);
     this.listenTo(this.get('mapModel'), 'change:tool', this.onMapToolChange);
 
     this.onDebounceTimeChange();
@@ -199,8 +200,16 @@ class SearchModel extends Backbone.Model {
   }
 
   onMapTimeChange() {
-    if (this.get('automaticSearch') && !this.get('filtersModel').get('time') && !this.get('mapModel').get('tool')) {
+    if (this.get('automaticSearch') && !this.get('mapModel').get('extendedTime') && !this.get('mapModel').get('tool')) {
       this.search();
+    }
+  }
+
+  onMapExtendedTimeChange() {
+    if (this.get('automaticSearch')) {
+      this.search();
+    } else {
+      this.set('hasChanges', true);
     }
   }
 
