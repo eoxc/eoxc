@@ -151,7 +151,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   setSlice(offset, sliceHeight) {
     const size = this.calculateSize();
     const headerHeight = 37 + 18;
-    const itemHeight = 143;
+    const itemHeight = 148;
     const numItems = this.referenceCollection.length;
     let first = 0;
     let last = 0;
