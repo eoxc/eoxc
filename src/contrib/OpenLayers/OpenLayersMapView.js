@@ -421,7 +421,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     // setup filters signals
     this.listenTo(this.mapModel, 'change:area', this.onMapAreaChange);
 
-    this.searchCollection.forEach((searchModel) => {
+    const searchCollection = this.searchCollection || [];
+    searchCollection.forEach((searchModel) => {
       this.listenTo(searchModel.get('filtersModel'), 'change', (filtersModel) => {
         this.groups.layers.getLayers().forEach((layer) => {
           const layerModel = this.layersCollection.get(layer.id);
