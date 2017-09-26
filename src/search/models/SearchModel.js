@@ -91,7 +91,10 @@ class SearchModel extends Backbone.Model {
     });
     this.prevRequest = request;
     if (reset) {
-      this.set('hasLoaded', 0);
+      this.set({
+        hasLoaded: 0,
+        totalResults: 0,
+      });
       this.get('results').reset([]);
     }
     this.set({
@@ -118,24 +121,26 @@ class SearchModel extends Backbone.Model {
     //   this.get('results').reset([]);
     //   this.trigger('search:error', error);
     // });
+    const prevHasLoaded = reset ? 0 : this.get('hasLoaded');
 
     return this.prevRequest
       .on('progress', (page) => {
+        const hasLoaded = this.get('hasLoaded');
         this.get('results').add(page.records);
         this.set({
           totalResults: page.totalResults,
           startIndex: page.startIndex,
-          itemsPerPage: page.itemsPerPage
+          itemsPerPage: page.itemsPerPage,
+          hasLoaded: hasLoaded + page.records.length,
         });
       })
       .on('success', (result) => {
-        const hasLoaded = reset ? 0 : this.get('hasLoaded');
         this.set({
           totalResults: result.totalResults,
           startIndex: result.startIndex,
           itemsPerPage: result.itemsPerPage,
           isSearching: false,
-          hasLoaded: hasLoaded + result.records.length,
+          hasLoaded: prevHasLoaded + result.records.length,
         });
         // this is set before?
         // this.get('results').reset(result.records);

@@ -16,6 +16,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
       layerId: this.model.cid,
       isClosed: this.isClosed,
       hasMore,
+      countLoadMore: hasMore ? Math.min(this.model.get('totalResults') - this.model.get('hasLoaded'), this.model.get('loadMore')) : 0,
       hasMoreOrIsSearching: hasMore || this.model.get('isSearching'),
     };
   },
@@ -137,7 +138,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
                   | |          |   |    |
                   | |          |   |    |
                   | |          |   |    |
-                  | \----------/ = |    |
+                  | \----------/   |    |
                   | /----------\   |    |
                   | |  title   |   |    |
                   | |          |   |    |
@@ -149,7 +150,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   setSlice(offset, sliceHeight) {
     const size = this.calculateSize();
-    const headerHeight = 37;
+    const headerHeight = 37 + 18;
     const itemHeight = 143;
     const numItems = this.referenceCollection.length;
     let first = 0;
@@ -198,7 +199,6 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
       && typeof hasLoaded !== 'undefined' ? totalResults > hasLoaded : false
     );
   }
-
 });
 
 export default SearchResultListView;
