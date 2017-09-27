@@ -22,6 +22,7 @@ const DownloadView = Marionette.CompositeView.extend({
     return new ChildViewClass({
       model: child,
       collection: child.get('downloadSelection'),
+      mapModel: this.mapModel,
       highlightModel: this.highlightModel,
     });
   },
@@ -35,6 +36,7 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   initialize(options) {
+    this.mapModel = options.mapModel;
     this.filtersModel = options.filtersModel;
     this.highlightModel = options.highlightModel;
     this.termsAndConditionsUrl = options.termsAndConditionsUrl;

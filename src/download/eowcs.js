@@ -1,5 +1,6 @@
 import $ from 'jquery';
 
+import {filtersToCQL} from '../core/util';
 
 function getCoverageXML(coverageid, options = {}) {
   let subsetX = options.subsetX;
@@ -143,4 +144,34 @@ export function getDownloadUrl(layerModel, filtersModel, recordModel, options = 
     }
   );
   return `${layerModel.get('download.url')}?${kvp}`;
+}
+
+export function downloadFullResolution(layerModel, mapModel, filtersModel, options) {
+  const requestOptions = {
+    bbox: mapModel.get('bbox'),
+    outputCRS: options.outputCRS,
+    subsetCRS: options.subsetCRS,
+    format: options.format,
+  };
+  const id = layerModel.get('download.fullResolutionId');
+  let kvp = getCoverageKVP(id, requestOptions);
+
+  const cqlMapping = layerModel.get('download.fullResolutionCqlMapping');
+  const cqlParameterName = layerModel.get('download.fullResolutioncqlParameterName');
+
+  if (cqlParameterName) {
+    kvp = `${kvp}&${options.cqlParameterName}=${filtersToCQL(filtersModel, cqlMapping)}`;
+  }
+  const url = `${layerModel.get('download.fullResolutionUrl')}?${kvp}`;
+
+  console.log(url);
+
+  const a = document.createElement('a');
+  if (typeof a.download !== 'undefined') {
+    a.setAttribute('href', url);
+    a.setAttribute('download', 'true');
+    a.click();
+    return null;
+  }
+  return $(`<iframe src="${url}"></iframe>`);
 }

@@ -18,8 +18,8 @@ import GeoJSON from 'ol/format/geojson';
 
 import Polygon from 'ol/geom/polygon';
 
-import { getISODateTimeString, uniqueBy } from '../../core/util';
-import { createMap, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, filtersToCQL } from './utils';
+import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
+import { createMap, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import './ol.css';
