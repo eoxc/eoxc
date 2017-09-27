@@ -59,3 +59,15 @@ export function getParameters(layerModel) {
       throw new Error(`Unsupported search protocol '${layerModel.get('search.protocol')}'.`);
   }
 }
+
+
+export function getSearchRequest(layerModel, filtersModel, mapModel, options) {
+  switch (layerModel.get('search.protocol')) {
+    case 'EO-WCS':
+      return eowcs.getSearchRequest(layerModel, filtersModel, mapModel, options);
+    case 'OpenSearch':
+      return opensearch.getSearchRequest(layerModel, filtersModel, mapModel, options);
+    default:
+      throw new Error(`Unsupported search protocol '${layerModel.get('search.protocol')}'.`);
+  }
+}

@@ -1,7 +1,7 @@
 import Backbone from 'backbone';
 import debounce from 'debounce';
 
-import { searchAllRecords } from '../';
+import { searchAllRecords, getSearchRequest } from '../';
 
 import OpenSearchCollection from './OpenSearchCollection';
 import EOWCSCollection from './EOWCSCollection';
@@ -31,6 +31,7 @@ class SearchModel extends Backbone.Model {
 
       hasLoaded: 0,
       debounceTime: 250,
+      searchRequest: null,
     };
   }
 
@@ -84,11 +85,12 @@ class SearchModel extends Backbone.Model {
 
   doSearch(layerModel, filtersModel, mapModel, reset = true, startIndex = 0) {
     this.cancelSearch();
-    const request = searchAllRecords(layerModel, filtersModel, mapModel, {
+    const searchOptions = {
       itemsPerPage: this.get('defaultPageSize'),
       maxCount: (startIndex === 0) ? this.get('maxCount') : this.get('loadMore'),
       startIndex,
-    });
+    };
+    const request = searchAllRecords(layerModel, filtersModel, mapModel, searchOptions);
     this.prevRequest = request;
     if (reset) {
       this.set({
@@ -103,6 +105,11 @@ class SearchModel extends Backbone.Model {
       hasError: false,
       errorMessage: null,
     });
+
+    if (reset) {
+      getSearchRequest(layerModel, filtersModel, mapModel, searchOptions)
+        .then(searchRequest => this.set('searchRequest', searchRequest));
+    }
 
     // return this.prevRequest.then((result) => {
     //   this.set({
