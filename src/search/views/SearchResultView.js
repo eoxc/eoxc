@@ -117,6 +117,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
       view.setSlice(sizeAccum - scrollTop, height);
       sizeAccum += view.$el.outerHeight(true);
     }
+    elem.scrollTop = scrollTop;
   },
 
   setSelectedSearchModels(searchModels) {

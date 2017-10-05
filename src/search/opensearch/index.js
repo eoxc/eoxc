@@ -131,3 +131,19 @@ export function getParameters(layerModel) {
       .parameters
     );
 }
+
+export function getSearchRequest(layerModel, filtersModel, mapModel, options) {
+  const url = layerModel.get('search.url');
+  const method = layerModel.get('search.method');
+  const format = options.mimeType || layerModel.get('search.format') || null;
+
+  return getService(url)
+    .then((service) => {
+      const parameters = convertFilters(
+        filtersModel ? filtersModel.attributes : {},
+        mapModel ? mapModel.attributes : {},
+        options, format, service
+      );
+      return service.createSearchRequest(parameters, format, method || 'GET', false, true);
+    });
+}

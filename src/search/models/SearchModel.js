@@ -1,7 +1,7 @@
 import Backbone from 'backbone';
 import debounce from 'debounce';
 
-import { searchAllRecords } from '../';
+import { searchAllRecords, getSearchRequest } from '../';
 
 import OpenSearchCollection from './OpenSearchCollection';
 import EOWCSCollection from './EOWCSCollection';
@@ -31,6 +31,7 @@ class SearchModel extends Backbone.Model {
 
       hasLoaded: 0,
       debounceTime: 250,
+      searchRequest: null,
     };
   }
 
@@ -57,7 +58,9 @@ class SearchModel extends Backbone.Model {
     this.listenTo(this.get('results'), 'reset', this.onSearchCollectionReset);
     this.listenTo(this.get('filtersModel'), 'change', this.onFiltersModelChange);
     this.listenTo(this.get('mapModel'), 'change:bbox', this.onMapBBOXChange);
+    this.listenTo(this.get('mapModel'), 'change:area', this.onMapAreaChange);
     this.listenTo(this.get('mapModel'), 'change:time', this.onMapTimeChange);
+    this.listenTo(this.get('mapModel'), 'change:extendedTime', this.onMapExtendedTimeChange);
     this.listenTo(this.get('mapModel'), 'change:tool', this.onMapToolChange);
 
     this.onDebounceTimeChange();
@@ -82,14 +85,18 @@ class SearchModel extends Backbone.Model {
 
   doSearch(layerModel, filtersModel, mapModel, reset = true, startIndex = 0) {
     this.cancelSearch();
-    const request = searchAllRecords(layerModel, filtersModel, mapModel, {
+    const searchOptions = {
       itemsPerPage: this.get('defaultPageSize'),
       maxCount: (startIndex === 0) ? this.get('maxCount') : this.get('loadMore'),
       startIndex,
-    });
+    };
+    const request = searchAllRecords(layerModel, filtersModel, mapModel, searchOptions);
     this.prevRequest = request;
     if (reset) {
-      this.set('hasLoaded', 0);
+      this.set({
+        hasLoaded: 0,
+        totalResults: 0,
+      });
       this.get('results').reset([]);
     }
     this.set({
@@ -98,6 +105,11 @@ class SearchModel extends Backbone.Model {
       hasError: false,
       errorMessage: null,
     });
+
+    if (reset) {
+      getSearchRequest(layerModel, filtersModel, mapModel, searchOptions)
+        .then(searchRequest => this.set('searchRequest', searchRequest));
+    }
 
     // return this.prevRequest.then((result) => {
     //   this.set({
@@ -116,24 +128,26 @@ class SearchModel extends Backbone.Model {
     //   this.get('results').reset([]);
     //   this.trigger('search:error', error);
     // });
+    const prevHasLoaded = reset ? 0 : this.get('hasLoaded');
 
     return this.prevRequest
       .on('progress', (page) => {
+        const hasLoaded = this.get('hasLoaded');
         this.get('results').add(page.records);
         this.set({
           totalResults: page.totalResults,
           startIndex: page.startIndex,
-          itemsPerPage: page.itemsPerPage
+          itemsPerPage: page.itemsPerPage,
+          hasLoaded: hasLoaded + page.records.length,
         });
       })
       .on('success', (result) => {
-        const hasLoaded = reset ? 0 : this.get('hasLoaded');
         this.set({
           totalResults: result.totalResults,
           startIndex: result.startIndex,
           itemsPerPage: result.itemsPerPage,
           isSearching: false,
-          hasLoaded: hasLoaded + result.records.length,
+          hasLoaded: prevHasLoaded + result.records.length,
         });
         // this is set before?
         // this.get('results').reset(result.records);
@@ -182,7 +196,7 @@ class SearchModel extends Backbone.Model {
   }
 
   onMapBBOXChange() {
-    if (!this.get('filtersModel').get('area')) {
+    if (!this.get('mapModel').get('area')) {
       if (this.get('automaticSearch') && !this.get('mapModel').get('tool')) {
         this.search();
       } else {
@@ -191,9 +205,23 @@ class SearchModel extends Backbone.Model {
     }
   }
 
-  onMapTimeChange() {
-    if (this.get('automaticSearch') && !this.get('filtersModel').get('time') && !this.get('mapModel').get('tool')) {
+  onMapAreaChange() {
+    if (this.get('automaticSearch') && !this.get('mapModel').get('tool')) {
       this.search();
+    }
+  }
+
+  onMapTimeChange() {
+    if (this.get('automaticSearch') && !this.get('mapModel').get('extendedTime') && !this.get('mapModel').get('tool')) {
+      this.search();
+    }
+  }
+
+  onMapExtendedTimeChange() {
+    if (this.get('automaticSearch')) {
+      this.search();
+    } else {
+      this.set('hasChanges', true);
     }
   }
 

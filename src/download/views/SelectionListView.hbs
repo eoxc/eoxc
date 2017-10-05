@@ -8,6 +8,9 @@
     </h4>
   </div>
   <div id="collapse-{{layerId}}" class="panel-collapse panel-result-list collapse in" role="tabpanel">
+    {{#if enableFullResolutionDownload}}
+      <button class="btn btn-sm btn-block btn-default btn-download-full-res" type="button">{{t 'Download full resolution raster'}}</button>
+    {{/if}}
     <div class="selection-body">
       <ul class="selection-items list-unstyled list-inline"></ul>
     </div>

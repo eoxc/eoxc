@@ -4,7 +4,11 @@
       <a role="button" data-toggle="collapse" href="#collapse-{{layerId}}" {{#unless isClosed}}aria-expanded="true"{{else}}class="collapsed"{{/unless}}>
         {{layerName}}
         {{#if isSearching}}
-          <i class="fa fa-circle-o-notch fa-spin"></i>
+          <!-- <i class="fa fa-circle-o-notch fa-spin"></i> -->
+          <span class="search-progress"><span>.</span><span>.</span><span>.</span></span>
+          {{#if totalResults}}
+            ({{hasLoaded}}/{{totalResults}})
+          {{/if}}
         {{else}}
           {{#if hasError}}
             <i class="fa fa-exclamation text-danger"></i>
@@ -16,34 +20,29 @@
             {{/if}}
           {{/if}}
         {{/if}}
-        {{#if isSearching}}{{else}}<span class="caret"></span>{{/if}}
+        {{#unless isSearching}}<span class="caret"></span>{{/unless}}
+        {{#unless hasError}}<a target="_blank" href="{{searchRequest.url}}"><i class="fa fa-external-link"></i></a>{{/unless}}
       </a>
     </h4>
   </div>
   <div id="collapse-{{layerId}}" class="panel-collapse panel-result-list collapse {{#unless isClosed}}in{{/unless}}" role="tabpanel">
     {{#unless hasError}}
+      {{#if isSearching}}
+        <button class="btn btn-sm btn-default btn-block btn-load-more" type="button" disabled>{{t 'Searching' countLoadMore }}<span class="search-progress"><span>.</span><span>.</span><span>.</span></span></button>
+      {{else if hasMore}}
+        <button class="btn btn-sm btn-default btn-block btn-load-more" type="button">{{t 'load_more' countLoadMore}}</button>
+      {{else if totalResults}}
+        <button class="btn btn-sm btn-default btn-block btn-load-more" type="button" disabled>{{t 'No more records'}}</button>
+      {{else}}
+        <button class="btn btn-sm btn-default btn-block btn-load-more" type="button" disabled>{{t 'Search returned no results'}}</button>
+      {{/if}}
       <div class="panel-body">
         <div class="spacer spacer-top"/>
         <ul id="result-list-{{layerId}}" class="result-list list-inline list-unstyled"></ul>
         <div class="spacer spacer-bottom"/>
-        {{#if isSearching}}
-          <p class="text-center" style="margin-top: 5px"><i class="fa fa-circle-o-notch fa-spin fa-4x" style="color: white"></i></p>
-        {{/if}}
       </div>
-      {{#unless isSearching}}
-        {{#if hasMore}}
-          <div class="panel-footer">
-            <div class="input-group">
-              <input type="text" class="form-control" disabled value="{{hasLoaded}}/{{totalResults}}">
-              <span class="input-group-btn">
-                <button class="btn btn-default btn-load-more" type="button">{{t 'load_more' loadMore }}</button>
-              </span>
-            </div>
-          </div>
-        {{/if}}
-      {{/unless}}
     {{else}}
-      <div class="panel-body" style="color: white">{{errorMessage}}</div>
+      <div class="panel-body" style="color: white">{{t errorMessage}}</div>
     {{/unless}}
   </div>
 </div>

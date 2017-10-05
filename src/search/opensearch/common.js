@@ -77,7 +77,7 @@ export function convertFilters(filterParams, mapParams, options, format, service
 
   const parameters = {};
 
-  const time = filterParams.time || mapParams.time;
+  const time = filterParams.time || mapParams.extendedTime || mapParams.time;
   if (time) {
     if (Array.isArray(time)) {
       parameters['time:start'] = time[0];
@@ -88,25 +88,27 @@ export function convertFilters(filterParams, mapParams, options, format, service
     }
   }
 
-  const area = filterParams.area;
-  if (area) {
-    if (Array.isArray(area)) {
-      parameters['geo:box'] = prepareBox(area);
-    } else if (area.geometry) {
-      const geometry = area.geometry;
-      if (geometry.type === 'Point' && url.hasParameter('geo:lon') && url.hasParameter('geo:lat')) {
-        parameters['geo:lon'] = geometry.coordinates[0];
-        parameters['geo:lat'] = geometry.coordinates[1];
-        if (url.hasParameter('geo:radius')) {
-          parameters['geo:radius'] = 0;
+  if (mapParams) {
+    const area = mapParams.area;
+    if (area) {
+      if (Array.isArray(area)) {
+        parameters['geo:box'] = prepareBox(area);
+      } else if (area.geometry) {
+        const geometry = area.geometry;
+        if (geometry.type === 'Point' && url.hasParameter('geo:lon') && url.hasParameter('geo:lat')) {
+          parameters['geo:lon'] = geometry.coordinates[0];
+          parameters['geo:lat'] = geometry.coordinates[1];
+          if (url.hasParameter('geo:radius')) {
+            parameters['geo:radius'] = 0;
+          }
+        } else {
+          parameters['geo:geometry'] = geometry;
         }
-      } else {
-        parameters['geo:geometry'] = geometry;
       }
+    } else if (mapParams && mapParams.bbox) {
+      // use the maps BBox by default
+      parameters['geo:box'] = prepareBox(mapParams.bbox);
     }
-  } else if (mapParams && mapParams.bbox) {
-    // use the maps BBox by default
-    parameters['geo:box'] = prepareBox(mapParams.bbox);
   }
 
   if (options.hasOwnProperty('itemsPerPage') && url.hasParameter('count')) {

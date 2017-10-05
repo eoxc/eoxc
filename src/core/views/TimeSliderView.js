@@ -53,7 +53,6 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     @param {Date[]} options.domain The maximum domain to allow panning of th time slider
   */
   initialize(options) {
-    this.filtersModel = options.filtersModel;
     this.layersCollection = options.layersCollection;
 
     this.mapModel = options.mapModel;
@@ -137,11 +136,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.checkVisible(false);
 
     this.listenTo(this.mapModel, 'change:time', this.onModelSelectionChanged);
-    this.listenTo(this.filtersModel, 'change:time', () => {
-      const filterTime = this.filtersModel.get('time');
-      if (filterTime) {
+    this.listenTo(this.mapModel, 'change:extendedTime', () => {
+      const extendedTime = this.mapModel.get('extendedTime');
+      if (extendedTime) {
         this.timeSlider.setHighlightInterval(
-          filterTime[0], filterTime[1],
+          extendedTime[0], extendedTime[1],
           this.filterFillColor, this.filterStrokeColor, this.filterOutsideColor,
           true
         );
@@ -149,7 +148,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         this.timeSlider.setHighlightInterval(null);
       }
     });
-    this.listenTo(this.filtersModel, 'show:time', (timeFilter) => {
+    this.listenTo(this.mapModel, 'show:time', (timeFilter) => {
       this.timeSlider.center(...timeFilter);
     });
     this.listenTo(this.layersCollection, 'add', this.onLayerAdded);

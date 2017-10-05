@@ -18,8 +18,8 @@ import GeoJSON from 'ol/format/geojson';
 
 import Polygon from 'ol/geom/polygon';
 
-import { getISODateTimeString, uniqueBy } from '../../core/util';
-import { createMap, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, filtersToCQL } from './utils';
+import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
+import { createMap, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import './ol.css';
@@ -419,24 +419,28 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     // setup filters signals
-    this.listenTo(this.filtersModel, 'change:area', this.onFiltersAreaChange);
-    this.listenTo(this.filtersModel, 'change', (filtersModel) => {
-      this.groups.layers.getLayers().forEach((layer) => {
-        const layerModel = this.layersCollection.get(layer.id);
-        const cqlParameterName = layerModel.get('display.cqlParameterName');
-        if (cqlParameterName) {
-          const source = layer.getSource();
-          const cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
-          const params = source.getParams();
-          if (cql && cql.length) {
-            params[cqlParameterName] = cql;
-          } else {
-            delete params[cqlParameterName];
+    this.listenTo(this.mapModel, 'change:area', this.onMapAreaChange);
+
+    const searchCollection = this.searchCollection || [];
+    searchCollection.forEach((searchModel) => {
+      this.listenTo(searchModel.get('filtersModel'), 'change', (filtersModel) => {
+        this.groups.layers.getLayers().forEach((layer) => {
+          const layerModel = this.layersCollection.get(layer.id);
+          const cqlParameterName = layerModel.get('display.cqlParameterName');
+          if (cqlParameterName) {
+            const source = layer.getSource();
+            const cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
+            const params = source.getParams();
+            if (cql && cql.length) {
+              params[cqlParameterName] = cql;
+            } else {
+              delete params[cqlParameterName];
+            }
+            source.updateParams(params);
+            // Workaround to make sure tiles are reloaded when parameters change
+            source.setTileLoadFunction(source.getTileLoadFunction());
           }
-          source.updateParams(params);
-          // Workaround to make sure tiles are reloaded when parameters change
-          source.setTileLoadFunction(source.getTileLoadFunction());
-        }
+        });
       });
     });
 
@@ -485,10 +489,13 @@ class OpenLayersMapView extends Marionette.ItemView {
           // TODO: check that feature is within bounds
           geom = wrapToBounds(format.writeFeatureObject(event.feature), bounds);
         }
-        this.filtersModel.set('area', geom);
+
 
         // to avoid a zoom-in on a final double click
-        setTimeout(() => this.mapModel.set('tool', null));
+        setTimeout(() => this.mapModel.set({
+          area: geom,
+          tool: null,
+        }));
       });
     });
 
@@ -579,9 +586,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     }, this);
   }
 
-  onFiltersAreaChange(filtersModel) {
+  onMapAreaChange(mapModel) {
     this.selectionSource.clear();
-    const area = filtersModel.get('area');
+    const area = mapModel.get('area');
 
     const format = new GeoJSON();
 

@@ -35,12 +35,14 @@ MapModel.prototype.defaults = {
   // the current center and zoom of the map view
   center: [0, 0],
   bbox: [0, 0, 1, 1],
+  area: null,
   zoom: 2,
   minZoom: 0,
   maxZoom: 28,
 
   // the current start/end time selection
   time: [null, null],
+  extendedTime: null,
 
   tool: null,
 
