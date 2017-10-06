@@ -153,18 +153,16 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
     subsetCRS: options.subsetCRS,
     format: options.format,
   };
-  const id = layerModel.get('download.fullResolutionId');
+  const id = layerModel.get('fullResolution.id');
   let kvp = getCoverageKVP(id, requestOptions);
 
-  const cqlMapping = layerModel.get('download.fullResolutionCqlMapping');
-  const cqlParameterName = layerModel.get('download.fullResolutioncqlParameterName');
+  const cqlMapping = layerModel.get('fullResolution.cqlMapping');
+  const cqlParameterName = layerModel.get('fullResolution.cqlParameterName');
 
   if (cqlParameterName) {
     kvp = `${kvp}&${options.cqlParameterName}=${filtersToCQL(filtersModel, cqlMapping)}`;
   }
-  const url = `${layerModel.get('download.fullResolutionUrl')}?${kvp}`;
-
-  console.log(url);
+  const url = `${layerModel.get('fullResolution.url')}?${kvp}`;
 
   const a = document.createElement('a');
   if (typeof a.download !== 'undefined') {
