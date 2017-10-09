@@ -27,3 +27,7 @@
 .download-control .checkbox {
   width: 100%;
 }
+
+.selection-items,.selection-lists .panel {
+  margin-bottom: 0px !important;
+}
