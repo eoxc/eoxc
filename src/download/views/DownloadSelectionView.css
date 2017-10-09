@@ -31,3 +31,8 @@
 .selection-items,.selection-lists .panel {
   margin-bottom: 0px !important;
 }
+
+.btn-download-full-res {
+  width: calc(100% - 10px);
+  margin: 5px 0 0 5px;
+}

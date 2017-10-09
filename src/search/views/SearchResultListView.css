@@ -30,10 +30,9 @@
   margin-bottom: 0px !important;
 }
 
-
 .btn-load-more {
-  width: calc(100% - 5px);
-  margin-top: 5px;
+  width: calc(100% - 10px);
+  margin: 5px 0 0 5px;
 }
 
 @keyframes blink {
