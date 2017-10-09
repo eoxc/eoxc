@@ -424,23 +424,22 @@ class OpenLayersMapView extends Marionette.ItemView {
     const searchCollection = this.searchCollection || [];
     searchCollection.forEach((searchModel) => {
       this.listenTo(searchModel.get('filtersModel'), 'change', (filtersModel) => {
-        this.groups.layers.getLayers().forEach((layer) => {
-          const layerModel = this.layersCollection.get(layer.id);
-          const cqlParameterName = layerModel.get('display.cqlParameterName');
-          if (cqlParameterName) {
-            const source = layer.getSource();
-            const cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
-            const params = source.getParams();
-            if (cql && cql.length) {
-              params[cqlParameterName] = cql;
-            } else {
-              delete params[cqlParameterName];
-            }
-            source.updateParams(params);
-            // Workaround to make sure tiles are reloaded when parameters change
-            source.setTileLoadFunction(source.getTileLoadFunction());
+        const layerModel = searchModel.get('layerModel');
+        const cqlParameterName = layerModel.get('display.cqlParameterName');
+        if (cqlParameterName) {
+          const layer = this.getLayerOfGroup(layerModel, this.groups.layers);
+          const source = layer.getSource();
+          const cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
+          const params = source.getParams();
+          if (cql && cql.length) {
+            params[cqlParameterName] = cql;
+          } else {
+            delete params[cqlParameterName];
           }
-        });
+          source.updateParams(params);
+          // Workaround to make sure tiles are reloaded when parameters change
+          source.setTileLoadFunction(source.getTileLoadFunction());
+        }
       });
     });
 
