@@ -172,7 +172,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     // update the global status
     const $globalStatus = this.$('.global-search-status');
     const isSearching = this.collection.any(model => model.get('isSearching'));
-    const hasError = this.collection.any(model => model.get('hasError'));
+    const hasError = this.collection.any(model => model.get('hasError') && model.get('layerModel').get('display.visible'));
 
     const selectedSearchModels = this.collection.filter(model => model.get('automaticSearch'));
 
