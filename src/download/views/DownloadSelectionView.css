@@ -3,11 +3,18 @@
 }
 
 .download-view .selection-lists {
-  height: calc(100% - 30px);
+  height: calc(100% - 23px);
   overflow-y: auto;
+  margin-left: -5px;
 }
+
 .download-view .selection-lists.with-terms {
   height: calc(100% - 60px);
+}
+
+.download-view .selection-norecords {
+    color: white;
+    padding: 5px;
 }
 
 .download-control {
@@ -19,4 +26,13 @@
 
 .download-control .checkbox {
   width: 100%;
+}
+
+.selection-items,.selection-lists .panel {
+  margin-bottom: 0px !important;
+}
+
+.btn-download-full-res {
+  width: calc(100% - 10px);
+  margin: 5px 0 0 5px;
 }

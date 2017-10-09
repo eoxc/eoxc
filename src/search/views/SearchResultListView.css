@@ -15,6 +15,7 @@
   /*height: 100%;*/
   /*overflow-y: auto;
   overflow-x: hidden;*/
+  margin-bottom: 0px;
 }
 
 
@@ -25,7 +26,14 @@
   width: 100%;
 }
 
+.search-result-list .panel-body,.search-result-list .panel {
+  margin-bottom: 0px !important;
+}
 
+.btn-load-more {
+  width: calc(100% - 10px);
+  margin: 5px 0 0 5px;
+}
 
 @keyframes blink {
     /**
