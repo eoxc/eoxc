@@ -92,6 +92,14 @@ export function uniqueBy(arr, cmp) {
  * name.
  */
 export function filtersToCQL(filtersModel, mapping = null) {
+
+  function serializeValue(value) {
+    if (value instanceof Date) {
+      return getISODateTimeString(value);
+    }
+    return value;
+  }
+
   const attributes = filtersModel.attributes;
   return Object.keys(attributes)
     .map((key) => {
@@ -108,16 +116,25 @@ export function filtersToCQL(filtersModel, mapping = null) {
     .filter(keyValue => !!keyValue)
     .map(([key, value]) => {
       if (value.min && value.max) {
-        return `${key} BETWEEN ${value.min} AND ${value.max}`;
+        if (value.min instanceof Date && value.max instanceof Date) {
+          return `${key} DURING ${serializeValue(value.min)}/${serializeValue(value.max)}`;
+        }
+        return `${key} BETWEEN ${serializeValue(value.min)} AND ${serializeValue(value.max)}`;
       } else if (value.min) {
-        return `${key} >= ${value.min}`;
+        if (value.min instanceof Date) {
+          return `${key} AFTER ${serializeValue(value.min)}`;
+        }
+        return `${key} >= ${serializeValue(value.min)}`;
       } else if (value.max) {
-        return `${key} <= ${value.max}`;
+        if (value.max instanceof Date) {
+          return `${key} BEFORE ${serializeValue(value.min)}`;
+        }
+        return `${key} <= ${serializeValue(value.max)}`;
       }
       if (typeof value === 'string') {
         return `${key} = '${value}'`;
       }
-      return `${key} = ${value}`;
+      return `${key} = ${serializeValue(value)}`;
     })
     .join(' AND ');
 }
