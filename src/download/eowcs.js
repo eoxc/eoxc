@@ -188,20 +188,7 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
   const url = `${fullResolutionUrl}${char}${kvp}`;
 
   const a = document.createElement('a');
-  if (typeof a.download !== 'undefined') {
-    a.setAttribute('href', url);
-    a.setAttribute('download', 'true');
-    a.click();
-    return;
-  }
-
-  const $iframe = $('<iframe style="visibility: collapse;"></iframe>');
-  $('body').append($iframe);
-  const content = $iframe[0].contentDocument;
-  const form = `<form action="${url}" method="GET"></form>`;
-  content.write(form);
-  $('form', content).submit();
-  setTimeout(() => {
-    $iframe.remove();
-  }, 20000);
+  a.setAttribute('href', url);
+  a.setAttribute('target', '_blank');
+  a.click();
 }
