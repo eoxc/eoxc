@@ -150,8 +150,8 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   setSlice(offset, sliceHeight) {
     const size = this.calculateSize();
-    const headerHeight = 37 + 18;
-    const itemHeight = 148;
+    const headerHeight = 39 + 18;
+    const itemHeight = 153;
     const numItems = this.referenceCollection.length;
     let first = 0;
     let last = 0;
@@ -173,12 +173,12 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   _calculateItemsSize(numItems) {
-    const itemHeight = 143;
+    const itemHeight = 153;
     return Math.ceil(numItems / 3) * itemHeight;
   },
 
   calculateSize() {
-    const headerHeight = 37;
+    const headerHeight = 39 + 18;
     const footerHeight = 0;
     if (this.isClosed) {
       return headerHeight;
