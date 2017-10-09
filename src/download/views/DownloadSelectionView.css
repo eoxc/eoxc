@@ -5,9 +5,16 @@
 .download-view .selection-lists {
   height: calc(100% - 30px);
   overflow-y: auto;
+  margin-left: -5px;
 }
+
 .download-view .selection-lists.with-terms {
   height: calc(100% - 60px);
+}
+
+.download-view .selection-norecords {
+    color: white;
+    padding: 5px;
 }
 
 .download-control {
