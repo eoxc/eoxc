@@ -3,7 +3,7 @@
 }
 
 .download-view .selection-lists {
-  height: calc(100% - 30px);
+  height: calc(100% - 23px);
   overflow-y: auto;
   margin-left: -5px;
 }
