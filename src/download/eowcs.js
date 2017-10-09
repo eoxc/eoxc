@@ -160,9 +160,16 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
   const cqlParameterName = layerModel.get('fullResolution.cqlParameterName');
 
   if (cqlParameterName) {
-    kvp = `${kvp}&${options.cqlParameterName}=${filtersToCQL(filtersModel, cqlMapping)}`;
+    kvp = `${kvp}&${cqlParameterName}=${filtersToCQL(filtersModel, cqlMapping)}`;
   }
-  const url = `${layerModel.get('fullResolution.url')}?${kvp}`;
+  const fullResolutionUrl = layerModel.get('fullResolution.url');
+
+  let char = '?';
+  if (fullResolutionUrl.includes('?')) {
+    char = (fullResolutionUrl.endsWith('?') || fullResolutionUrl.endsWith('&')) ? '' : '&';
+  }
+
+  const url = `${fullResolutionUrl}${char}${kvp}`;
 
   const a = document.createElement('a');
   if (typeof a.download !== 'undefined') {
@@ -171,5 +178,14 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
     a.click();
     return null;
   }
-  return $(`<iframe src="${url}"></iframe>`);
+
+  const $iframe = $('<iframe style="visibility: collapse;"></iframe>');
+  $('body').append($iframe);
+  const content = $iframe[0].contentDocument;
+  const form = `<form action="${url}" method="GET"></form>`;
+  content.write(form);
+  $('form', content).submit();
+  setTimeout(() => {
+    $iframe.remove();
+  }, 20000);
 }
