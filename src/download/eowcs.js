@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-import {filtersToCQL} from '../core/util';
+import { filtersToCQL } from '../core/util';
 
 function getCoverageXML(coverageid, options = {}) {
   let subsetX = options.subsetX;
@@ -76,6 +76,18 @@ function getCoverageKVP(coverageid, options = {}) {
     params.push(['format', options.format]);
   }
 
+  let axisNames;
+  if (!options.axisNames) {
+    axisNames = {};
+  } else if (Array.isArray(options.axisNames)) {
+    axisNames = {
+      x: options.axisNames[0],
+      y: options.axisNames[1],
+    };
+  } else {
+    axisNames = options.axisNames;
+  }
+
   let subsetX = options.subsetX;
   let subsetY = options.subsetY;
   if (options.bbox && !options.subsetX && !options.subsetY) {
@@ -83,10 +95,10 @@ function getCoverageKVP(coverageid, options = {}) {
     subsetY = [options.bbox[1], options.bbox[3]];
   }
   if (subsetX) {
-    params.push(['subset', `x(${subsetX[0]},${subsetX[1]})`]);
+    params.push(['subset', `${axisNames.x || 'x'}(${subsetX[0]},${subsetX[1]})`]);
   }
   if (subsetY) {
-    params.push(['subset', `y(${subsetY[0]},${subsetY[1]})`]);
+    params.push(['subset', `${axisNames.y || 'y'}(${subsetY[0]},${subsetY[1]})`]);
   }
 
   if (options.outputCRS) {
@@ -152,6 +164,7 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
     outputCRS: options.outputCRS,
     subsetCRS: options.subsetCRS,
     format: options.format,
+    axisNames: layerModel.get('fullResolution.axisNames'),
   };
   const id = layerModel.get('fullResolution.id');
   let kvp = getCoverageKVP(id, requestOptions);
@@ -160,7 +173,10 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
   const cqlParameterName = layerModel.get('fullResolution.cqlParameterName');
 
   if (cqlParameterName) {
-    kvp = `${kvp}&${cqlParameterName}=${filtersToCQL(filtersModel, cqlMapping)}`;
+    const cql = filtersToCQL(filtersModel, cqlMapping);
+    if (cql.length) {
+      kvp = `${kvp}&${cqlParameterName}=${cql}`;
+    }
   }
   const fullResolutionUrl = layerModel.get('fullResolution.url');
 
@@ -176,7 +192,7 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
     a.setAttribute('href', url);
     a.setAttribute('download', 'true');
     a.click();
-    return null;
+    return;
   }
 
   const $iframe = $('<iframe style="visibility: collapse;"></iframe>');
