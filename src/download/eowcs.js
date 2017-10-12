@@ -199,5 +199,9 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
   const a = document.createElement('a');
   a.setAttribute('href', url);
   a.setAttribute('target', '_blank');
+  a.setAttribute('style', 'display: none;');
+  document.body.appendChild(a);
   a.click();
+
+  setTimeout(() => document.body.removeChild(a));
 }
