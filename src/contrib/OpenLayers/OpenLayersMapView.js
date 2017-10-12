@@ -429,8 +429,17 @@ class OpenLayersMapView extends Marionette.ItemView {
         if (cqlParameterName) {
           const layer = this.getLayerOfGroup(layerModel, this.groups.layers);
           const source = layer.getSource();
-          const cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
+          let cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
           const params = source.getParams();
+
+          const layerIds = layerModel.get('display.ids');
+          if (layerIds && layerIds.length > 1) {
+            const origCql = cql;
+            for (let i = 1; i < layerIds.length; ++i) {
+              cql = `${cql};${origCql}`;
+            }
+          }
+
           if (cql && cql.length) {
             params[cqlParameterName] = cql;
           } else {
