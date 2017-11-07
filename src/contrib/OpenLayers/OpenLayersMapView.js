@@ -303,12 +303,20 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     const source = layer.getSource();
     if (source instanceof WMSTileSource) {
-      const params = source.getParams();
+      let params = source.getParams();
+      if (layer.searchModel) {
+        params = Object.assign(
+          {}, source.getParams(),
+          layer.searchModel.get('layerModel').get('display.extraParameters') || {}
+        );
+      }
+
       if (isoTime !== null) {
         params.time = isoTime;
       } else {
         delete params.time;
       }
+      source.params_ = {};
       source.updateParams(params);
     } else if (source instanceof WMTSSource) {
       source.updateDimensions({ time: isoTime });
@@ -432,7 +440,10 @@ class OpenLayersMapView extends Marionette.ItemView {
           let cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
           const origCql = cql;
 
-          const params = source.getParams();
+          const params = Object.assign(
+            {}, source.getParams(),
+            layerModel.get('display.extraParameters') || {}
+          );
 
           const layerIds = layerModel.get('display.ids');
           if (layerIds && layerIds.length > 1) {
@@ -446,6 +457,7 @@ class OpenLayersMapView extends Marionette.ItemView {
           } else {
             delete params[cqlParameterName];
           }
+          source.params_ = {};
           source.updateParams(params);
           // Workaround to make sure tiles are reloaded when parameters change
           source.setTileLoadFunction(source.getTileLoadFunction());

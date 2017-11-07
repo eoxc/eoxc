@@ -131,11 +131,12 @@ export function createRasterLayer(layerModel) {
         visible: params.visible,
         source: new WMSTileSource({
           crossOrigin: 'anonymous',
-          params: {
+          params: Object.assign({
             LAYERS: layerId,
             VERSION: '1.1.0',
             FORMAT: params.format, // TODO: use format here?
-          },
+            STYLES: params.style,
+          }, layerModel.get('display.extraParameters')),
           urls: (params.url) ? [params.url] : params.urls,
           wrapX: true,
           attributions: [
