@@ -97,6 +97,11 @@ export function createRasterLayer(layerModel) {
     matrixIds[z] = id;
   }
 
+  let tileSize = params.tileSize;
+  if (typeof params.tileSize === 'number') {
+    tileSize = [params.tileSize, params.tileSize];
+  }
+
   const layerId = params.id ? params.id : params.ids.join(',');
 
   switch (params.protocol) {
@@ -140,10 +145,7 @@ export function createRasterLayer(layerModel) {
           }, layerModel.get('display.extraParameters')),
           tileGrid: new TileGrid({
             resolutions,
-            tileSize: [
-              params.tileWidth || 256,
-              params.tileHeight || 256,
-            ],
+            tileSize: tileSize || [256, 256],
             extent: projectionExtent
           }),
           urls: (params.url) ? [params.url] : params.urls,
