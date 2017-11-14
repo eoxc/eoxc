@@ -20,6 +20,7 @@ import WMTSSource from 'ol/source/wmts';
 import WMSTileSource from 'ol/source/tilewms';
 import VectorSource from 'ol/source/vector';
 
+import TileGrid from 'ol/tilegrid/tilegrid';
 import WMTSTileGrid from 'ol/tilegrid/wmts';
 
 import Style from 'ol/style/style';
@@ -137,6 +138,14 @@ export function createRasterLayer(layerModel) {
             FORMAT: params.format, // TODO: use format here?
             STYLES: params.style,
           }, layerModel.get('display.extraParameters')),
+          tileGrid: new TileGrid({
+            resolutions,
+            tileSize: [
+              params.tileWidth || 256,
+              params.tileHeight || 256,
+            ],
+            extent: projectionExtent
+          }),
           urls: (params.url) ? [params.url] : params.urls,
           wrapX: true,
           attributions: [
