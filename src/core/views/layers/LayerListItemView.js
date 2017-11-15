@@ -15,9 +15,13 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     'change .layer-visible': 'onLayerVisibleChange',
     'click .layer-options': 'onLayerOptionsClick',
 
+    // for when no options are set
     'click .layer-adjust-opacity': 'onLayerAdjustOpacityClick',
     'inserted.bs.popover': 'onPopoverInserted',
     'hidden.bs.popover': 'onPopoverHidden',
+
+    // when using options
+    'click .layer-show-options': 'onShowOptionsClick',
   },
 
   /**
@@ -38,6 +42,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     return {
       singleChoice: this.singleChoice,
       fullDisplay: this.fullDisplay,
+      options: this.model.get('display.options'),
     };
   },
 
@@ -114,8 +119,8 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     this.model.set('display.visible', this.$('.layer-visible').is(':checked'));
   },
 
-  onLayerOptionsClick() {
-    this.model.trigger('show', this.model);
+  onShowOptionsClick() {
+    this.model.trigger('show-options', this.model);
   },
 });
 
