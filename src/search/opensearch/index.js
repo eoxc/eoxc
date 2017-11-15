@@ -34,6 +34,7 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
   const url = layerModel.get('search.url');
   const method = layerModel.get('search.method');
   const format = options.mimeType || layerModel.get('search.format') || null;
+  const maxUrlLength = layerModel.get('search.maxUrlLength');
 
   return getService(url)
     .then((service) => {
@@ -42,7 +43,7 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
         mapModel ? mapModel.attributes : {},
         options, format, service
       );
-      return service.search(parameters, format, method || 'GET', false, true);
+      return service.search(parameters, format, method || 'GET', false, maxUrlLength);
     })
     .then((result) => {
       // eslint-disable-next-line no-param-reassign
