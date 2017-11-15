@@ -584,6 +584,13 @@ class OpenLayersMapView extends Marionette.ItemView {
     layer.setVisible(display.visible);
     layer.setOpacity(display.opacity);
 
+    const source = layer.getSource();
+    if (source.getParams) {
+      const params = source.getParams();
+      params.STYLES = display.style;
+      source.updateParams(params);
+    }
+
     const searchLayer = this.searchLayersGroup.getLayerById(layerModel.get('id'));
     let searchModel = null;
     if (searchLayer) {
