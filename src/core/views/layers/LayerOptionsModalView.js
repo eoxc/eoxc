@@ -9,6 +9,7 @@ import template from './LayerOptionsModalView.hbs';
 const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.LayerOptionsModalView# */{
   template,
   events: {
+    'change [name="layer-visible"]': 'onLayerVisibleChange',
     'input #layer-options-opacity': 'onOpacitySlide',
     'change .layer-option': 'onLayerOptionChange'
   },
@@ -20,16 +21,29 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
   },
 
   getDisplayOptions() {
-    return this.model.get('display.options')
+    const options = this.model.get('display.options')
       .map((option) => {
         let values = option.values;
+        let low;
+        let high;
+        let targetLow;
+        let targetHigh;
+        const target = option.target;
         if (values) {
           values = values.map(value =>
-            Object.assign({}, value, { isCurrent: this.model.get(`display.${option.name}`) === value.value })
+            Object.assign({}, value, {
+              isCurrent: this.model.get(target) === value.value
+            })
           );
         }
-        return Object.assign({}, option, { values });
+        if (typeof option.min !== 'undefined') {
+          [targetLow, targetHigh] = Array.isArray(target) ? target : target.split(',');
+          low = this.model.get(targetLow);
+          high = this.model.get(targetHigh);
+        }
+        return Object.assign({}, option, { values, low, high, targetLow, targetHigh });
       });
+    return options;
   },
 
   onRender() {
@@ -50,6 +64,21 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
     this.$slider.on('change', () => {
       this.model.set('display.opacity', parseInt(this.$slider.val(), 10) / 100);
     });
+
+    $(this.el).find('input[data-slider-min]')
+      .slider()
+      .on('slideStop', (event) => {
+        const $target = $(event.target);
+        this.model.set({
+          [$target.data('targetLow')]: event.value[0],
+          [$target.data('targetHigh')]: event.value[1],
+        });
+      });
+  },
+
+  onLayerVisibleChange(event) {
+    const $target = $(event.target);
+    this.model.set('display.visible', $target.is(':checked'));
   },
 
   onOpacitySlide() {
@@ -60,7 +89,7 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
 
   onLayerOptionChange(event) {
     const $target = $(event.target);
-    this.model.set(`display.${$target.attr('name')}`, $target.val());
+    this.model.set(`${$target.attr('name')}`, $target.val());
   },
 });
 
