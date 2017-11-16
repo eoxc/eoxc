@@ -19,7 +19,7 @@ import GeoJSON from 'ol/format/geojson';
 import Polygon from 'ol/geom/polygon';
 
 import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
-import { createMap, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
+import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import './ol.css';
@@ -175,7 +175,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     };
 
     this.groups.layers.getLayers().forEach((layer) => {
-      this.applyLayerFilters(layer, this.mapModel, this.filtersModel);
+      this.applyLayerFilters(layer, this.mapModel);
     }, this);
 
     const selectionLayer = createVectorLayer({
@@ -281,48 +281,11 @@ class OpenLayersMapView extends Marionette.ItemView {
   }
 
   applyLayerFilters(layer, mapModel) {
-    let time = mapModel.get('time');
-    if (Array.isArray(time)) {
-      time = time[0] < time[1] ? time : [time[1], time[0]];
-    } else if (time instanceof Date) {
-      time = [time, time];
+    let filtersModel;
+    if (layer.searchModel) {
+      filtersModel = layer.searchModel.get('filtersModel');
     }
-
-    let isoTime = null;
-    if (time !== null) {
-      let beginISO = getISODateTimeString(time[0]);
-      let endISO = getISODateTimeString(time[1]);
-
-      if (layer.xxx) { // TODO: check if layer does not support ISO time
-        beginISO = beginISO.slice(0, -1);
-        endISO = endISO.slice(0, -1);
-      }
-
-      isoTime = `${beginISO}/${endISO}`;
-    }
-
-    const source = layer.getSource();
-    if (source instanceof WMSTileSource) {
-      let params = source.getParams();
-      if (layer.searchModel) {
-        params = Object.assign(
-          {}, source.getParams(),
-          layer.searchModel.get('layerModel').get('display.extraParameters') || {}
-        );
-      }
-
-      if (isoTime !== null) {
-        params.time = isoTime;
-      } else {
-        delete params.time;
-      }
-      source.params_ = {};
-      source.updateParams(params);
-    } else if (source instanceof WMTSSource) {
-      source.updateDimensions({ time: isoTime });
-    }
-    // Workaround to make sure tiles are reloaded when parameters change
-    source.setTileLoadFunction(source.getTileLoadFunction());
+    updateLayerParams(layer, mapModel, layer.layerModel, filtersModel);
   }
 
   /**
@@ -436,31 +399,7 @@ class OpenLayersMapView extends Marionette.ItemView {
         const cqlParameterName = layerModel.get('display.cqlParameterName');
         if (cqlParameterName) {
           const layer = this.getLayerOfGroup(layerModel, this.groups.layers);
-          const source = layer.getSource();
-          let cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
-          const origCql = cql;
-
-          const params = Object.assign(
-            {}, source.getParams(),
-            layerModel.get('display.extraParameters') || {}
-          );
-
-          const layerIds = layerModel.get('display.ids');
-          if (layerIds && layerIds.length > 1) {
-            for (let i = 1; i < layerIds.length; ++i) {
-              cql = `${cql};${origCql}`;
-            }
-          }
-
-          if (origCql && origCql.length) {
-            params[cqlParameterName] = cql;
-          } else {
-            delete params[cqlParameterName];
-          }
-          source.params_ = {};
-          source.updateParams(params);
-          // Workaround to make sure tiles are reloaded when parameters change
-          source.setTileLoadFunction(source.getTileLoadFunction());
+          updateLayerParams(layer, this.mapModel, layerModel, filtersModel);
         }
       });
     });
@@ -580,16 +519,13 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   onLayerChange(layerModel, group) {
     const layer = this.getLayerOfGroup(layerModel, group);
-    const display = layerModel.get('display');
-    layer.setVisible(display.visible);
-    layer.setOpacity(display.opacity);
-
-    const source = layer.getSource();
-    if (source.getParams) {
-      const params = source.getParams();
-      params.STYLES = display.style;
-      source.updateParams(params);
+    let filtersModel;
+    if (layer.searchModel) {
+      filtersModel = layer.searchModel.get('filtersModel');
     }
+    updateLayerParams(layer, this.mapModel, layerModel, filtersModel);
+
+    const display = layerModel.get('display');
 
     const searchLayer = this.searchLayersGroup.getLayerById(layerModel.get('id'));
     let searchModel = null;
@@ -609,7 +545,7 @@ class OpenLayersMapView extends Marionette.ItemView {
   onTimeChange() {
     this.layersCollection.forEach((layerModel) => {
       this.applyLayerFilters(
-        this.getLayerOfGroup(layerModel, this.groups.layers), this.mapModel
+        this.getLayerOfGroup(layerModel, this.groups.layers), this.mapModel, layerModel
       );
     }, this);
   }

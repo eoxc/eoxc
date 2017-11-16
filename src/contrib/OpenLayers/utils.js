@@ -1,3 +1,4 @@
+import _ from 'underscore'; // eslint-disable-line import/no-extraneous-dependencies
 import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
@@ -31,6 +32,8 @@ import Circle from 'ol/style/circle';
 import GeoJSON from 'ol/format/geojson';
 
 import CollectionSource from './CollectionSource';
+
+import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
 
 
 export function createMap(center, zoom, renderer, minZoom, maxZoom) {
@@ -162,7 +165,99 @@ export function createRasterLayer(layerModel) {
       throw new Error('Unsupported view protocol');
   }
   layer.id = layerModel.get('id');
+  layer.layerModel = layerModel;
   return layer;
+}
+
+function getLayerParams(mapModel, layerModel, filtersModel) {
+  const params = {};
+  let time = mapModel.get('time');
+  if (Array.isArray(time)) {
+    time = time[0] < time[1] ? time : [time[1], time[0]];
+  } else if (time instanceof Date) {
+    time = [time, time];
+  }
+
+  let isoTime = null;
+  if (time !== null) {
+    let beginISO = getISODateTimeString(time[0]);
+    let endISO = getISODateTimeString(time[1]);
+
+    if (false) { // TODO: check if layer does not support ISO time
+      beginISO = beginISO.slice(0, -1);
+      endISO = endISO.slice(0, -1);
+    }
+
+    isoTime = `${beginISO}/${endISO}`;
+  }
+
+  if (isoTime !== null) {
+    params.time = isoTime;
+  } else {
+    delete params.time;
+  }
+
+  // CQL filters
+  const cqlParameterName = layerModel.get('display.cqlParameterName');
+  if (cqlParameterName && filtersModel) {
+    let cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
+    const origCql = cql;
+
+    const layerIds = layerModel.get('display.ids');
+    if (layerIds && layerIds.length > 1) {
+      for (let i = 1; i < layerIds.length; ++i) {
+        cql = `${cql};${origCql}`;
+      }
+    }
+
+    if (origCql && origCql.length) {
+      params[cqlParameterName] = cql;
+    } else {
+      delete params[cqlParameterName];
+    }
+  }
+
+  // extra parameters
+  const extraParameters = layerModel.get('display.extraParameters');
+  if (extraParameters) {
+    Object.keys(extraParameters).forEach((key) => {
+      if (typeof extraParameters[key] === 'string') {
+        params[key] = extraParameters[key];
+      } else if (extraParameters[key].template) {
+        params[key] = _.template(extraParameters[key].template, {
+          interpolate: /\{\{(.+?)\}\}/g
+        })(extraParameters[key]);
+      }
+    });
+  }
+
+  return params;
+}
+
+/**
+ *
+ */
+export function updateLayerParams(layer, mapModel, layerModel, filtersModel) {
+  const display = layerModel.get('display');
+  layer.setVisible(display.visible);
+  layer.setOpacity(display.opacity);
+  const source = layer.getSource();
+  const previousParams = source.getParams ? source.getParams() : {};
+
+  const params = Object.assign(
+    {}, previousParams, getLayerParams(mapModel, layerModel, filtersModel)
+  );
+
+  if (source instanceof WMSTileSource) {
+    params.STYLES = display.style;
+    source.params_ = {};
+    source.updateParams(params);
+  } else if (source instanceof WMTSSource) {
+    // TODO: only use time as dimension and ignore any other params
+    source.updateDimensions({ time: params.time });
+  }
+  // Workaround to make sure tiles are reloaded when parameters change
+  source.setTileLoadFunction(source.getTileLoadFunction());
 }
 
 function createStyle({ fillColor, strokeColor, strokeWidth = 1, circleRadius = 0 } = { }) {
