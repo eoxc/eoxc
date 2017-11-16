@@ -24,6 +24,10 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     'click .layer-show-options': 'onShowOptionsClick',
   },
 
+  modelEvents: {
+    change: 'render',
+  },
+
   /**
     @constructs
     @param {Object} options
@@ -108,6 +112,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
       }
     };
   },
+
   onPopoverHidden() {
     this.isPopoverShown = false;
     this.$slider.off('slide');
