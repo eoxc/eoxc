@@ -40,9 +40,10 @@ const SelectionListView = Marionette.CompositeView.extend({
 
   onDownloadFullResolutionClick() {
     const layerModel = this.model.get('layerModel');
-    downloadFullResolution(
-      layerModel, this.mapModel, this.model.get('filtersModel'), {}
-    );
+    layerModel.trigger('download-full-resolution', layerModel);
+    // downloadFullResolution(
+    //   layerModel, this.mapModel, this.model.get('filtersModel'), {}
+    // );
   }
 });
 
