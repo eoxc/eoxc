@@ -42,7 +42,7 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
         mapModel ? mapModel.attributes : {},
         options, format, service
       );
-      return service.search(parameters, format, method || 'GET', false, true);
+      return service.search(parameters, format, method || 'GET', false);
     })
     .then((result) => {
       // eslint-disable-next-line no-param-reassign
