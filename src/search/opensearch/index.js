@@ -34,7 +34,7 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
   const url = layerModel.get('search.url');
   const method = layerModel.get('search.method');
   const format = options.mimeType || layerModel.get('search.format') || null;
-  const maxUrlLength = layerModel.get('search.maxUrlLength');
+  const maxUrlLength = layerModel.get('search.maxUrlLength') || 4000;
 
   return getService(url)
     .then((service) => {
@@ -52,42 +52,11 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
     });
 }
 
-// export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
-//   const url = layerModel.get('search.url');
-//   const method = layerModel.get('search.method');
-//   const format = options.mimeType || layerModel.get('search.format') || null;
-//   const maxCount = options.maxCount;
-//
-//   return getService(url)
-//     .then(service => {
-//       const parameters = convertFilters(filtersModel, mapModel, options, format, service);
-//       const paginator = service.getPaginator(parameters, format, method, true);
-//       if (maxCount) {
-//         return paginator.fetchFirstRecords(maxCount)
-//           .then(result => ({
-//             totalResults: result.totalResults,
-//             itemsPerPage: result.itemsPerPage,
-//             startIndex: result.startIndex,
-//             records: prepareRecords(result.records),
-//           }));
-//       }
-//       return paginator.fetchAllRecords()
-//         .then(result => ({
-//           totalResults: result.totalResults,
-//           itemsPerPage: result.itemsPerPage,
-//           startIndex: result.startIndex,
-//           records: prepareRecords(result.records),
-//         }));
-//     });
-// }
-
-// const worker = new OpenSearchWorker();
-
 export function searchAllRecords(layerModel, filtersModel, mapModel, options = {}) {
   const url = layerModel.get('search.url');
   const method = layerModel.get('search.method');
   const format = options.mimeType || layerModel.get('search.format') || null;
-  const maxUrlLength = layerModel.get('search.maxUrlLength');
+  const maxUrlLength = layerModel.get('search.maxUrlLength') || 4000;
 
   const filterParams = filtersModel.toJSON();
   const mapParams = mapModel ? mapModel.toJSON() : null;
