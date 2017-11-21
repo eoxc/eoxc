@@ -1,6 +1,6 @@
 {
   "name": "eoxc",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "EOxC client generator",
   "main": "dist/eoxc.js",
   "scripts": {
