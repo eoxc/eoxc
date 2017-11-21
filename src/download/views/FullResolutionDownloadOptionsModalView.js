@@ -5,29 +5,33 @@ import ModalView from '../../core/views/ModalView';
 import template from './FullResolutionDownloadOptionsModalView.hbs';
 import './DownloadOptionsModalView.css';
 
-import FiltersModel from '../../core/models/FiltersModel';
-
-import { downloadFullResolution } from '../../download';
+import { downloadFullResolution } from '../../download/eowcs';
 
 export default ModalView.extend({
   template,
   templateHelpers() {
     return {
       records: this.records,
-      downloadOptions: this.showDownloadOptions,
       bbox: this.bbox.map(v => v.toFixed(4)),
+      fields: this.layerModel.get('fullResolution.fields'),
+      interpolations: this.layerModel.get('fullResolution.interpolations'),
     };
   },
 
   events: {
     'change .select-projection': 'onProjectionChange',
     'change .select-format': 'onFormatChange',
-    'click .start-download': 'onStartDownloadClicked',
+    'change [name="field"]': 'onBandsChange',
+    'change [name="interpolation"]': 'onInterpolationChange',
     'change [name="scale-method"]': 'onScaleMethodChange',
+    'click .start-download': 'onStartDownloadClicked',
   },
 
   initialize(options) {
-    const filtersArea = options.filtersModel.get('area');
+    this.layerModel = options.layerModel;
+    this.mapModel = options.mapModel;
+    this.filtersModel = options.filtersModel;
+    const filtersArea = options.mapModel.get('area');
     if (filtersArea) {
       if (Array.isArray(filtersArea)) {
         this.bbox = filtersArea;
@@ -37,29 +41,64 @@ export default ModalView.extend({
     } else {
       this.bbox = options.mapModel.get('bbox');
     }
-    this.showDownloadOptions = true;
   },
 
   onProjectionChange() {
     const val = this.$('.select-projection').val();
-    this.model.set('selectedProjection', val !== '' ? val : null);
+    this.model.set('projection', val !== '' ? val : null);
   },
 
   onFormatChange() {
     const val = this.$('.select-format').val();
-    this.model.set('selectedDownloadFormat', val !== '' ? val : null);
+    this.model.set('format', val !== '' ? val : null);
+  },
+
+  onBandsChange() {
+    this.model.set('fields',
+      this.$('[name="field"]:checked').map((i, input) => input.value).get()
+    );
+  },
+
+  onInterpolationChange() {
+    const val = this.$('input[name="interpolation"]').val();
+    this.model.set('interpolation', val !== '' ? val : null);
   },
 
   onScaleMethodChange() {
     switch (this.$('input[name="scale-method"]:checked').val()) {
       case 'resolution': {
-        this.$(`input[name^='size']`).prop('disabled', true);
         this.$(`input[name^='resolution']`).prop('disabled', false);
+        this.$(`input[name^='size']`).prop('disabled', true);
+        this.$('input[name="scalefactor"]').prop('disabled', true);
+
+        this.model.set({
+          scaleMethod: 'resolution',
+          resolutionX: parseFloat(this.$('input[name="resolution-x"]').val()),
+          resolutionY: parseFloat(this.$('input[name="resolution-y"]').val()),
+        });
         break;
       }
       case 'size': {
-        this.$(`input[name^='size']`).prop('disabled', false);
         this.$(`input[name^='resolution']`).prop('disabled', true);
+        this.$(`input[name^='size']`).prop('disabled', false);
+        this.$('input[name="scalefactor"]').prop('disabled', true);
+
+        this.model.set({
+          scaleMethod: 'size',
+          sizeX: parseInt(this.$('input[name="size-x"]').val(), 10),
+          sizeY: parseInt(this.$('input[name="size-y"]').val(), 10),
+        });
+        break;
+      }
+      case 'scale': {
+        this.$(`input[name^='resolution']`).prop('disabled', true);
+        this.$(`input[name^='size']`).prop('disabled', true);
+        this.$('input[name="scalefactor"]').prop('disabled', false);
+
+        this.model.set({
+          scaleMethod: 'scale',
+          scale: parseFloat(this.$('input[name="scalefactor"]').val()),
+        });
         break;
       }
       default:
@@ -68,36 +107,30 @@ export default ModalView.extend({
   },
 
   onStartDownloadClicked() {
-    downloadFullResolution();
-    // const options = {
-    //   format: this.model.get('selectedDownloadFormat'),
-    //   outputCRS: this.model.get('selectedProjection'),
-    //   subsetCRS: 'EPSG:4326', // TODO make this the maps projection
-    // };
-    // const filtersModel = new FiltersModel();
-    // if (this.model.get('subsetByBounds')) {
-    //   filtersModel.set('area', this.bbox);
-    // }
-    //
-    // // const [recordModel, searchModel] = this.records[0];
-    // // $.ajax({
-    // //   type: "GET",
-    // //   async: true,
-    // //   url: getDownloadUrl(searchModel.get('layerModel'), null, recordModel),
-    // // }).done(() => {
-    // //   alert(arguments)
-    // // })
-    // // this.records.forEach(([recordModel, searchModel]) => downloadRecord(
-    // //     searchModel.get('layerModel'), filtersModel, recordModel, options, this.$('#download-elements')
-    // //   )
-    // // );
-    //
-    // this.records.forEach(([recordModel, searchModel], i) => {
-    //   setTimeout(() =>
-    //     downloadRecord(
-    //       searchModel.get('layerModel'), filtersModel, recordModel, options, this.$('#download-elements')
-    //     ), i * 0
-    //   );
-    // });
+    const options = {
+      bbox: this.bbox,
+      outputCRS: this.projection,
+      fields: this.model.get('fields'),
+      format: this.model.get('format'),
+      interpolation: this.model.get('interpolation'),
+    };
+
+    switch (this.model.get('scaleMethod') || 'resolution') {
+      case 'resolution': {
+        options.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
+        options.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
+        break;
+      }
+      case 'size':
+        options.sizeX = this.model.get('sizeX');
+        options.sizeY = this.model.get('sizeY');
+        break;
+      case 'scale':
+        options.scale = this.model.get('scale');
+        break;
+      default:
+        break;
+    }
+    downloadFullResolution(this.layerModel, this.mapModel, this.filtersModel, options);
   }
 });

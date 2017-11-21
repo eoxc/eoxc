@@ -5,87 +5,122 @@
       <h4 class="modal-title">{{t 'Start full resolution download' }}</h4>
     </div>
     <div class="modal-body">
-      {{#if downloadOptions}}
-        <form class="form-horizontal">
-          {{#if availableProjections.length}}
-          <div class="form-group">
-            <label class="col-sm-2 control-label">{{t 'Projection'}}</label>
-            <div class="col-sm-10">
-              <select class="form-control select-projection">
-                <option>---</option>
-                {{#each availableProjections}}
-                <option value="{{this.identifier}}">{{this.name}}</option>
-                {{/each}}
-              </select>
+      <form class="form-horizontal">
+        {{#if availableProjections.length}}
+        <div class="form-group">
+          <label class="col-sm-2 control-label">{{t 'Projection'}}</label>
+          <div class="col-sm-10">
+            <select class="form-control select-projection">
+              <option>---</option>
+              {{#each availableProjections}}
+              <option value="{{this.identifier}}">{{this.name}}</option>
+              {{/each}}
+            </select>
+          </div>
+        </div>
+        {{/if}}
+        {{#if availableDownloadFormats.length}}
+        <div class="form-group">
+          <label class="col-sm-2 control-label">{{t 'Format'}}</label>
+          <div class="col-sm-10">
+            <select class="form-control select-format">
+              <option>---</option>
+              {{#each availableDownloadFormats}}
+              <option value="{{this.mimeType}}">{{this.name}}</option>
+              {{/each}}
+            </select>
+          </div>
+        </div>
+        {{/if}}
+        <div class="form-group">
+          <label class="col-sm-2 control-label">{{t 'Bounding Box'}}</label>
+          <div class="col-sm-10">
+            <div class="input-group">
+              <input class="form-control input-sm" disabled="true" placeholder="Min-X" value="{{bbox.[0]}}">
+              <span class="input-group-addon">-</span>
+              <input class="form-control input-sm" disabled="true" placeholder="Min-Y" value="{{bbox.[1]}}">
+              <span class="input-group-addon">-</span>
+              <input class="form-control input-sm" disabled="true" placeholder="Max-X" value="{{bbox.[2]}}">
+              <span class="input-group-addon">-</span>
+              <input class="form-control input-sm" disabled="true" placeholder="Max-Y" value="{{bbox.[3]}}">
             </div>
           </div>
-          {{/if}}
-          {{#if availableDownloadFormats.length}}
-          <div class="form-group">
-            <label class="col-sm-2 control-label">{{t 'Format'}}</label>
-            <div class="col-sm-10">
-              <select class="form-control select-format">
-                <option>---</option>
-                {{#each availableDownloadFormats}}
-                <option value="{{this.mimeType}}">{{this.name}}</option>
-                {{/each}}
-              </select>
-            </div>
+        </div>
+
+        {{#if fields}}
+        <div class="form-group">
+          <label class="col-sm-2 control-label">{{t 'Bands'}}</label>
+          <div class="col-sm-10">
+            {{#each fields}}
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="field" value="{{this.identifier}}" checked="checked"> {{this.name}}
+                </label>
+              </div>
+            {{/each}}
           </div>
-          {{/if}}
-          <div class="form-group">
-            <label class="col-sm-2 control-label">{{t 'Bounding Box'}}</label>
-            <div class="col-sm-10">
+        </div>
+        {{/if}}
+
+
+        {{#if interpolations}}
+        <div class="form-group">
+          <label class="col-sm-2 control-label">{{t 'Interpolation'}}</label>
+          <div class="col-sm-10">
+            <select class="form-control" name="interpolation">
+              <option>---</option>
+              {{#each interpolations}}
+              <option value="{{this.identifier}}">{{this.name}}</option>
+              {{/each}}
+            </select>
+          </div>
+        </div>
+        {{/if}}
+
+        <div class="form-group">
+          <label class="col-sm-2">{{t 'Scaling'}}</label>
+          <div class="col-sm-10">
+            <div class="radio">
+              <label>
+                <input type="radio" class="subset-by-bounds" name="scale-method" value="resolution" checked="checked">{{t 'Resolution'}}
+              </label>
               <div class="input-group">
-                <input class="form-control input-sm" disabled="true" placeholder="Min-X" value="{{bbox.[0]}}">
+                <input class="form-control input-sm" placeholder="Resolution X" name="resolution-x" value="{{resolutionX}}">
                 <span class="input-group-addon">-</span>
-                <input class="form-control input-sm" disabled="true" placeholder="Min-Y" value="{{bbox.[1]}}">
-                <span class="input-group-addon">-</span>
-                <input class="form-control input-sm" disabled="true" placeholder="Max-X" value="{{bbox.[2]}}">
-                <span class="input-group-addon">-</span>
-                <input class="form-control input-sm" disabled="true" placeholder="Max-Y" value="{{bbox.[3]}}">
+                <input class="form-control input-sm" placeholder="Resolution Y" name="resolution-y" value="{{resolutionY}}">
               </div>
             </div>
           </div>
+        </div>
 
-          <div class="form-group">
-            <label class="col-sm-2">{{t 'Scaling'}}</label>
-            <div class="col-sm-10">
-              <div class="radio">
-                <label>
-                  <input type="radio" class="subset-by-bounds" name="scale-method" value="resolution" checked="checked">{{t 'Resolution'}}
-                </label>
-                <div class="input-group">
-                  <input class="form-control input-sm" placeholder="Resolution X" name="resolution-x" value="{{resolutionX}}">
-                  <span class="input-group-addon">-</span>
-                  <input class="form-control input-sm" placeholder="Resolution Y" name="resolution-y" value="{{resolutionY}}">
-                </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <div class="radio">
+              <label>
+                <input type="radio" class="subset-by-bounds" name="scale-method" value="size">{{t 'Size'}}
+              </label>
+              <div class="input-group">
+                <input class="form-control input-sm" placeholder="Size X" name="size-x" value="{{sizeX}}" disabled="disabled">
+                <span class="input-group-addon">-</span>
+                <input class="form-control input-sm" placeholder="Size Y" name="size-y" value="{{sizeY}}" disabled="disabled">
               </div>
             </div>
           </div>
+        </div>
 
-          <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
-              <div class="radio">
-                <label>
-                  <input type="radio" class="subset-by-bounds" name="scale-method" value="size">{{t 'Size'}}
-                </label>
-                <div class="input-group">
-                  <input class="form-control input-sm" placeholder="Size X" name="size-x" value="{{sizeX}}" disabled="disabled">
-                  <span class="input-group-addon">-</span>
-                  <input class="form-control input-sm" placeholder="Size Y" name="size-y" value="{{sizeY}}" disabled="disabled">
-                </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <div class="radio">
+              <label>
+                <input type="radio" class="subset-by-bounds" name="scale-method" value="scale">{{t 'Scale'}}
+              </label>
+              <div class="input-group">
+                <input class="form-control input-sm" placeholder="Scale" name="scalefactor" value="{{scale}}" disabled="disabled">
               </div>
             </div>
           </div>
-        </form>
-      {{/if}}
-      <!-- <p class="spacer"><b>{{t 'confirm_download' records.length}}</b></p> -->
-      <!-- {{#if records.[1]}}
-      <p>
-        <i>{{t 'confirm_note'}}</i>
-      </p>
-      {{/if}} -->
+        </div>
+      </form>
     </div>
     <div class="modal-footer">
       <button type="button" class="btn btn-default" data-dismiss="modal">{{t 'Close' }}</button>
