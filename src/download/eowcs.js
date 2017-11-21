@@ -112,6 +112,22 @@ function getCoverageKVP(coverageid, options = {}) {
     params.push(['mediatype', 'multipart/related']);
   }
 
+  if (options.rangeSubset) {
+    params.push(['rangesubset', options.rangeSubset.join(',')]);
+  }
+
+  // scaling related stuff
+  if (options.scale) {
+    params.push(['scaleFactor', options.scale]);
+  }
+  if (options.sizeX && options.sizeY) {
+    params.push(['scaleSize', `${axisNames.x}(${options.sizeX}),${axisNames.y}(${options.sizeY})`]);
+  }
+
+  if (options.interpolation) {
+    params.push(['interpolation', options.interpolation]);
+  }
+
   return params
     .map(param => param.join('='))
     .join('&');
@@ -124,6 +140,9 @@ export function download(layerModel, filtersModel, recordModel, options) {
     outputCRS: options.outputCRS,
     subsetCRS: options.subsetCRS,
     format: options.format,
+    sizeX: options.sizeX,
+    sizeY: options.sizeY,
+    scale: options.scale,
   };
 
   if (layerModel.get('download.method') === 'GET') {
@@ -161,10 +180,15 @@ export function getDownloadUrl(layerModel, filtersModel, recordModel, options = 
 
 export function downloadFullResolution(layerModel, mapModel, filtersModel, options) {
   const requestOptions = {
-    bbox: mapModel.get('bbox'),
+    bbox: options.bbox || mapModel.get('bbox'),
     outputCRS: options.outputCRS,
     subsetCRS: options.subsetCRS,
+    rangeSubset: options.fields,
     format: options.format,
+    scale: options.scale,
+    sizeX: options.sizeX,
+    sizeY: options.sizeY,
+    interpolation: options.interpolation,
     axisNames: layerModel.get('fullResolution.axisNames'),
   };
   const id = layerModel.get('fullResolution.id');
