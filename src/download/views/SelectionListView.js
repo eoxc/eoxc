@@ -33,6 +33,10 @@ const SelectionListView = Marionette.CompositeView.extend({
     'click .btn-download-full-res': 'onDownloadFullResolutionClick',
   },
 
+  modelEvents: {
+    'change:automaticSearch': 'onAutomaticSearchChange',
+  },
+
   initialize(options) {
     this.highlightModel = options.highlightModel;
     this.mapModel = options.mapModel;
@@ -41,9 +45,10 @@ const SelectionListView = Marionette.CompositeView.extend({
   onDownloadFullResolutionClick() {
     const layerModel = this.model.get('layerModel');
     layerModel.trigger('download-full-resolution', layerModel);
-    // downloadFullResolution(
-    //   layerModel, this.mapModel, this.model.get('filtersModel'), {}
-    // );
+  },
+
+  onAutomaticSearchChange() {
+    this.$('.btn-download-full-res').prop('disabled', !this.model.get('automaticSearch'));
   }
 });
 
