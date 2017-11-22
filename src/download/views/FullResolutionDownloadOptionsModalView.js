@@ -24,6 +24,10 @@ export default ModalView.extend({
     'change [name="field"]': 'onBandsChange',
     'change [name="interpolation"]': 'onInterpolationChange',
     'change [name="scale-method"]': 'onScaleMethodChange',
+    [`change [name^='size-']`]: 'onSizeOrResolutionChange',
+    [`change [name^='resolution-']`]: 'onSizeOrResolutionChange',
+    'change [name="scalefactor"]': 'onSizeOrResolutionChange',
+    'submit form': 'onFormSubmit',
     'click .start-download': 'onStartDownloadClicked',
   },
 
@@ -66,6 +70,14 @@ export default ModalView.extend({
 
   onScaleMethodChange() {
     switch (this.$('input[name="scale-method"]:checked').val()) {
+      case 'full':
+        this.$(`input[name^='resolution']`).prop('disabled', true);
+        this.$(`input[name^='size']`).prop('disabled', true);
+        this.$('input[name="scalefactor"]').prop('disabled', true);
+        this.model.set({
+          scaleMethod: 'none',
+        });
+        break;
       case 'resolution': {
         this.$(`input[name^='resolution']`).prop('disabled', false);
         this.$(`input[name^='size']`).prop('disabled', true);
@@ -97,7 +109,7 @@ export default ModalView.extend({
 
         this.model.set({
           scaleMethod: 'scale',
-          scale: parseFloat(this.$('input[name="scalefactor"]').val()),
+          scale: parseFloat(this.$('input[name="scalefactor"]').val()) / 100,
         });
         break;
       }
@@ -106,7 +118,20 @@ export default ModalView.extend({
     }
   },
 
+  onSizeOrResolutionChange() {
+    this.model.set({
+      resolutionX: parseFloat(this.$('input[name="resolution-x"]').val()),
+      resolutionY: parseFloat(this.$('input[name="resolution-y"]').val()),
+      sizeX: parseInt(this.$('input[name="size-x"]').val(), 10),
+      sizeY: parseInt(this.$('input[name="size-y"]').val(), 10),
+      scale: parseFloat(this.$('input[name="scalefactor"]').val()) / 100,
+    });
+  },
+
   onStartDownloadClicked() {
+    // refresh values from form
+    this.onSizeOrResolutionChange();
+
     const options = {
       bbox: this.bbox,
       outputCRS: this.projection,
@@ -132,5 +157,9 @@ export default ModalView.extend({
         break;
     }
     downloadFullResolution(this.layerModel, this.mapModel, this.filtersModel, options);
+  },
+
+  onFormSubmit() {
+    console.log("submitting")
   }
 });
