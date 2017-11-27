@@ -17,6 +17,7 @@ const SelectionListView = Marionette.CompositeView.extend({
       layerName: layerModel.get('displayName'),
       layerId: layerModel.get('id'),
       enableFullResolutionDownload: layerModel.get('fullResolution'),
+      enableProcessing: layerModel.get('processingUrl'),
     };
   },
   childView: SelectionListItemView,
@@ -31,6 +32,7 @@ const SelectionListView = Marionette.CompositeView.extend({
 
   events: {
     'click .btn-download-full-res': 'onDownloadFullResolutionClick',
+    'click .btn-processing': 'onProcessingClick',
   },
 
   modelEvents: {
@@ -45,6 +47,10 @@ const SelectionListView = Marionette.CompositeView.extend({
   onDownloadFullResolutionClick() {
     const layerModel = this.model.get('layerModel');
     layerModel.trigger('download-full-resolution', layerModel);
+  },
+
+  onProcessingClick() {
+    this.model.trigger('start-processing', this.model);
   },
 
   onAutomaticSearchChange() {

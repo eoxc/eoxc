@@ -11,6 +11,9 @@
     {{#if enableFullResolutionDownload}}
       <button class="btn btn-sm btn-block btn-default btn-download-full-res" type="button" {{#unless automaticSearch}}disabled{{/unless}}>{{t 'Download full resolution raster'}}</button>
     {{/if}}
+    {{#if enableProcessing}}
+      <button class="btn btn-sm btn-block btn-default btn-processing" type="button" {{#unless automaticSearch}}disabled{{/unless}}>{{t 'Start processing'}}</button>
+    {{/if}}
     <div class="selection-body">
       <ul class="selection-items list-unstyled list-inline"></ul>
     </div>
