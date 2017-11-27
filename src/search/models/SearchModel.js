@@ -17,8 +17,8 @@ class SearchModel extends Backbone.Model {
     return {
       automaticSearch: false,
       defaultPageSize: 9,
-      maxCount: 200,
-      loadMore: 50,
+      maxCount: 150,
+      loadMore: 150,
       totalResults: undefined,
       isSearching: false,
       isCancelled: false,
