@@ -55,6 +55,7 @@ const SelectionListView = Marionette.CompositeView.extend({
 
   onAutomaticSearchChange() {
     this.$('.btn-download-full-res').prop('disabled', !this.model.get('automaticSearch'));
+    this.$('.btn-processing').prop('disabled', !this.model.get('automaticSearch'));
   }
 });
 
