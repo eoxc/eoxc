@@ -13,6 +13,7 @@ const DownloadView = Marionette.CompositeView.extend({
   templateHelpers() {
     return {
       termsAndConditionsUrl: this.termsAndConditionsUrl,
+      downloadEnabled: this.downloadEnabled,
     };
   },
   className: 'download-view',
@@ -38,6 +39,7 @@ const DownloadView = Marionette.CompositeView.extend({
     this.filtersModel = options.filtersModel;
     this.highlightModel = options.highlightModel;
     this.termsAndConditionsUrl = options.termsAndConditionsUrl;
+    this.downloadEnabled = options.downloadEnabled;
 
     this.collection.each((searchModel) => {
       this.listenTo(
@@ -90,7 +92,7 @@ const DownloadView = Marionette.CompositeView.extend({
       count + searchModel.get('downloadSelection').length
     ), 0);
 
-    let enabled = totalCount > 0;
+    let enabled = totalCount > 0 && this.downloadEnabled;
     if (this.termsAndConditionsUrl) {
       enabled = enabled && this.hasAcceptedTerms;
     }
