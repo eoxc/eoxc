@@ -142,7 +142,7 @@ export function createRasterLayer(layerModel) {
           crossOrigin: 'anonymous',
           params: Object.assign({
             LAYERS: layerId,
-            VERSION: '1.1.0',
+            VERSION: params.version || '1.1.0',
             FORMAT: params.format, // TODO: use format here?
             STYLES: params.style,
           }, layerModel.get('display.extraParameters')),
