@@ -183,7 +183,7 @@ function getLayerParams(mapModel, layerModel, filtersModel) {
     let beginISO = getISODateTimeString(time[0]);
     let endISO = getISODateTimeString(time[1]);
 
-    if (false) { // TODO: check if layer does not support ISO time
+    if (layerModel.get('display.discardZulu')) {
       beginISO = beginISO.slice(0, -1);
       endISO = endISO.slice(0, -1);
     }
