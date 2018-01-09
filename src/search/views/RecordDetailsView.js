@@ -9,14 +9,13 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   regions: {
     map: '.record-details-map',
   },
-  triggers: {
-  },
 
   templateHelpers() {
     return {
       thumbnailUrl: this.model.getThumbnailUrl(),
       browseUrl: this.model.getBrowseUrl(),
       description: this.model.getDescription(this.descriptionTemplate),
+      title: this.model.getTitle(),
     };
   },
 

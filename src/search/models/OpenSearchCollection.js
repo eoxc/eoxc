@@ -43,6 +43,14 @@ class OpenSearchRecordModel extends RecordModel {
     return null;
   }
 
+  getTitle() {
+    const properties = this.get('properties');
+    if (properties && properties.title) {
+      return properties.title;
+    }
+    return this.get('id');
+  }
+
   getDescription(descriptionTemplate = undefined) {
     if (descriptionTemplate) {
       return _.template(descriptionTemplate, {

@@ -1,5 +1,6 @@
 import Backbone from 'backbone';
 
+
 class RecordModel extends Backbone.Model {
   getThumbnailUrl() {
     // overwrite in sub-class
@@ -9,6 +10,10 @@ class RecordModel extends Backbone.Model {
   getBrowseUrl() {
     // overwrite in sub-class
     return null;
+  }
+
+  getTitle() {
+    return this.get('id');
   }
 
   triggerShowInfo(collection = this.collection) {
