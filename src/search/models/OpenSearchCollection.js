@@ -1,8 +1,15 @@
+import _ from 'underscore';
 import Backbone from 'backbone';
 import RecordModel from '../../core/models/RecordModel';
 
 class OpenSearchRecordModel extends RecordModel {
-  getThumbnailUrl() {
+  getThumbnailUrl(thumbnailUrlTemplate = undefined) {
+    if (thumbnailUrlTemplate) {
+      return _.template(thumbnailUrlTemplate, {
+        interpolate: /\{\{(.+?)\}\}/g
+      })(this.toJSON());
+    }
+
     const properties = this.get('properties');
     if (properties && properties.media) {
       const media = properties.media.find(m => m.category === 'THUMBNAIL');
@@ -13,7 +20,13 @@ class OpenSearchRecordModel extends RecordModel {
     return null;
   }
 
-  getBrowseUrl() {
+  getBrowseUrl(browseUrlTemplate = undefined) {
+    if (browseUrlTemplate) {
+      return _.template(browseUrlTemplate, {
+        interpolate: /\{\{(.+?)\}\}/g
+      })(this.toJSON());
+    }
+
     const properties = this.get('properties');
     if (properties && properties.media) {
       const media = properties.media.find(m => m.category === 'QUICKLOOK');
@@ -28,6 +41,17 @@ class OpenSearchRecordModel extends RecordModel {
       }
     }
     return null;
+  }
+
+  getDescription(descriptionTemplate = undefined) {
+    if (descriptionTemplate) {
+      return _.template(descriptionTemplate, {
+        interpolate: /\{\{(.+?)\}\}/g
+      })(this.toJSON());
+    }
+
+    const properties = this.get('properties');
+    return properties.summary || properties.content;
   }
 }
 

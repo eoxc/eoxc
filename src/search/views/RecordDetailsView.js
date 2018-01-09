@@ -16,13 +16,14 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     return {
       thumbnailUrl: this.model.getThumbnailUrl(),
       browseUrl: this.model.getBrowseUrl(),
-      description: this.model.get('properties').summary || this.model.get('properties').content,
+      description: this.model.getDescription(this.descriptionTemplate),
     };
   },
 
   initialize(options) {
     this.mapView = options.mapView;
     this.mapModel = options.mapModel;
+    this.descriptionTemplate = options.descriptionTemplate;
   },
 
   onAttach() {

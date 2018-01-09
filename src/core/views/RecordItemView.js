@@ -25,7 +25,10 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     const time = this.model.get('properties').time;
     const start = Array.isArray(time) ? time[0] : time;
     return {
-      thumbnailUrl: this.model.getThumbnailUrl(),
+      thumbnailUrl: this.model.getThumbnailUrl(
+        this.collection ? this.collection.searchModel.get('layerModel').get('search.thumbnailUrlTemplate')
+                        : undefined
+      ),
       date: start.toISOString().substring(0, 10),
       time: start.toISOString().substring(11, 19),
     };
