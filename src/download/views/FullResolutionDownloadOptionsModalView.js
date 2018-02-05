@@ -64,7 +64,7 @@ export default ModalView.extend({
   },
 
   onInterpolationChange() {
-    const val = this.$('input[name="interpolation"]').val();
+    const val = this.$('select[name="interpolation"]').val();
     this.model.set('interpolation', val !== '' ? val : null);
   },
 
@@ -134,7 +134,7 @@ export default ModalView.extend({
 
     const options = {
       bbox: this.bbox,
-      outputCRS: this.projection,
+      outputCRS: this.model.get('projection'),
       fields: this.model.get('fields'),
       format: this.model.get('format'),
       interpolation: this.model.get('interpolation'),

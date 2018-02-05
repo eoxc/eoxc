@@ -1,6 +1,7 @@
 import $ from 'jquery';
 
 import { filtersToCQL } from '../core/util';
+import { getISODateTimeString } from '../core/util';
 import FiltersModel from '../core/models/FiltersModel';
 
 function getCoverageXML(coverageid, options = {}) {
@@ -194,18 +195,17 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
   const id = layerModel.get('fullResolution.id');
   let kvp = getCoverageKVP(id, requestOptions);
 
+
+  const time = mapModel.get('time');
+  if (time) {
+    kvp = `${kvp}&subset=http://www.opengis.net/def/axis/OGC/0/time("${getISODateTimeString(time[0])}"/"${getISODateTimeString(time[1])}")`;
+  }
+
   const cqlMapping = layerModel.get('fullResolution.cqlMapping');
   const cqlParameterName = layerModel.get('fullResolution.cqlParameterName');
 
   if (cqlParameterName) {
     const filtersModelCopy = new FiltersModel(filtersModel.attributes);
-    const time = mapModel.get('time');
-    if (time) {
-      filtersModelCopy.set('time', {
-        min: time[0],
-        max: time[1],
-      });
-    }
     const cql = filtersToCQL(filtersModelCopy, cqlMapping);
     if (cql.length) {
       kvp = `${kvp}&${cqlParameterName}=${cql}`;
