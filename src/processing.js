@@ -1,4 +1,3 @@
-import { toWKT } from 'opensearch-browser/utils';
 import { getISODateTimeString } from './core/util';
 import { toNormalizedFeature } from './contrib/OpenLayers/utils';
 
@@ -26,7 +25,7 @@ export function sendProcessingRequest(searchModel, mapModel) {
   const body = {
     collectionName: layerModel.get('id'),
     productIdentifiers: downloadSelection.map(record => record.get('id')),
-    timeSelection: {
+    dateRange: {
       startTime: getISODateTimeString(start),
       endTime: getISODateTimeString(end),
     },
@@ -34,9 +33,7 @@ export function sendProcessingRequest(searchModel, mapModel) {
 
   const area = mapModel.get('area');
   if (area) {
-    body.spatialSelection = toWKT(
-      Array.isArray(area) ? toNormalizedFeature(area)[0] : area
-    );
+    body.regionGeometry = Array.isArray(area) ? toNormalizedFeature(area)[0] : area;
   }
   fetch(
     new Request(layerModel.get('processingUrl'), {
