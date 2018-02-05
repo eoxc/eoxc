@@ -198,7 +198,7 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
 
   const time = mapModel.get('time');
   if (time) {
-    kvp = `${kvp}&subset=http://www.opengis.net/def/axis/OGC/0/time("${getISODateTimeString(time[0])}"/"${getISODateTimeString(time[1])}")`;
+    kvp = `${kvp}&subset=http://www.opengis.net/def/axis/OGC/0/time("${getISODateTimeString(time[0])}","${getISODateTimeString(time[1])}")`;
   }
 
   const cqlMapping = layerModel.get('fullResolution.cqlMapping');
