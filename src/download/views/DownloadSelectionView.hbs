@@ -1,4 +1,4 @@
-<div class="selection-lists {{#if termsAndConditionsUrl}}with-terms{{/if}}"></div>
+<div class="selection-lists {{#if termsAndConditionsUrl}}with-terms{{/if}}{{#unless downloadEnabled}} with-terms{{/unless}}"></div>
 <div class="input-group download-control">
   {{#if termsAndConditionsUrl}}
   <div class="checkbox">
@@ -7,6 +7,11 @@
     </label>
   </div>
   {{/if}}
+  {{#unless downloadEnabled}}
+  <div class="checkbox">
+    <p>{{t 'Log in to enable the download'}}</p>
+  </div>
+  {{/unless}}
   <span class="btn-group btn-group-justified">
     <div class="btn-group" role="group">
       <button class="btn btn-default btn-sm start-download" type="button" disabled>{{t 'Download'}}</button>
