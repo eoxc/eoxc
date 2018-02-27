@@ -11,11 +11,55 @@ export default ModalView.extend({
   template,
   templateHelpers() {
     return {
-      records: this.records,
       bbox: this.bbox.map(v => v.toFixed(4)),
       fields: this.layerModel.get('fullResolution.fields'),
       interpolations: this.layerModel.get('fullResolution.interpolations'),
     };
+  },
+
+  onRender() {
+    const preferences = this.getPreferences();
+    const preferredFormat = preferences.preferredFormat;
+    const preferredInterpolation = preferences.preferredInterpolation;
+    const preferredProjection = preferences.preferredProjection;
+    const preferredScalingMethod = preferences.preferredScalingMethod;
+    const preferredSize = preferences.preferredSize;
+    const preferredResolution = preferences.preferredResolution;
+    const preferredScale = preferences.preferredScale;
+    const preferredFields = preferences.preferredFields;
+
+    if (preferredFormat) {
+      this.$('.select-format').val(preferredFormat);
+    }
+    if (preferredInterpolation) {
+      this.$('select[name="interpolation"]').val(preferredInterpolation);
+    }
+    if (preferredProjection) {
+      this.$('.select-projection').val(preferredProjection);
+    }
+    if (preferredScalingMethod) {
+      this.$(`input[name="scale-method"][value=${preferredScalingMethod}]`).prop('checked', true);
+      if (preferredScalingMethod === 'resolution' && !isNaN(preferredResolution[0]) && !isNaN(preferredResolution[1])) {
+        this.$('[name="resolution-x"]').val(preferredResolution[0]);
+        this.$('[name="resolution-y"]').val(preferredResolution[1]);
+      } else if (preferredScalingMethod === 'size' && !isNaN(preferredSize[0]) && !isNaN(preferredSize[1])) {
+        this.$('[name="size-x"]').val(preferredSize[0]);
+        this.$('[name="size-y"]').val(preferredSize[1]);
+      } else if (preferredScalingMethod === 'scale') {
+        this.$('[name="scalefactor"]').val(preferredScale * 100);
+      }
+
+      this.onScaleMethodChange();
+    }
+
+    if (preferredFields) {
+      this.$('[name="field"]').prop('checked', false);
+      preferredFields.forEach((field) => {
+        this.$(`[name="field"][value="${field}"]`).prop('checked', true);
+      });
+    }
+
+    // this.$('[name=]')
   },
 
   events: {
@@ -29,6 +73,7 @@ export default ModalView.extend({
     'change [name="scalefactor"]': 'onSizeOrResolutionChange',
     'submit form': 'onFormSubmit',
     'click .start-download': 'onStartDownloadClicked',
+    'click .btn-draw-bbox': 'onDrawBBoxClicked',
   },
 
   initialize(options) {
@@ -45,27 +90,38 @@ export default ModalView.extend({
     } else {
       this.bbox = options.mapModel.get('bbox');
     }
+
+    this.listenTo(this.mapModel, 'change:area', () => {
+      const bbox = this.mapModel.get('area');
+      if (Array.isArray(bbox)) {
+        this.bbox = bbox;
+        this.render();
+      }
+    });
   },
 
   onProjectionChange() {
     const val = this.$('.select-projection').val();
     this.model.set('projection', val !== '' ? val : null);
+    this.updatePreferences('preferredProjection', val !== '' ? val : null);
   },
 
   onFormatChange() {
     const val = this.$('.select-format').val();
     this.model.set('format', val !== '' ? val : null);
+    this.updatePreferences('preferredFormat', val !== '' ? val : null);
   },
 
   onBandsChange() {
-    this.model.set('fields',
-      this.$('[name="field"]:checked').map((i, input) => input.value).get()
-    );
+    const fields = this.$('[name="field"]:checked').map((i, input) => input.value).get();
+    this.model.set('fields', fields);
+    this.updatePreferences('preferredFields', fields);
   },
 
   onInterpolationChange() {
     const val = this.$('select[name="interpolation"]').val();
     this.model.set('interpolation', val !== '' ? val : null);
+    this.updatePreferences('preferredInterpolation', val !== '' ? val : null);
   },
 
   onScaleMethodChange() {
@@ -116,16 +172,35 @@ export default ModalView.extend({
       default:
         break;
     }
+
+    this.updatePreferences(
+      'preferredScalingMethod',
+      this.$('input[name="scale-method"]:checked').val()
+    );
   },
 
   onSizeOrResolutionChange() {
+    const resolution = [
+      parseFloat(this.$('input[name="resolution-x"]').val()),
+      parseFloat(this.$('input[name="resolution-y"]').val()),
+    ];
+    const size = [
+      parseInt(this.$('input[name="size-x"]').val(), 10),
+      parseInt(this.$('input[name="size-y"]').val(), 10),
+    ];
+    const scale = parseFloat(this.$('input[name="scalefactor"]').val()) / 100;
+
     this.model.set({
-      resolutionX: parseFloat(this.$('input[name="resolution-x"]').val()),
-      resolutionY: parseFloat(this.$('input[name="resolution-y"]').val()),
-      sizeX: parseInt(this.$('input[name="size-x"]').val(), 10),
-      sizeY: parseInt(this.$('input[name="size-y"]').val(), 10),
-      scale: parseFloat(this.$('input[name="scalefactor"]').val()) / 100,
+      resolutionX: resolution[0],
+      resolutionY: resolution[1],
+      sizeX: size[0],
+      sizeY: size[1],
+      scale,
     });
+
+    this.updatePreferences('preferredResolution', resolution);
+    this.updatePreferences('preferredSize', size);
+    this.updatePreferences('preferredScale', scale);
   },
 
   onStartDownloadClicked() {
@@ -159,7 +234,32 @@ export default ModalView.extend({
     downloadFullResolution(this.layerModel, this.mapModel, this.filtersModel, options);
   },
 
-  onFormSubmit() {
-    console.log("submitting")
+  onDrawBBoxClicked() {
+    this.mapModel.set('tool', 'bbox');
+    this.close();
+
+    this.listenToOnce(this.mapModel, 'change:tool', () => {
+      this.open();
+    });
+  },
+
+
+  updatePreferences(key, value) {
+    const preferences = this.getPreferences();
+    preferences[key] = value;
+    localStorage.setItem(
+      `full-resolution-download-options-view-preferences-${this.layerModel.get('layerId')}`,
+      JSON.stringify(preferences),
+    );
+  },
+
+  getPreferences() {
+    try {
+      return JSON.parse(localStorage.getItem(
+        `full-resolution-download-options-view-preferences-${this.layerModel.get('layerId')}`
+      ) || '{}');
+    } catch (error) {
+      return {};
+    }
   }
 });

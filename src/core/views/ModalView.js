@@ -59,7 +59,8 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
     Show the Panel when it was not visible before.
    */
   open() {
-    this.$el.css('display', this.initialDisplay);
+    // this.$el.css('display', this.initialDisplay);
+    this.$el.modal('show');
     this.closed = false;
   },
 
@@ -67,7 +68,8 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
     Close the Panel when open before.
    */
   close() {
-    this.$el.css('display', 'none');
+    // this.$el.css('display', 'none');
+    this.$el.modal('hide');
     this.closed = true;
   },
 
