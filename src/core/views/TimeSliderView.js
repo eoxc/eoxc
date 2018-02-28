@@ -129,7 +129,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.$('.control#reload .reload-arrow').replaceWith('<i class="fa fa-refresh fa-fw" />');
 
     const visibleLayers = this.layersCollection.filter(
-      layerModel => layerModel.get('display.visible') && layerModel.get('search.protocol')
+      layerModel => layerModel.get('display.visible')
     );
 
     visibleLayers.forEach(layerModel => this.addLayer(layerModel));
@@ -250,7 +250,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   checkVisible(fade = true) {
     const visibleLayers = this.layersCollection
-      .filter(m => m.get('display.visible') && m.get('search.protocol'));
+      .filter(m => m.get('display.visible'));
     if (visibleLayers.length) {
       if (fade) {
         this.$el.fadeIn();
@@ -405,7 +405,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   onLayerVisibleChanged(layerModel) {
-    if (layerModel.hasChanged('display') && layerModel.get('search.protocol')) {
+    if (layerModel.hasChanged('display')) {
       if (layerModel.get('display.visible') && !this.timeSlider.hasDataset(layerModel.get('id'))) {
         this.addLayer(layerModel);
       } else {
