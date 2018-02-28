@@ -102,6 +102,7 @@ export default ModalView.extend({
         this.render();
       }
     });
+    this.resolution = this.layerModel.get('fullResolution.maxSizeResolution');
   },
 
   onProjectionChange() {
@@ -221,20 +222,36 @@ export default ModalView.extend({
 
     switch (this.model.get('scaleMethod') || 'resolution') {
       case 'resolution': {
-        options.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
-        options.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
+        this.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
+        this.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
+        options.sizeX = sizeX;
+        options.sizeY = sizeY;
         break;
       }
       case 'size':
-        options.sizeX = this.model.get('sizeX');
-        options.sizeY = this.model.get('sizeY');
+        this.sizeX = this.model.get('sizeX');
+        this.sizeY = this.model.get('sizeY');
+        options.sizeX = sizeX;
+        options.sizeY = sizeY;
         break;
       case 'scale':
+        this.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution * this.model.get('scale'));
+        this.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution * this.model.get('scale'));
         options.scale = this.model.get('scale');
         break;
       default:
+        this.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution);
+        this.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution);
         break;
     }
+
+    //show warning when "sizeX * sizeY * #bands * bits/band (assume 8) / 1024 / 1024 >= maxSizeWarning"
+    if (this.sizeX * this.sizeY * options.fields.length / 131072 >= this.layerModel.get('fullResolution.maxSizeWarning')) {
+      //TODO show warning
+    }
+
+    //TODO check input sanity, e.g. at least one band selected, etc.
+
     downloadFullResolution(this.layerModel, this.mapModel, this.filtersModel, options);
   },
 

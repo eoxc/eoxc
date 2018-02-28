@@ -30,6 +30,11 @@ const LayerModel = Backbone.NestedModel.extend(/** @lends core/models.LayerModel
       protocol: null,
       id: null,
     },
+    fullResolution: {
+      protocol: null,
+      maxSizeWarning: 500,
+      maxSizeResolution: 0.0000858306884765625,
+    },
   },
 
   /**
