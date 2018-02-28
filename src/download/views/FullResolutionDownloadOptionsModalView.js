@@ -30,12 +30,15 @@ export default ModalView.extend({
 
     if (preferredFormat) {
       this.$('.select-format').val(preferredFormat);
+      this.model.set('format', preferredFormat);
     }
     if (preferredInterpolation) {
       this.$('select[name="interpolation"]').val(preferredInterpolation);
+      this.model.set('interpolation', preferredInterpolation);
     }
     if (preferredProjection) {
       this.$('.select-projection').val(preferredProjection);
+      this.model.set('projection', preferredProjection);
     }
     if (preferredScalingMethod) {
       this.$(`input[name="scale-method"][value=${preferredScalingMethod}]`).prop('checked', true);
@@ -57,6 +60,7 @@ export default ModalView.extend({
       preferredFields.forEach((field) => {
         this.$(`[name="field"][value="${field}"]`).prop('checked', true);
       });
+      this.model.set('fields', preferredFields);
     }
 
     // this.$('[name=]')
