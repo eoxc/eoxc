@@ -51,8 +51,8 @@ export default ModalView.extend({
       } else if (preferredScalingMethod === 'scale') {
         this.$('[name="scalefactor"]').val(preferredScale * 100);
       }
-
       this.onScaleMethodChange();
+      this.onSizeOrResolutionChange();
     }
 
     if (preferredFields) {
@@ -61,9 +61,11 @@ export default ModalView.extend({
         this.$(`[name="field"][value="${field}"]`).prop('checked', true);
       });
       this.model.set('fields', preferredFields);
+      this.onBandsChange();
     }
 
-    // this.$('[name=]')
+    this.checkSize();
+    this.checkValidity();
   },
 
   events: {
@@ -121,6 +123,9 @@ export default ModalView.extend({
     const fields = this.$('[name="field"]:checked').map((i, input) => input.value).get();
     this.model.set('fields', fields);
     this.updatePreferences('preferredFields', fields);
+
+    this.checkSize();
+    this.checkValidity();
   },
 
   onInterpolationChange() {
@@ -182,6 +187,9 @@ export default ModalView.extend({
       'preferredScalingMethod',
       this.$('input[name="scale-method"]:checked').val()
     );
+
+    this.checkSize();
+    this.checkValidity();
   },
 
   onSizeOrResolutionChange() {
@@ -206,6 +214,9 @@ export default ModalView.extend({
     this.updatePreferences('preferredResolution', resolution);
     this.updatePreferences('preferredSize', size);
     this.updatePreferences('preferredScale', scale);
+
+    this.checkSize();
+    this.checkValidity();
   },
 
   onStartDownloadClicked() {
@@ -220,37 +231,35 @@ export default ModalView.extend({
       interpolation: this.model.get('interpolation'),
     };
 
+    let sizeX;
+    let sizeY;
+
     switch (this.model.get('scaleMethod') || 'resolution') {
       case 'resolution': {
-        this.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
-        this.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
+        sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
+        sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
         options.sizeX = sizeX;
         options.sizeY = sizeY;
         break;
       }
       case 'size':
-        this.sizeX = this.model.get('sizeX');
-        this.sizeY = this.model.get('sizeY');
+        sizeX = this.model.get('sizeX');
+        sizeY = this.model.get('sizeY');
         options.sizeX = sizeX;
         options.sizeY = sizeY;
         break;
       case 'scale':
-        this.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution * this.model.get('scale'));
-        this.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution * this.model.get('scale'));
+        sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution * this.model.get('scale'));
+        sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution * this.model.get('scale'));
         options.scale = this.model.get('scale');
         break;
       default:
-        this.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution);
-        this.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution);
+        sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution);
+        sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution);
         break;
     }
 
-    //show warning when "sizeX * sizeY * #bands * bits/band (assume 8) / 1024 / 1024 >= maxSizeWarning"
-    if (this.sizeX * this.sizeY * options.fields.length / 131072 >= this.layerModel.get('fullResolution.maxSizeWarning')) {
-      //TODO show warning
-    }
-
-    //TODO check input sanity, e.g. at least one band selected, etc.
+    // TODO check input sanity, e.g. at least one band selected, etc.
 
     downloadFullResolution(this.layerModel, this.mapModel, this.filtersModel, options);
   },
@@ -272,6 +281,68 @@ export default ModalView.extend({
       `full-resolution-download-options-view-preferences-${this.layerModel.get('layerId')}`,
       JSON.stringify(preferences),
     );
+  },
+
+  checkSize() {
+    // show warning when:
+    // "sizeX * sizeY * #bands * bits/band (assume 8) / 1024 / 1024 >= maxSizeWarning"
+    let sizeX = 0;
+    let sizeY = 0;
+    switch (this.model.get('scaleMethod') || 'resolution') {
+      case 'resolution': {
+        sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
+        sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
+        break;
+      }
+      case 'size':
+        sizeX = this.model.get('sizeX');
+        sizeY = this.model.get('sizeY');
+        break;
+      case 'scale':
+        sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution * this.model.get('scale'));
+        sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution * this.model.get('scale'));
+        break;
+      default:
+        sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution);
+        sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution);
+        break;
+    }
+
+
+    const $sizeWarning = this.$('.size-warning');
+
+    const fields = this.model.get('fields') || [];
+    if ((sizeX * sizeY * fields.length) / 131072 >= this.layerModel.get('fullResolution.maxSizeWarning')) {
+      $sizeWarning.fadeIn();
+    } else if ($sizeWarning.is(':visible')) {
+      $sizeWarning.fadeOut();
+    } else {
+      $sizeWarning.hide();
+    }
+  },
+
+  checkValidity() {
+    let isInvalid = false;
+    switch (this.model.get('scaleMethod') || 'resolution') {
+      case 'resolution':
+        isInvalid = isNaN(this.model.get('resolutionX')) || isNaN(this.model.get('resolutionY'));
+        break;
+      case 'size':
+        isInvalid = isNaN(this.model.get('sizeX')) || isNaN(this.model.get('sizeY'));
+        break;
+      case 'scale':
+        isInvalid = isNaN(this.model.get('scale'));
+        break;
+      default:
+        break;
+    }
+
+    const fields = this.model.get('fields');
+    if (!fields || !fields.length) {
+      isInvalid = true;
+    }
+
+    this.$('.start-download').prop('disabled', isInvalid);
   },
 
   getPreferences() {
