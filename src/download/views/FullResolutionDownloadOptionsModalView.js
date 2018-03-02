@@ -315,15 +315,41 @@ export default ModalView.extend({
 
   checkValidity() {
     let isInvalid = false;
-    switch (this.model.get('scaleMethod') || 'resolution') {
+    switch (this.model.get('scaleMethod') || 'none') {
+      case 'none':
+        this.$('.input-resolution').removeClass('has-error');
+        this.$('.input-size').removeClass('has-error');
+        this.$('.input-scale').removeClass('has-error');
+        break;
       case 'resolution':
-        isInvalid = isNaN(this.model.get('resolutionX')) || isNaN(this.model.get('resolutionY')) || this.model.get('resolutionX') <= 0 || this.model.get('resolutionY') <= 0;
+        if (isNaN(this.model.get('resolutionX')) || isNaN(this.model.get('resolutionY')) || this.model.get('resolutionX') <= 0 || this.model.get('resolutionY') <= 0) {
+          this.$('.input-resolution').addClass('has-error');
+          isInvalid = true;
+        } else {
+          this.$('.input-resolution').removeClass('has-error');
+        }
+        this.$('.input-size').removeClass('has-error');
+        this.$('.input-scale').removeClass('has-error');
         break;
       case 'size':
-        isInvalid = isNaN(this.model.get('sizeX')) || isNaN(this.model.get('sizeY')) || this.model.get('sizeX') <= 0 || this.model.get('sizeY') <= 0 || Math.floor(this.model.get('sizeX')) != this.model.get('sizeX') || Math.floor(this.model.get('sizeY')) != this.model.get('sizeY');
+        if (isNaN(this.model.get('sizeX')) || isNaN(this.model.get('sizeY')) || this.model.get('sizeX') <= 0 || this.model.get('sizeY') <= 0 || Math.floor(this.model.get('sizeX')) != this.model.get('sizeX') || Math.floor(this.model.get('sizeY')) != this.model.get('sizeY')) {
+          this.$('.input-size').addClass('has-error');
+          isInvalid = true;
+        } else {
+          this.$('.input-size').removeClass('has-error');
+        }
+        this.$('.input-resolution').removeClass('has-error');
+        this.$('.input-scale').removeClass('has-error');
         break;
       case 'scale':
-        isInvalid = isNaN(this.model.get('scale')) || this.model.get('scale') <= 0;
+        if (isNaN(this.model.get('scale')) || this.model.get('scale') <= 0) {
+          this.$('.input-scale').addClass('has-error');
+          isInvalid = true;
+        } else {
+          this.$('.input-scale').removeClass('has-error');
+        }
+        this.$('.input-resolution').removeClass('has-error');
+        this.$('.input-size').removeClass('has-error');
         break;
       default:
         break;
@@ -331,7 +357,10 @@ export default ModalView.extend({
 
     const fields = this.model.get('fields');
     if (!fields || !fields.length) {
+      this.$('.input-fields').addClass('has-error');
       isInvalid = true;
+    } else {
+      this.$('.input-fields').removeClass('has-error');
     }
 
     this.$('.start-download').prop('disabled', isInvalid);
