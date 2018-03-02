@@ -212,6 +212,9 @@ export default ModalView.extend({
       scale,
     });
 
+    this.$('input[name="size-x"]').val(this.model.get('sizeX'));
+    this.$('input[name="size-y"]').val(this.model.get('sizeY'));
+
     this.updatePreferences('preferredResolution', resolution);
     this.updatePreferences('preferredSize', size);
     this.updatePreferences('preferredScale', scale);
@@ -314,13 +317,13 @@ export default ModalView.extend({
     let isInvalid = false;
     switch (this.model.get('scaleMethod') || 'resolution') {
       case 'resolution':
-        isInvalid = isNaN(this.model.get('resolutionX')) || isNaN(this.model.get('resolutionY')); // TODO check values non-negative floats
+        isInvalid = isNaN(this.model.get('resolutionX')) || isNaN(this.model.get('resolutionY')) || this.model.get('resolutionX') <= 0 || this.model.get('resolutionY') <= 0;
         break;
       case 'size':
-        isInvalid = isNaN(this.model.get('sizeX')) || isNaN(this.model.get('sizeY')); // TODO check values non-negative integers
+        isInvalid = isNaN(this.model.get('sizeX')) || isNaN(this.model.get('sizeY')) || this.model.get('sizeX') <= 0 || this.model.get('sizeY') <= 0 || Math.floor(this.model.get('sizeX')) != this.model.get('sizeX') || Math.floor(this.model.get('sizeY')) != this.model.get('sizeY');
         break;
       case 'scale':
-        isInvalid = isNaN(this.model.get('scale')); // TODO check value non-negative float
+        isInvalid = isNaN(this.model.get('scale')) || this.model.get('scale') <= 0;
         break;
       default:
         break;
