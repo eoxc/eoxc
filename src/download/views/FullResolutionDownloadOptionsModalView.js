@@ -1,4 +1,5 @@
 import turfBBox from '@turf/bbox';
+import i18next from 'i18next';
 
 import ModalView from '../../core/views/ModalView';
 
@@ -231,36 +232,22 @@ export default ModalView.extend({
       interpolation: this.model.get('interpolation'),
     };
 
-    let sizeX;
-    let sizeY;
-
     switch (this.model.get('scaleMethod') || 'resolution') {
       case 'resolution': {
-        sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
-        sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
-        options.sizeX = sizeX;
-        options.sizeY = sizeY;
+        options.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
+        options.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
         break;
       }
       case 'size':
-        sizeX = this.model.get('sizeX');
-        sizeY = this.model.get('sizeY');
-        options.sizeX = sizeX;
-        options.sizeY = sizeY;
+        options.sizeX = this.model.get('sizeX');
+        options.sizeY = this.model.get('sizeY');
         break;
       case 'scale':
-        sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution * this.model.get('scale'));
-        sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution * this.model.get('scale'));
         options.scale = this.model.get('scale');
         break;
       default:
-        sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.resolution);
-        sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.resolution);
         break;
     }
-
-    // TODO check input sanity, e.g. at least one band selected, etc.
-
     downloadFullResolution(this.layerModel, this.mapModel, this.filtersModel, options);
   },
 
@@ -288,6 +275,7 @@ export default ModalView.extend({
     // "sizeX * sizeY * #bands * bits/band (assume 8) / 1024 / 1024 >= maxSizeWarning"
     let sizeX = 0;
     let sizeY = 0;
+    let estimated_size = 0;
     switch (this.model.get('scaleMethod') || 'resolution') {
       case 'resolution': {
         sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
@@ -308,11 +296,12 @@ export default ModalView.extend({
         break;
     }
 
-
     const $sizeWarning = this.$('.size-warning');
 
     const fields = this.model.get('fields') || [];
-    if ((sizeX * sizeY * fields.length) / 131072 >= this.layerModel.get('fullResolution.maxSizeWarning')) {
+    estimated_size = (sizeX * sizeY * fields.length) / 131072;
+    if (estimated_size >= this.layerModel.get('fullResolution.maxSizeWarning')) {
+      $sizeWarning.html(i18next.t('download_size_warning', { estimated_size: parseFloat(estimated_size).toFixed(0) }));
       $sizeWarning.fadeIn();
     } else if ($sizeWarning.is(':visible')) {
       $sizeWarning.fadeOut();
@@ -325,13 +314,13 @@ export default ModalView.extend({
     let isInvalid = false;
     switch (this.model.get('scaleMethod') || 'resolution') {
       case 'resolution':
-        isInvalid = isNaN(this.model.get('resolutionX')) || isNaN(this.model.get('resolutionY'));
+        isInvalid = isNaN(this.model.get('resolutionX')) || isNaN(this.model.get('resolutionY')); // TODO check values non-negative floats
         break;
       case 'size':
-        isInvalid = isNaN(this.model.get('sizeX')) || isNaN(this.model.get('sizeY'));
+        isInvalid = isNaN(this.model.get('sizeX')) || isNaN(this.model.get('sizeY')); // TODO check values non-negative integers
         break;
       case 'scale':
-        isInvalid = isNaN(this.model.get('scale'));
+        isInvalid = isNaN(this.model.get('scale')); // TODO check value non-negative float
         break;
       default:
         break;

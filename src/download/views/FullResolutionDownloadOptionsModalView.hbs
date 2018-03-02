@@ -141,7 +141,7 @@
           </div>
           <div class="col-sm-10">
             {{#each fields}}
-              <div class="checkbox">
+              <div class="checkbox-inline">
                 <label>
                   <input type="checkbox" name="field" value="{{this.identifier}}" checked="checked"> {{this.name}}
                 </label>
@@ -152,7 +152,7 @@
         {{/if}}
       </form>
       <div class="size-warning alert alert-danger">
-        {{t 'The specified parameters result in a particular large output.'}}
+        {{t 'download_size_warning' }}
       </div>
     </div>
     <div class="modal-footer">
