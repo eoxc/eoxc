@@ -17,7 +17,7 @@ const SelectionListView = Marionette.CompositeView.extend({
       layerName: layerModel.get('displayName'),
       layerId: layerModel.get('id'),
       enableFullResolutionDownload: layerModel.get('fullResolution.protocol'),
-      enableProcessing: layerModel.get('processingUrl'),
+      enableProcessing: layerModel.get('processing.url'),
     };
   },
   childView: SelectionListItemView,
