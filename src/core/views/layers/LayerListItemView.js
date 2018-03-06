@@ -25,7 +25,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   },
 
   modelEvents: {
-    change: 'render',
+    change: 'onModelChange',
   },
 
   /**
@@ -127,6 +127,11 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   onShowOptionsClick() {
     this.model.trigger('show-options', this.model);
   },
+
+  onModelChange(model) {
+    // TODO: other fields required too?
+    this.$('.layer-visible').prop('checked', model.get('display.visible'));
+  }
 });
 
 export default LayerListItemView;
