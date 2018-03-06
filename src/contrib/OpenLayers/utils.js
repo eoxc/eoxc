@@ -182,8 +182,8 @@ function getLayerParams(mapModel, layerModel, filtersModel) {
 
   let isoTime = null;
   if (time !== null) {
-    let beginISO = getISODateTimeString(time[0]);
-    let endISO = getISODateTimeString(time[1]);
+    let beginISO = getISODateTimeString(time[0], layerModel.get('display.useMilliseconds'));
+    let endISO = getISODateTimeString(time[1], layerModel.get('display.useMilliseconds'));
 
     if (layerModel.get('display.discardZulu')) {
       beginISO = beginISO.slice(0, -1);
