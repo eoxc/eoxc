@@ -31,6 +31,8 @@ import Circle from 'ol/style/circle';
 
 import GeoJSON from 'ol/format/geojson';
 
+import deepEqual from 'deep-equal';
+
 import CollectionSource from './CollectionSource';
 
 import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
@@ -242,22 +244,31 @@ export function updateLayerParams(layer, mapModel, layerModel, filtersModel) {
   layer.setVisible(display.visible);
   layer.setOpacity(display.opacity);
   const source = layer.getSource();
-  const previousParams = source.getParams ? source.getParams() : {};
+  let previousParams;
+  if (source.getParams) {
+    previousParams = source.getParams();
+  } else if (source.getDimensions) {
+    previousParams = source.getDimensions();
+  } else {
+    previousParams = {};
+  }
 
   const params = Object.assign(
     {}, previousParams, getLayerParams(mapModel, layerModel, filtersModel)
   );
 
-  if (source instanceof WMSTileSource) {
-    params.STYLES = display.style;
-    source.params_ = {};
-    source.updateParams(params);
-  } else if (source instanceof WMTSSource) {
-    // TODO: only use time as dimension and ignore any other params
-    source.updateDimensions({ time: params.time });
+  if (!deepEqual(params, previousParams)) {
+    if (source instanceof WMSTileSource) {
+      params.STYLES = display.style;
+      source.params_ = {}; // eslint-disable-line no-underscore-dangle
+      source.updateParams(params);
+    } else if (source instanceof WMTSSource) {
+      // TODO: only use time as dimension and ignore any other params
+      source.updateDimensions({ time: params.time });
+    }
+    // Workaround to make sure tiles are reloaded when parameters change
+    source.setTileLoadFunction(source.getTileLoadFunction());
   }
-  // Workaround to make sure tiles are reloaded when parameters change
-  source.setTileLoadFunction(source.getTileLoadFunction());
 }
 
 function createStyle({ fillColor, strokeColor, strokeWidth = 1, circleRadius = 0 } = { }) {
