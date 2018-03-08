@@ -1,4 +1,4 @@
-import $ from 'jquery';
+import 'jquery';
 import 'bootstrap-slider';
 import 'bootstrap-slider/dist/css/bootstrap-slider.css';
 
@@ -49,7 +49,7 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
   onRender() {
     let opacity = this.model.get('display.opacity');
     opacity = typeof opacity === 'undefined' ? 1 : opacity;
-    this.$slider = $(this.el).find('.opacity-slider').slider({
+    this.$slider = this.$('.opacity-slider').slider({
       min: 0,
       max: 100,
       value: opacity * 100,
@@ -65,15 +65,17 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
       this.model.set('display.opacity', parseInt(this.$slider.val(), 10) / 100);
     });
 
-    $(this.el).find('input[data-slider-min]')
-      .slider()
-      .on('slideStop', (event) => {
-        const $target = $(event.target);
-        this.model.set({
-          [$target.data('targetLow')]: event.value[0],
-          [$target.data('targetHigh')]: event.value[1],
+    const $dataSliders = this.$('input[data-slider-min]');
+    if ($dataSliders.length) {
+      $dataSliders.slider()
+        .on('slideStop', (event) => {
+          const $target = $(event.target);
+          this.model.set({
+            [$target.data('targetLow')]: event.value[0],
+            [$target.data('targetHigh')]: event.value[1],
+          });
         });
-      });
+    }
   },
 
   onLayerVisibleChange(event) {
