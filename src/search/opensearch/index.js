@@ -65,9 +65,14 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
 
   const description = serializedServices[url];
 
+  const parseOptions = {
+    extraFields: layerModel.get('search.extraFields'),
+    namespaces: layerModel.get('search.extraFieldsNamespaces'),
+  };
+
   let worker = new OpenSearchWorker();
   worker.postMessage(['searchAll', {
-    url, method, filterParams, mapParams, options, format, description, maxUrlLength
+    url, method, filterParams, mapParams, options, format, description, maxUrlLength, parseOptions,
   }]);
 
   worker.onmessage = ({ data }) => {
