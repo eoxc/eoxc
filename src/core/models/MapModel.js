@@ -29,6 +29,10 @@ class MapModel extends Backbone.Model {
   show(featureOrExtent) {
     this.trigger('show', featureOrExtent);
   }
+
+  showTime(timeExtent) {
+    this.trigger('show:time', timeExtent);
+  }
 }
 
 MapModel.prototype.defaults = {
