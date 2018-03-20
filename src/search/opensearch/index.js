@@ -57,6 +57,7 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
   const method = layerModel.get('search.method');
   const format = options.mimeType || layerModel.get('search.format') || null;
   const maxUrlLength = layerModel.get('search.maxUrlLength') || 4000;
+  const headers = layerModel.get('search.headers');
 
   const filterParams = filtersModel.toJSON();
   const mapParams = mapModel ? mapModel.toJSON() : null;
@@ -72,7 +73,16 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
 
   let worker = new OpenSearchWorker();
   worker.postMessage(['searchAll', {
-    url, method, filterParams, mapParams, options, format, description, maxUrlLength, parseOptions,
+    url,
+    method,
+    filterParams,
+    mapParams,
+    options,
+    format,
+    description,
+    maxUrlLength,
+    parseOptions,
+    headers,
   }]);
 
   worker.onmessage = ({ data }) => {

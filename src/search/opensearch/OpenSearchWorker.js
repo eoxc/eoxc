@@ -31,7 +31,7 @@ function getService(url, description) {
   return self.services[url];
 }
 
-function searchAll(url, method, filterParams, mapParams, options, format, description, maxUrlLength, parseOptions) {
+function searchAll(url, method, filterParams, mapParams, options, format, description, maxUrlLength, parseOptions, headers) {
   const maxCount = options.maxCount;
 
   return getService(url, description)
@@ -41,6 +41,7 @@ function searchAll(url, method, filterParams, mapParams, options, format, descri
         baseOffset: options.startIndex,
         maxUrlLength,
         parseOptions,
+        headers,
       });
       return paginator.searchFirstRecords(maxCount);
     });
@@ -63,11 +64,11 @@ self.onmessage = function onMessage({ data }) {
     case 'searchAll': {
       const {
         url, method, filterParams, mapParams, options, format, description, maxUrlLength,
-        parseOptions
+        parseOptions, headers
       } = params;
       self.search = searchAll(
         url, method, filterParams, mapParams, options, format, description, maxUrlLength,
-        parseOptions
+        parseOptions, headers
       );
       self.search
         .then((emitter) => {
