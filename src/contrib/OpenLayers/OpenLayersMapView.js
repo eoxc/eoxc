@@ -666,7 +666,7 @@ class OpenLayersMapView extends Marionette.ItemView {
   }
 
   onMapClick(event) {
-    if (this.mapModel.get('tool')) {
+    if (this.mapModel.get('tool') || this.mapModel.get('noclick')) {
       return;
     }
     const coordinate = wrapCoordinate(event.coordinate);
