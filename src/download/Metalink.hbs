@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <metalink xmlns="urn:ietf:params:xml:ns:metalink">{{#if date}}
-  <published>{{ date }}</published>{{/if}}
-{{#each files}}
-  <file name="{{ this.name }}">
-    <url priority="1">{{ this.url }}</url>
+  <published>{{date}}</published>{{/if}}
+{{#each items}}
+  <file name="{{this.name}}">{{#if this.size}}
+    <size>{{this.size}}</size>{{/if}}
+    <url priority="1">{{this.href}}</url>
   </file>
 {{/each}}
 </metalink>

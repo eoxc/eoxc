@@ -1,7 +1,6 @@
 import $ from 'jquery';
 
-import { filtersToCQL } from '../core/util';
-import { getISODateTimeString } from '../core/util';
+import { filtersToCQL, getISODateTimeString } from '../core/util';
 import FiltersModel from '../core/models/FiltersModel';
 
 function getCoverageXML(coverageid, options = {}) {
@@ -168,7 +167,7 @@ export function download(layerModel, filtersModel, recordModel, options) {
   `);
 }
 
-export function getDownloadUrl(layerModel, filtersModel, recordModel, options = {}) {
+export function getDownloadInfos(layerModel, filtersModel, recordModel, options = {}) {
   const kvp = getCoverageKVP(
     recordModel.get('id'), {
       bbox: filtersModel.get('area'),
@@ -176,7 +175,10 @@ export function getDownloadUrl(layerModel, filtersModel, recordModel, options = 
       format: options.format,
     }
   );
-  return `${layerModel.get('download.url')}?${kvp}`;
+  return [{
+    href: `${layerModel.get('download.url')}?${kvp}`,
+    name: recordModel.get('id'),
+  }];
 }
 
 export function downloadFullResolution(layerModel, mapModel, filtersModel, options) {

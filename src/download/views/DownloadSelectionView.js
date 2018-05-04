@@ -4,7 +4,7 @@ import urlParse from 'url-parse';
 import template from './DownloadSelectionView.hbs';
 import './DownloadSelectionView.css';
 import SelectionListView from './SelectionListView';
-import { downloadCustom, getDownloadUrl } from '../../download/';
+import { downloadCustom, getDownloadInfos } from '../../download/';
 import metalinkTemplate from '../Metalink.hbs';
 
 
@@ -61,17 +61,24 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   onDownloadAsMetalinkClicked() {
-    let content = metalinkTemplate({
-      date: (new Date()).toISOString(),
-      files: this._getDownloadInfos(),
-    });
-    content = content.replace(/[\n]/g, '\r\n');
-    downloadCustom('download-files.meta4', 'application/metalink4+xml', content);
+    this._getDownloadInfos()
+      .then((items) => {
+        let content = metalinkTemplate({
+          date: (new Date()).toISOString(),
+          items,
+        });
+        content = content.replace(/[\n]/g, '\r\n');
+        downloadCustom('download-files.meta4', 'application/metalink4+xml', content);
+      });
   },
 
   onDownloadAsUrlListClicked() {
-    const urls = this._getDownloadInfos().map(info => info.url);
-    downloadCustom('url-list.txt', 'text/plain', urls.join('\r\n'));
+    this._getDownloadInfos()
+      .then((infos) => {
+        downloadCustom('url-list.txt', 'text/plain',
+          infos.map(info => info.href).join('\r\n')
+        );
+      });
   },
 
   onDeselectAllClicked() {
@@ -111,21 +118,21 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   _getDownloadInfos(options) {
-    return this.collection.reduce((acc, searchModel) =>
-      acc.concat(searchModel.get('downloadSelection')
-        .map((recordModel) => {
-          const layerModel = searchModel.get('layerModel');
-          const url = getDownloadUrl(layerModel, this.filtersModel, recordModel, options);
-          let name = recordModel.get('id');
-          const parsed = urlParse(url);
-          if (parsed.query.length === 0) {
-            const parts = parsed.pathname.split('/');
-            name = parts[parts.length - 1];
-          }
-          return { url, name };
-        })
-      ), [])
-      .filter(info => !!info.url);
+    function flatten(arr) {
+      return arr.reduce((acc, val) => acc.concat(val), []);
+    }
+
+
+    const chunks = this.collection
+      .map(searchModel =>
+        searchModel.get('downloadSelection')
+          .map(recordModel => getDownloadInfos(
+            searchModel.get('layerModel'), this.filtersModel, recordModel, options)
+          )
+      );
+
+    return Promise.all(flatten(chunks))
+      .then(received => flatten(received));
   }
 });
 

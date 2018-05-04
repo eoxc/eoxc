@@ -1,4 +1,5 @@
 import $ from 'jquery';
+import urlParse from 'url-parse';
 
 export function download(recordModel) {
   const links = recordModel.get('properties').links;
@@ -7,13 +8,20 @@ export function download(recordModel) {
   return $(`<iframe src="${url}"></iframe>`);
 }
 
-export function getDownloadUrl(recordModel) {
+export function getDownloadInfos(recordModel) {
   const properties = recordModel.get('properties');
   if (properties && properties.links) {
     const url = properties.links.find(link => link.rel === 'enclosure');
     if (url) {
-      return url.href;
+      let name = recordModel.get('id');
+      const parsed = urlParse(url);
+      if (parsed.query.length === 0) {
+        const parts = parsed.pathname.split('/');
+        name = parts[parts.length - 1];
+      }
+
+      return [{ href: url.href, name }];
     }
   }
-  return null;
+  return [];
 }
