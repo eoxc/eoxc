@@ -97,18 +97,29 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   checkButtons() {
-    const totalCount = this.collection.reduce((count, searchModel) => (
-      count + searchModel.get('downloadSelection').length
-    ), 0);
+    const totalCountNotS3 = this.collection
+      .filter(searchModel => searchModel.get('layerModel').get('download.protocol') !== 'S3')
+      .reduce((count, searchModel) => (
+        count + searchModel.get('downloadSelection').length
+      ), 0);
 
-    let enabled = totalCount > 0 && this.downloadEnabled;
+    const totalCount = this.collection
+      .reduce((count, searchModel) => (
+        count + searchModel.get('downloadSelection').length
+      ), 0);
+
+    let fullDownloadEnabled = totalCountNotS3 > 0 && this.downloadEnabled;
+    let textDownloadEnabled = totalCount > 0 && this.downloadEnabled;
     if (this.termsAndConditionsUrl) {
-      enabled = enabled && this.hasAcceptedTerms;
+      fullDownloadEnabled = fullDownloadEnabled && this.hasAcceptedTerms;
+      textDownloadEnabled = textDownloadEnabled && this.hasAcceptedTerms;
     }
 
-    this.$('.download-control')
-      .find('button')
-      .prop('disabled', !enabled);
+    this.$('.start-download')
+      .prop('disabled', !fullDownloadEnabled);
+
+    this.$('.dropdown-toggle')
+      .prop('disabled', !textDownloadEnabled);
 
     this.triggerMethod('update:status', this._infoBadge(totalCount));
   },
