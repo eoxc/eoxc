@@ -1,22 +1,27 @@
 // import AWS from 'aws-sdk';
 import urlParse from 'url-parse';
 
-// const s3instances = {};
-//
-// function getS3Instance(host) {
-//   if (!s3instances[host]) {
-//     s3instances[host] = new AWS.S3({ apiVersion: '2006-03-01', endpoint: host });
-//   }
-//   return s3instances[host];
-// }
+function getChildren(element) {
+  let i = 0;
+  const nodes = element.childNodes;
+  const children = [];
+  let node;
+  while(node = nodes[i++]) {
+    if (node.nodeType === 1) {
+      children.push(node);
+    }
+  }
+  return children;
+}
 
 function parseItem(itemNode) {
-  return Array.from(itemNode.children)
+  return getChildren(itemNode)
     .reduce((acc, child) => {
       acc[child.tagName] = child.textContent;
       return acc;
     }, {});
 }
+
 
 function listBucket(origin, bucket, prefix) {
   return fetch(`${origin}/${bucket}?list-type=2&prefix=${prefix}`)
@@ -24,7 +29,7 @@ function listBucket(origin, bucket, prefix) {
     .then(content => (new window.DOMParser()).parseFromString(content, 'text/xml'))
     .then(xmlDoc =>
       Array.from(xmlDoc.documentElement.getElementsByTagName('Contents'))
-        .map(parseItem)
+        .map(item => parseItem(item))
     );
 }
 
@@ -35,34 +40,13 @@ export function getDownloadInfos(layerModel, recordModel) {
       const { origin, pathname } = urlParse(link.href);
       const [bucket, ...pathParts] = pathname.slice(1).split('/');
       const path = pathParts.join('/');
-
       return listBucket(origin, bucket, path)
         .then(items => items.map(item => ({
           href: `${origin}/${bucket}/${item.Key}`,
           size: item.Size,
           name: item.Key,
         })));
-
-      // return new Promise((resolve, reject) => {
-      //
-      //   // const s3 = getS3Instance(host);
-      //
-      //
-      //
-      //
-      //   // s3.makeUnauthenticatedRequest('listObjects', options, (err, data) => {
-      //   //   if (err) {
-      //   //     reject(err);
-      //   //   }
-      //   //   resolve(
-      //   //     data.Contents.map(item => ({
-      //   //
-      //   //     })
-      //   //   ));
-      //   // });
-      // });
     }
-
     let name = recordModel.get('id');
     const parsed = urlParse(link.href);
     if (parsed.query.length === 0) {
