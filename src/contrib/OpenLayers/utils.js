@@ -77,8 +77,11 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
  * @param {core/models.LayerModel} layerModel The layerModel to create a layer for.
  * @returns {ol.Layer} The OpenLayers layer object
  */
-export function createRasterLayer(layerModel) {
-  const params = layerModel.get('display');
+export function createRasterLayer(layerModel, useDetailsDisplay = false) {
+  const displayParams = useDetailsDisplay
+    ? layerModel.get('detailsDisplay') || layerModel.get('display')
+    : layerModel.get('display');
+
   let layer;
 
   const projection = proj.get('EPSG:4326');
@@ -93,41 +96,41 @@ export function createRasterLayer(layerModel) {
     resolutions[z] = size / Math.pow(2, (z + 1));
     let id = z;
 
-    if (params.matrixIdPrefix) {
-      id = params.matrixIdPrefix + id;
+    if (displayParams.matrixIdPrefix) {
+      id = displayParams.matrixIdPrefix + id;
     }
-    if (params.matrixIdPostfix) {
-      id += params.matrixIdPostfix;
+    if (displayParams.matrixIdPostfix) {
+      id += displayParams.matrixIdPostfix;
     }
     matrixIds[z] = id;
   }
 
-  let tileSize = params.tileSize;
-  if (typeof params.tileSize === 'number') {
-    tileSize = [params.tileSize, params.tileSize];
+  let tileSize = displayParams.tileSize;
+  if (typeof displayParams.tileSize === 'number') {
+    tileSize = [displayParams.tileSize, displayParams.tileSize];
   }
 
-  const layerId = params.id ? params.id : params.ids.join(',');
+  const layerId = displayParams.id ? displayParams.id : displayParams.ids.join(',');
 
-  switch (params.protocol) {
+  switch (displayParams.protocol) {
     case 'WMTS':
       layer = new TileLayer({
-        visible: params.visible,
+        visible: displayParams.visible,
         source: new WMTSSource({
-          urls: (params.url) ? [params.url] : params.urls,
-          layer: params.id,
-          matrixSet: params.matrixSet,
-          format: params.format,
-          projection: params.projection,
+          urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+          layer: displayParams.id,
+          matrixSet: displayParams.matrixSet,
+          format: displayParams.format,
+          projection: displayParams.projection,
           tileGrid: new WMTSTileGrid({
             origin: extent.getTopLeft(projectionExtent),
             resolutions,
             matrixIds,
           }),
-          style: params.style,
+          style: displayParams.style,
           attributions: [
             new Attribution({
-              html: params.attribution,
+              html: displayParams.attribution,
             }),
           ],
           wrapX: true,
@@ -139,25 +142,25 @@ export function createRasterLayer(layerModel) {
       break;
     case 'WMS':
       layer = new TileLayer({
-        visible: params.visible,
+        visible: displayParams.visible,
         source: new WMSTileSource({
           crossOrigin: 'anonymous',
           params: Object.assign({
             LAYERS: layerId,
-            VERSION: params.version || '1.1.0',
-            FORMAT: params.format, // TODO: use format here?
-            STYLES: params.style,
-          }, layerModel.get('display.extraParameters')),
+            VERSION: displayParams.version || '1.1.0',
+            FORMAT: displayParams.format, // TODO: use format here?
+            STYLES: displayParams.style,
+          }, displayParams.extraParameters),
           tileGrid: new TileGrid({
             resolutions,
             tileSize: tileSize || [256, 256],
             extent: projectionExtent
           }),
-          urls: (params.url) ? [params.url] : params.urls,
+          urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
           wrapX: true,
           attributions: [
             new Attribution({
-              html: params.attribution,
+              html: displayParams.attribution,
             }),
           ],
         }),
@@ -171,7 +174,7 @@ export function createRasterLayer(layerModel) {
   return layer;
 }
 
-function getLayerParams(mapModel, layerModel, filtersModel) {
+function getLayerParams(mapModel, displayParams, filtersModel) {
   const params = {};
   let time = mapModel.get('time');
   if (Array.isArray(time)) {
@@ -182,10 +185,10 @@ function getLayerParams(mapModel, layerModel, filtersModel) {
 
   let isoTime = null;
   if (time !== null) {
-    let beginISO = getISODateTimeString(time[0], layerModel.get('display.useMilliseconds'));
-    let endISO = getISODateTimeString(time[1], layerModel.get('display.useMilliseconds'));
+    let beginISO = getISODateTimeString(time[0], displayParams.useMilliseconds);
+    let endISO = getISODateTimeString(time[1], displayParams.useMilliseconds);
 
-    if (layerModel.get('display.discardZulu')) {
+    if (displayParams.discardZulu) {
       beginISO = beginISO.slice(0, -1);
       endISO = endISO.slice(0, -1);
     }
@@ -200,12 +203,12 @@ function getLayerParams(mapModel, layerModel, filtersModel) {
   }
 
   // CQL filters
-  const cqlParameterName = layerModel.get('display.cqlParameterName');
+  const cqlParameterName = displayParams.cqlParameterName;
   if (cqlParameterName && filtersModel) {
-    let cql = filtersToCQL(filtersModel, layerModel.get('display.cqlMapping'));
+    let cql = filtersToCQL(filtersModel, displayParams.cqlMapping);
     const origCql = cql;
 
-    const layerIds = layerModel.get('display.ids');
+    const layerIds = displayParams.ids;
     if (layerIds && layerIds.length > 1) {
       for (let i = 1; i < layerIds.length; ++i) {
         cql = `${cql};${origCql}`;
@@ -220,7 +223,7 @@ function getLayerParams(mapModel, layerModel, filtersModel) {
   }
 
   // extra parameters
-  const extraParameters = layerModel.get('display.extraParameters');
+  const extraParameters = displayParams.extraParameters;
   if (extraParameters) {
     Object.keys(extraParameters).forEach((key) => {
       if (typeof extraParameters[key] === 'string') {
@@ -239,10 +242,15 @@ function getLayerParams(mapModel, layerModel, filtersModel) {
 /**
  *
  */
-export function updateLayerParams(layer, mapModel, layerModel, filtersModel) {
-  const display = layerModel.get('display');
-  layer.setVisible(display.visible);
-  layer.setOpacity(display.opacity);
+export function updateLayerParams(
+  layer, mapModel, layerModel, filtersModel, useDetailsDisplay = false
+) {
+  const displayParams = useDetailsDisplay
+    ? layerModel.get('detailsDisplay') || layerModel.get('display')
+    : layerModel.get('display');
+
+  layer.setVisible(displayParams.visible);
+  layer.setOpacity(displayParams.opacity);
   const source = layer.getSource();
   let previousParams;
   if (source.getParams) {
@@ -253,13 +261,14 @@ export function updateLayerParams(layer, mapModel, layerModel, filtersModel) {
     previousParams = {};
   }
 
+
   const params = Object.assign(
-    {}, previousParams, getLayerParams(mapModel, layerModel, filtersModel)
+    {}, previousParams, getLayerParams(mapModel, displayParams, filtersModel)
   );
 
   if (!deepEqual(params, previousParams)) {
     if (source instanceof WMSTileSource) {
-      params.STYLES = display.style;
+      params.STYLES = displayParams.style;
       source.params_ = {}; // eslint-disable-line no-underscore-dangle
       source.updateParams(params);
     } else if (source instanceof WMTSSource) {

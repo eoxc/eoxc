@@ -1,7 +1,6 @@
 import Marionette from 'backbone.marionette';
-
-const template = require('./ModalView.hbs');
-// require('./ModalView.css');
+import './ModalView.css';
+import template from './ModalView.hbs';
 
 
 const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# */{
@@ -46,8 +45,13 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
     };
   },
 
+  useBackdrop() {
+    return true;
+  },
+
   onAttach() {
     this.initialDisplay = this.$el.css('display');
+    this.$el.modal({ backdrop: this.useBackdrop() });
     this.$el.modal('show');
   },
 

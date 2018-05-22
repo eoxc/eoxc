@@ -20,8 +20,18 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
     };
   },
 
+  initialize(options) {
+    ModalView.prototype.initialize.call(this, options);
+    this.useDetailsDisplay = options.useDetailsDisplay && !!this.model.get('detailsDisplay');
+  },
+
+  useBackdrop() {
+    return true;
+  },
+
   getDisplayOptions() {
-    const options = this.model.get('display.options')
+    const display = this.useDetailsDisplay ? this.model.get('detailsDisplay') : this.model.get('display');
+    const options = display.options
       .map((option) => {
         let values = option.values;
         let low;
@@ -47,7 +57,8 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
   },
 
   onRender() {
-    let opacity = this.model.get('display.opacity');
+    const display = this.useDetailsDisplay ? this.model.get('detailsDisplay') : this.model.get('display');
+    let opacity = display.opacity;
     opacity = typeof opacity === 'undefined' ? 1 : opacity;
     this.$slider = this.$('.opacity-slider').slider({
       min: 0,
@@ -59,10 +70,10 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
     });
 
     this.$slider.on('slide', (event) => {
-      this.model.set('display.opacity', event.value / 100);
+      this.model.set(`${this.useDetailsDisplay ? 'detailsDisplay' : 'display'}.opacity`, event.value / 100);
     });
     this.$slider.on('change', () => {
-      this.model.set('display.opacity', parseInt(this.$slider.val(), 10) / 100);
+      this.model.set(`${this.useDetailsDisplay ? 'detailsDisplay' : 'display'}.opacity`, parseInt(this.$slider.val(), 10) / 100);
     });
 
     const $dataSliders = this.$('input[data-slider-min]');
@@ -80,7 +91,7 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
 
   onLayerVisibleChange(event) {
     const $target = $(event.target);
-    this.model.set('display.visible', $target.is(':checked'));
+    this.model.set(`${this.useDetailsDisplay ? 'detailsDisplay' : 'display'}.visible`, $target.is(':checked'));
   },
 
   onOpacitySlide() {

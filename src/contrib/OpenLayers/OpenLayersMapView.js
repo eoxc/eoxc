@@ -107,6 +107,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.selectedFootprintStrokeColor = options.selectedFootprintStrokeColor;
 
     this.staticHighlight = options.staticHighlight;
+    this.useDetailsDisplay = options.useDetailsDisplay;
 
     this.map = undefined;
 
@@ -162,7 +163,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     const createGroupForCollection = (collection) => {
       const group = new Group({
         layers: sortLayers(
-          collection, collection.map(layerModel => createRasterLayer(layerModel))
+          collection, collection.map(layerModel => createRasterLayer(
+            layerModel, this.useDetailsDisplay
+          ))
         ),
       });
       return group;
@@ -285,7 +288,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (layer.searchModel) {
       filtersModel = layer.searchModel.get('filtersModel');
     }
-    updateLayerParams(layer, mapModel, layer.layerModel, filtersModel);
+    updateLayerParams(
+      layer, mapModel, layer.layerModel, filtersModel, this.useDetailsDisplay,
+    );
   }
 
   /**
@@ -399,7 +404,9 @@ class OpenLayersMapView extends Marionette.ItemView {
         const cqlParameterName = layerModel.get('display.cqlParameterName');
         if (cqlParameterName) {
           const layer = this.getLayerOfGroup(layerModel, this.groups.layers);
-          updateLayerParams(layer, this.mapModel, layerModel, filtersModel);
+          updateLayerParams(
+            layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay,
+          );
         }
       });
     });
@@ -523,9 +530,11 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (layer.searchModel) {
       filtersModel = layer.searchModel.get('filtersModel');
     }
-    updateLayerParams(layer, this.mapModel, layerModel, filtersModel);
+    updateLayerParams(layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay);
 
-    const display = layerModel.get('display');
+    const display = this.useDetailsDisplay
+      ? layerModel.get('detailsDisplay') || layerModel.get('display')
+      : layerModel.get('display');
 
     const searchLayer = this.searchLayersGroup.getLayerById(layerModel.get('id'));
     let searchModel = null;
