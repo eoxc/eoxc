@@ -67,6 +67,7 @@ export default ModalView.extend({
 
     this.checkSize();
     this.checkValidity();
+    this.checkBands();
   },
 
   events: {
@@ -118,6 +119,7 @@ export default ModalView.extend({
     const val = this.$('.select-format').val();
     this.model.set('format', val !== '' ? val : null);
     this.updatePreferences('preferredFormat', val !== '' ? val : null);
+    this.checkBands();
   },
 
   onBandsChange() {
@@ -127,6 +129,7 @@ export default ModalView.extend({
 
     this.checkSize();
     this.checkValidity();
+    this.checkBands();
   },
 
   onInterpolationChange() {
@@ -355,7 +358,11 @@ export default ModalView.extend({
         break;
     }
 
-    const fields = this.model.get('fields');
+    const fields = (
+      this.model.get('fields')
+      || this.getPreferences().preferredFields
+      || this.layerModel.get('fullResolution.fields').map(f => f.identifier)
+    );
     if (!fields || !fields.length) {
       this.$('.input-fields').addClass('has-error');
       isInvalid = true;
@@ -364,6 +371,29 @@ export default ModalView.extend({
     }
 
     this.$('.start-download').prop('disabled', isInvalid);
+  },
+
+  checkBands() {
+    const formatType = this.model.get('format');
+    const format = this.model.get('availableDownloadFormats').find(frmt => frmt.mimeType === formatType);
+
+    const $bandsWarning = this.$('.bands-warning');
+    if (format && !isNaN(format.maxBands)) {
+      const fields = this.model.get('fields');
+      if (fields.length > parseInt(format.maxBands, 10)) {
+        $bandsWarning.text(
+          i18next.t('download_bands_warning', {
+            maxBands: format.maxBands,
+            requestedBands: fields.length,
+          })
+        );
+        $bandsWarning.fadeIn();
+      } else {
+        setTimeout(() => $bandsWarning.stop(true, true).fadeOut());
+      }
+    } else {
+      setTimeout(() => $bandsWarning.stop(true, true).fadeOut());
+    }
   },
 
   getPreferences() {
