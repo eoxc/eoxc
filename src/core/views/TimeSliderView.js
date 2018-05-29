@@ -175,7 +175,14 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       case 'EO-WCS':
       case 'OpenSearch':
         source = (start, end, params, callback) => {
-          const filtersModel = new FiltersModel({ time: [start, end] });
+          // set "fixed" parameters here
+          const filtersModel = new FiltersModel((layerModel.get('search.parameters') || []).reduce(
+            (acc, param) => (
+              param.fixed
+                ? Object.assign(acc, { [param.type]: param.fixed })
+                : acc
+              ), { time: [start, end] }
+          ));
           searchAllRecords(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' })
             .on('progress', (result) => {
               callback(result.records.map((record) => {
@@ -210,7 +217,13 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         };
 
         bucketSource = (start, end, params, callback) => {
-          const filtersModel = new FiltersModel({ time: [start, end] });
+          const filtersModel = new FiltersModel((layerModel.get('search.parameters') || []).reduce(
+            (acc, param) => (
+              param.fixed
+                ? Object.assign(acc, { [param.type]: param.fixed })
+                : acc
+              ), { time: [start, end] }
+          ));
           getCount(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' })
             .then(count => callback(count));
         };
