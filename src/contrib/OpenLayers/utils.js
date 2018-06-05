@@ -183,6 +183,13 @@ function getLayerParams(mapModel, displayParams, filtersModel) {
     time = [time, time];
   }
 
+  if (displayParams.adjustTime) {
+    time = [
+      new Date(time[0].getTime() - (displayParams.adjustTime * 1000)),
+      new Date(time[1].getTime() + (displayParams.adjustTime * 1000)),
+    ];
+  }
+
   let isoTime = null;
   if (time !== null) {
     let beginISO = getISODateTimeString(time[0], displayParams.useMilliseconds);
