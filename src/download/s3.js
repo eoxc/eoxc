@@ -36,7 +36,7 @@ function listBucket(origin, bucket, prefix) {
 export function getDownloadInfos(layerModel, recordModel) {
   const link = recordModel.get('properties').links.find(l => l.rel === 'enclosure');
   if (link) {
-    if (link.href.slice(-1) === '/') {
+    if (link.href.slice(-4) !== '.zip') {
       const { origin, pathname } = urlParse(link.href);
       const [bucket, ...pathParts] = pathname.slice(1).split('/');
       const path = pathParts.join('/');
