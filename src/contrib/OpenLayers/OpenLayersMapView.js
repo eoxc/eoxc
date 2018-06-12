@@ -22,7 +22,9 @@ import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
 import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
+import ProgressBar from './progressbar';
 import './ol.css';
+import template from './OpenLayersMapView.hbs';
 
 class GroupById extends Group {
   constructor(options = {}) {
@@ -115,9 +117,12 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.isZooming = false;
 
     this.onFeatureClicked = options.onFeatureClicked;
+
+    this.template = template;
   }
 
   onRender() {
+    this.progressBar = new ProgressBar();
     this.createMap();
     return this;
   }
@@ -125,6 +130,7 @@ class OpenLayersMapView extends Marionette.ItemView {
   onAttach() {
     if (this.map) {
       this.map.setTarget(this.el);
+      this.progressBar.setElement(this.$('.progress-bar')[0]);
       $(window).resize(() => this.onResize());
     }
   }
@@ -149,13 +155,33 @@ class OpenLayersMapView extends Marionette.ItemView {
       // position: 'absolute',
     });
 
+    const minZoom = this.layersCollection.map(
+      layer => (
+        this.useDetailsDisplay && layer.get('detailsDisplay')
+          ? layer.get('detailsDisplay')
+          : layer.get('display')
+      ).minZoom
+    )
+      .filter(layerMinZoom => typeof layerMinZoom !== 'undefined')
+      .reduce((acc, layerMinZoom) => Math.max(acc, layerMinZoom), this.mapModel.get('minZoom'));
+
+    const maxZoom = this.layersCollection.map(
+      layer => (
+        this.useDetailsDisplay && layer.get('detailsDisplay')
+          ? layer.get('detailsDisplay')
+          : layer.get('display')
+      ).maxZoom
+    )
+      .filter(layerMaxZoom => typeof layerMaxZoom !== 'undefined')
+      .reduce((acc, layerMaxZoom) => Math.min(acc, layerMaxZoom), this.mapModel.get('maxZoom'));
+
     // create the map object
     this.map = createMap(
       this.mapModel.get('center') || [0, 0],
       this.mapModel.get('zoom') + 1 || 2,
       options.mapRenderer || 'canvas',
-      this.mapModel.get('minZoom') + 1,
-      this.mapModel.get('maxZoom') + 1
+      minZoom + 1,
+      maxZoom + 1
     );
 
     // create layer groups for base, normal and overlay layers
@@ -179,6 +205,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.groups.layers.getLayers().forEach((layer) => {
       this.applyLayerFilters(layer, this.mapModel);
+      this.progressBar.addSource(layer.getSource());
     }, this);
 
     const selectionLayer = createVectorLayer({

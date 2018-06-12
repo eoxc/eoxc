@@ -184,9 +184,12 @@ function getLayerParams(mapModel, displayParams, filtersModel) {
   }
 
   if (displayParams.adjustTime) {
+    const offset = Array.isArray(displayParams.adjustTime)
+      ? displayParams.adjustTime
+      : [-displayParams.adjustTime, displayParams.adjustTime];
     time = [
-      new Date(time[0].getTime() - (displayParams.adjustTime * 1000)),
-      new Date(time[1].getTime() + (displayParams.adjustTime * 1000)),
+      new Date(time[0].getTime() + (offset[0] * 1000)),
+      new Date(time[1].getTime() + (offset[1] * 1000)),
     ];
   }
 
