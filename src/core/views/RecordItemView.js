@@ -19,16 +19,21 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   initialize(options) {
     this.highlightModel = options.highlightModel;
     this.collection = this.model.collection;
+    this.thumbnailUrlPattern = options.thumbnailUrlPattern;
   },
 
   templateHelpers() {
     const time = this.model.get('properties').time;
     const start = Array.isArray(time) ? time[0] : time;
+    let thumbnailUrl = this.model.getThumbnailUrl(
+      this.collection ? this.collection.searchModel.get('layerModel').get('search.thumbnailUrlTemplate')
+                      : undefined
+    );
+    if (this.thumbnailUrlPattern && !(new RegExp(this.thumbnailUrlPattern)).test(thumbnailUrl)) {
+      thumbnailUrl = '';
+    }
     return {
-      thumbnailUrl: this.model.getThumbnailUrl(
-        this.collection ? this.collection.searchModel.get('layerModel').get('search.thumbnailUrlTemplate')
-                        : undefined
-      ),
+      thumbnailUrl,
       date: start.toISOString().substring(0, 10),
       time: start.toISOString().substring(11, 19),
     };

@@ -9,8 +9,11 @@ const SearchResultItemView = RecordItemView.extend(/** @lends search/views/layer
   }),
 
   initialize(options) {
-    RecordItemView.prototype.initialize.call(this, options);
     const searchModel = options.searchModel;
+    const layerModel = searchModel.get('layerModel');
+    RecordItemView.prototype.initialize.call(this, Object.assign({}, options, {
+      thumbnailUrlPattern: layerModel.get('search.thumbnailUrlPattern'),
+    }));
     const downloadSelectionCollection = searchModel.get('downloadSelection');
     this.listenTo(downloadSelectionCollection, 'reset update', this.onSelectedForDownloadChange);
   },
