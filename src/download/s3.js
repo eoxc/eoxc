@@ -53,7 +53,7 @@ export function getDownloadInfos(layerModel, recordModel) {
       const parts = parsed.pathname.split('/');
       name = parts[parts.length - 1];
     }
-    return [{ href: link.href, name }];
+    return Promise.resolve([{ href: link.href, name }]);
   }
-  return [];
+  return Promise.resolve([]);
 }

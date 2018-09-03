@@ -20,8 +20,8 @@ export function getDownloadInfos(recordModel) {
         name = parts[parts.length - 1];
       }
 
-      return [{ href: url.href, name }];
+      return Promise.resolve([{ href: url.href, name }]);
     }
   }
-  return [];
+  return Promise.resolve([]);
 }

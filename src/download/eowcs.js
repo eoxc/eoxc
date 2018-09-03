@@ -175,10 +175,10 @@ export function getDownloadInfos(layerModel, filtersModel, recordModel, options 
       format: options.format,
     }
   );
-  return [{
+  return Promise.resolve([{
     href: `${layerModel.get('download.url')}?${kvp}`,
     name: recordModel.get('id'),
-  }];
+  }]);
 }
 
 export function downloadFullResolution(layerModel, mapModel, filtersModel, options) {

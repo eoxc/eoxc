@@ -53,10 +53,21 @@ export function downloadCustom(filename, mediaType, content) {
 }
 
 export function getDownloadInfos(layerModel, filtersModel, recordModel, options) {
+  let downloadInfos;
   if (layerModel.get('download.protocol') === 'EO-WCS') {
-    return getDownloadInfosEOWCS(layerModel, filtersModel, recordModel, options);
+    downloadInfos = getDownloadInfosEOWCS(layerModel, filtersModel, recordModel, options);
   } else if (layerModel.get('download.protocol') === 'S3') {
-    return getDownloadInfosS3(layerModel, recordModel);
+    downloadInfos = getDownloadInfosS3(layerModel, recordModel);
+  } else {
+    downloadInfos = getDownloadInfosUrl(recordModel);
   }
-  return getDownloadInfosUrl(recordModel);
+
+  const rewrite = layerModel.get('download.rewrite');
+  if (rewrite) {
+    const searchRE = new RegExp(rewrite.from);
+    return downloadInfos.then(infos => infos.map(item => Object.assign({}, item, {
+      href: item.href.replace(searchRE, rewrite.to)
+    })));
+  }
+  return downloadInfos;
 }
