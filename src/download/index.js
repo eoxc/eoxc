@@ -13,7 +13,7 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
     const a = document.createElement('a');
     // This works in Chrome and Firefox
     if (typeof a.download !== 'undefined') {
-      getDownloadInfosUrl(recordModel).map((info) => {
+      getDownloadInfosUrl(recordModel).then(infos => infos.forEach((info) => {
         const ia = document.createElement('a');
         ia.style.display = 'none';
         ia.setAttribute('target', '_blank');
@@ -27,24 +27,21 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
         ia.click();
 
         setTimeout(() => document.body.removeChild(ia), 10000);
-
-        return null;
-      });
+      }));
+    } else {
+      // This works in IE11, but not for SSO
+      getDownloadInfosUrl(recordModel).then(infos => infos.forEach((info) => {
+        const $iframe = $('<iframe style="visibility: collapse;"></iframe>');
+        $('body').append($iframe);
+        const content = $iframe[0].contentDocument;
+        const form = `<form action="${info.href}" method="GET"></form>`;
+        content.write(form);
+        $('form', content).submit();
+        setTimeout(() => {
+          $iframe.remove();
+        }, 20000);
+      }));
     }
-    // element = downloadUrl(recordModel);
-
-    // This works in IE11, but not for SSO
-    getDownloadInfosUrl(recordModel).forEach((info) => {
-      const $iframe = $('<iframe style="visibility: collapse;"></iframe>');
-      $('body').append($iframe);
-      const content = $iframe[0].contentDocument;
-      const form = `<form action="${info.href}" method="GET"></form>`;
-      content.write(form);
-      $('form', content).submit();
-      setTimeout(() => {
-        $iframe.remove();
-      }, 20000);
-    });
   }
 }
 
