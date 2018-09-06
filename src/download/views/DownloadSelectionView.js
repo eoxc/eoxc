@@ -14,6 +14,7 @@ const DownloadView = Marionette.CompositeView.extend({
     return {
       termsAndConditionsUrl: this.termsAndConditionsUrl,
       downloadEnabled: this.downloadEnabled,
+      selectFilesEnabled: typeof this.onSelectFiles !== 'undefined',
     };
   },
   className: 'download-view',
@@ -32,6 +33,7 @@ const DownloadView = Marionette.CompositeView.extend({
     'click .start-download': 'onStartDownloadClicked',
     'click .download-as-metalink': 'onDownloadAsMetalinkClicked',
     'click .download-as-url-list': 'onDownloadAsUrlListClicked',
+    'click .select-files': 'onSelectFilesClicked',
     'click .deselect-all': 'onDeselectAllClicked',
     'change .terms-and-conditions': 'onTermsAndAndConditionsChange',
   },
@@ -48,12 +50,16 @@ const DownloadView = Marionette.CompositeView.extend({
         searchModel.get('downloadSelection'), 'reset update', this.onDownloadSelectionChange
       );
     });
-
+    this.onSelectFiles = options.onSelectFiles;
     this.onStartDownload = options.onStartDownload;
   },
 
   onAttach() {
     this.triggerMethod('update:status', this._infoBadge());
+  },
+
+  onSelectFilesClicked() {
+    this.onSelectFiles();
   },
 
   onStartDownloadClicked() {
@@ -119,6 +125,9 @@ const DownloadView = Marionette.CompositeView.extend({
       .prop('disabled', !fullDownloadEnabled);
 
     this.$('.dropdown-toggle')
+      .prop('disabled', !textDownloadEnabled);
+
+    this.$('.select-files')
       .prop('disabled', !textDownloadEnabled);
 
     this.triggerMethod('update:status', this._infoBadge(totalCount));

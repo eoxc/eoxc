@@ -21,6 +21,12 @@
       <ul class="dropdown-menu dropdown-menu-right">
         <li><a href="#" class="download-as-metalink">{{t 'Download as Metalink'}}</a></li>
         <li><a href="#" class="download-as-url-list">{{t 'Download as URL-List'}}</a></li>
+        {{#if selectFilesEnabled}}
+        <!-- <div class="btn-group" role="group">
+          <button class="btn btn-default btn-sm select-files" type="button" disabled>{{t 'Select files'}}</button>
+        </div> -->
+        <li><a href="#" class="select-files" type="button" disabled>{{t 'Select files...'}}</a></li>
+        {{/if}}
       </ul>
     </div>
     <div class="btn-group" role="group">
