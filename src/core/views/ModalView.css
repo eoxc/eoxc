@@ -1,3 +1,16 @@
 .modal {
   padding-left: 0 !important;
 }
+
+.modal-full-screen-scrolling {
+  height: calc(100% - 20px);
+}
+
+.modal-full-screen-scrolling .modal-content {
+  height: 100%;
+}
+
+.modal-full-screen-scrolling .modal-content .modal-body {
+  height: calc(100% - 118px);
+  overflow-y: scroll;
+}
