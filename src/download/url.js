@@ -14,7 +14,7 @@ export function getDownloadInfos(recordModel) {
     const url = properties.links.find(link => link.rel === 'enclosure');
     if (url) {
       let name = recordModel.get('id');
-      const parsed = urlParse(url);
+      const parsed = urlParse(url.href);
       if (parsed.query.length === 0) {
         const parts = parsed.pathname.split('/');
         name = parts[parts.length - 1];

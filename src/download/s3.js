@@ -44,7 +44,9 @@ export function getDownloadInfos(layerModel, recordModel) {
         .then(items => items.map(item => ({
           href: `${origin}/${bucket}/${item.Key}`,
           size: item.Size,
-          name: item.Key.substring(path.length + 1),
+          name: item.Key.substring(path.length + 1) !== 'zip' ?
+            item.Key.substring(path.length + 1) :
+            item.Key.split('/')[item.Key.split('/').length - 1],
         })));
     }
     let name = recordModel.get('id');
