@@ -44,7 +44,7 @@ export function getDownloadInfos(layerModel, recordModel) {
         .then(items => items.map(item => ({
           href: `${origin}/${bucket}/${item.Key}`,
           size: item.Size,
-          name: item.Key,
+          name: item.Key.substring(path.length + 1),
         })));
     }
     let name = recordModel.get('id');
