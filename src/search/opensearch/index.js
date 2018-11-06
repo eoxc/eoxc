@@ -35,6 +35,7 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
   const method = layerModel.get('search.method');
   const format = options.mimeType || layerModel.get('search.format') || null;
   const maxUrlLength = layerModel.get('search.maxUrlLength') || 4000;
+  const dropEmptyParameters = layerModel.get('search.dropEmptyParameters') || false;
 
   return getService(url)
     .then((service) => {
@@ -43,7 +44,9 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
         mapModel ? mapModel.attributes : {},
         options, format, service
       );
-      return service.search(parameters, format, method || 'GET', false, maxUrlLength);
+      return service.search(
+        parameters, format, method || 'GET', false, maxUrlLength, dropEmptyParameters
+      );
     })
     .then((result) => {
       // eslint-disable-next-line no-param-reassign
@@ -57,8 +60,9 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
   const method = layerModel.get('search.method');
   const format = options.mimeType || layerModel.get('search.format') || null;
   const maxUrlLength = layerModel.get('search.maxUrlLength') || 4000;
+  const dropEmptyParameters = layerModel.get('search.dropEmptyParameters') || false;
 
-  const filterParams = filtersModel.toJSON();
+  const filterParams = filtersModel ? filtersModel.toJSON() : {};
   const mapParams = mapModel ? mapModel.toJSON() : null;
 
   const emitter = new PagedSearchProgressEmitter();
@@ -72,7 +76,16 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
 
   let worker = new OpenSearchWorker();
   worker.postMessage(['searchAll', {
-    url, method, filterParams, mapParams, options, format, description, maxUrlLength, parseOptions,
+    url,
+    method,
+    filterParams,
+    mapParams,
+    options,
+    format,
+    description,
+    maxUrlLength,
+    dropEmptyParameters,
+    parseOptions,
   }]);
 
   worker.onmessage = ({ data }) => {
