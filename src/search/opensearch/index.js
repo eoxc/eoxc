@@ -45,7 +45,12 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
         options, format, service
       );
       return service.search(
-        parameters, format, method || 'GET', false, maxUrlLength, dropEmptyParameters
+        parameters, {
+          type: format,
+          method: method || 'GET',
+          maxUrlLength,
+          dropEmptyParameters,
+        },
       );
     })
     .then((result) => {

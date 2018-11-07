@@ -37,7 +37,9 @@ function searchAll(url, method, filterParams, mapParams, options, format, descri
   return getService(url, description)
     .then((service) => {
       const parameters = convertFilters(filterParams, mapParams, options, format, service);
-      const paginator = service.getPaginator(parameters, format, method, {
+      const paginator = service.getPaginator(parameters, {
+        type: format,
+        method,
         baseOffset: options.startIndex,
         maxUrlLength,
         dropEmptyParameters,
