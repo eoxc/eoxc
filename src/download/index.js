@@ -5,6 +5,21 @@ import { download as downloadEOWCS, getDownloadInfos as getDownloadInfosEOWCS } 
 import { download as downloadUrl, getDownloadInfos as getDownloadInfosUrl } from './url';
 import { getDownloadInfos as getDownloadInfosS3 } from './s3';
 
+
+export function isRecordDownloadable(layerModel, recordModel) {
+  if (layerModel.get('download.protocol') === 'EO-WCS') {
+    return true;
+  }
+  const properties = recordModel.get('properties');
+  if (properties && properties.links) {
+    const url = properties.links.find(link => link.rel === 'enclosure');
+    if (url) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function downloadRecord(layerModel, filtersModel, recordModel, options, elementContainer) {
   let element = null;
   if (layerModel.get('download.protocol') === 'EO-WCS') {

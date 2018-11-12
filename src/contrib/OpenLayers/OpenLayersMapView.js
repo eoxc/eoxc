@@ -25,6 +25,7 @@ import ModelAttributeSource from './ModelAttributeSource';
 import ProgressBar from './progressbar';
 import './ol.css';
 import template from './OpenLayersMapView.hbs';
+import { isRecordDownloadable } from '../../download';
 
 class GroupById extends Group {
   constructor(options = {}) {
@@ -732,10 +733,11 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   showOverlay(coordinate, searchFeatures, selectedFeatures) {
     if (searchFeatures.length || selectedFeatures.length) {
-      this.marker.searchRecords = searchFeatures.map(f => [f.model, f.searchModel]);
+      const searchRecords = searchFeatures.map(f => [f.model, f.searchModel]);
+      this.marker.searchRecords = searchRecords.filter(([recordModel, searchModel]) => isRecordDownloadable(recordModel, searchModel.get('layerModel')));
       this.marker.selectedRecords = selectedFeatures.map(f => [f.model, f.searchModel]);
       this.marker.infoRecords = uniqueBy(
-        this.marker.searchRecords.concat(this.marker.selectedRecords),
+        searchRecords.concat(this.marker.selectedRecords),
         (a, b) => a[0].get('id') === b[0].get('id') && a[1] === b[1]
       );
       this.marker.visible = true;

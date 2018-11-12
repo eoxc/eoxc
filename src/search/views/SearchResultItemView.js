@@ -1,4 +1,5 @@
 import RecordItemView from '../../core/views/RecordItemView';
+import { isRecordDownloadable } from '../../download';
 
 // eslint-disable-next-line max-len
 const SearchResultItemView = RecordItemView.extend(/** @lends search/views/layers.SearchResultItemView# */{
@@ -11,6 +12,7 @@ const SearchResultItemView = RecordItemView.extend(/** @lends search/views/layer
   initialize(options) {
     const searchModel = options.searchModel;
     const layerModel = searchModel.get('layerModel');
+    this.layerModel = layerModel;
     RecordItemView.prototype.initialize.call(this, Object.assign({}, options, {
       thumbnailUrlPattern: layerModel.get('search.thumbnailUrlPattern'),
     }));
@@ -25,7 +27,9 @@ const SearchResultItemView = RecordItemView.extend(/** @lends search/views/layer
 
   onChecked(event) {
     event.preventDefault();
-    this.model.selectForDownload(!this.model.isSelectedForDownload());
+    if (isRecordDownloadable(this.layerModel, this.model)) {
+      this.model.selectForDownload(!this.model.isSelectedForDownload());
+    }
   },
 
   onSelectedForDownloadChange() {
