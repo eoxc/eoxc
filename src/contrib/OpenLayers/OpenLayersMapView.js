@@ -734,7 +734,7 @@ class OpenLayersMapView extends Marionette.ItemView {
   showOverlay(coordinate, searchFeatures, selectedFeatures) {
     if (searchFeatures.length || selectedFeatures.length) {
       const searchRecords = searchFeatures.map(f => [f.model, f.searchModel]);
-      this.marker.searchRecords = searchRecords.filter(([recordModel, searchModel]) => isRecordDownloadable(recordModel, searchModel.get('layerModel')));
+      this.marker.searchRecords = searchRecords.filter(([recordModel, searchModel]) => isRecordDownloadable(searchModel.get('layerModel'), recordModel));
       this.marker.selectedRecords = selectedFeatures.map(f => [f.model, f.searchModel]);
       this.marker.infoRecords = uniqueBy(
         searchRecords.concat(this.marker.selectedRecords),
