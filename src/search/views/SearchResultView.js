@@ -2,6 +2,8 @@ import Marionette from 'backbone.marionette';
 import _ from 'underscore';
 import $ from 'jquery';
 
+import { isRecordDownloadable } from '../../download';
+
 import SearchResultListView from './SearchResultListView';
 
 import './SearchResultView.css';
@@ -228,7 +230,9 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
   onSelectAllClick() {
     const selectedSearchModels = this.collection.filter(model => model.get('automaticSearch'));
     selectedSearchModels.forEach((searchModel) => {
-      searchModel.get('results').forEach(recordModel => recordModel.selectForDownload());
+      searchModel.get('results')
+        .filter(recordModel => isRecordDownloadable(searchModel.get('layerModel'), recordModel))
+        .forEach(recordModel => recordModel.selectForDownload());
     });
   }
 });

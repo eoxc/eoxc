@@ -130,6 +130,9 @@ const DownloadView = Marionette.CompositeView.extend({
     this.$('.select-files')
       .prop('disabled', !textDownloadEnabled);
 
+    this.$('.deselect-all')
+      .prop('disabled', totalCount === 0);
+
     this.triggerMethod('update:status', this._infoBadge(totalCount));
   },
 
