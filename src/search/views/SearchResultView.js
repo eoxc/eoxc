@@ -109,6 +109,21 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     }, 1000 / 60));
   },
 
+  onResultsChange() {
+    const downloadableCount = this.collection
+      .filter(searchModel => searchModel.get('layerModel').get('display.visible'))
+      .map(searchModel =>
+        searchModel.get('results')
+          .filter(recordModel => isRecordDownloadable(searchModel.get('layerModel'), recordModel))
+          .length
+      )
+      .reduce((count, modelCount) => (
+        count + modelCount
+      ), 0);
+
+    this.$('.select-all').prop('disabled', downloadableCount === 0);
+  },
+
   updateViews() {
     const elem = this.$('.result-contents')[0];
     const scrollTop = elem.scrollTop;
