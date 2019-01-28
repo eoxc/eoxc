@@ -1,6 +1,8 @@
 // import AWS from 'aws-sdk';
 import urlParse from 'url-parse';
 
+import rewrite from './rewrite';
+
 function getChildren(element) {
   let i = 0;
   const nodes = element.childNodes;
@@ -36,8 +38,11 @@ function listBucket(origin, bucket, prefix) {
 export function getDownloadInfos(layerModel, recordModel) {
   const link = recordModel.get('properties').links.find(l => l.rel === 'enclosure');
   if (link) {
+    const parsed = urlParse(
+      rewrite(link.href, layerModel.get('download.rewrite'))
+    );
     if (link.href.slice(-4) !== '.zip') {
-      const { origin, pathname } = urlParse(link.href);
+      const { origin, pathname } = parsed;
       const [bucket, ...pathParts] = pathname.slice(1).split('/');
       const path = pathParts.join('/');
       return listBucket(origin, bucket, path)
@@ -50,7 +55,6 @@ export function getDownloadInfos(layerModel, recordModel) {
         })));
     }
     let name = recordModel.get('id');
-    const parsed = urlParse(link.href);
     if (parsed.query.length === 0) {
       const parts = parsed.pathname.split('/');
       name = parts[parts.length - 1];

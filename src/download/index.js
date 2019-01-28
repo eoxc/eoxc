@@ -4,7 +4,7 @@ import { saveAs } from 'file-saver';
 import { download as downloadEOWCS, getDownloadInfos as getDownloadInfosEOWCS } from './eowcs';
 import { download as downloadUrl, getDownloadInfos as getDownloadInfosUrl } from './url';
 import { getDownloadInfos as getDownloadInfosS3 } from './s3';
-
+import rewrite from './rewrite';
 
 export function isRecordDownloadable(layerModel, recordModel) {
   if (layerModel.get('download.protocol') === 'EO-WCS') {
@@ -74,12 +74,7 @@ export function getDownloadInfos(layerModel, filtersModel, recordModel, options)
     downloadInfos = getDownloadInfosUrl(recordModel);
   }
 
-  const rewrite = layerModel.get('download.rewrite');
-  if (rewrite) {
-    const searchRE = new RegExp(rewrite.from);
-    return downloadInfos.then(infos => infos.map(item => Object.assign({}, item, {
-      href: item.href.replace(searchRE, rewrite.to)
-    })));
-  }
-  return downloadInfos;
+  return downloadInfos.then(infos => infos.map(item => Object.assign({}, item, {
+    href: rewrite(item.href, layerModel.get('download.rewrite'))
+  })));
 }
