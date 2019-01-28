@@ -33,6 +33,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
       model: child,
       referenceCollection: child.get('results'),
       highlightModel: this.highlightModel,
+      fallbackThumbnailUrl: this.fallbackThumbnailUrl,
     });
   },
 
@@ -67,6 +68,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
   initialize(options) {
     this.filtersModel = options.filtersModel;
     this.highlightModel = options.highlightModel;
+    this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
 
     this.listenTo(this.collection, 'change', this.onSearchModelsChange);
 

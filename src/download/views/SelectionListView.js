@@ -26,6 +26,7 @@ const SelectionListView = Marionette.CompositeView.extend({
     return new ChildViewClass({
       model: child,
       highlightModel: this.highlightModel,
+      fallbackThumbnailUrl: this.fallbackThumbnailUrl,
     });
   },
   emptyView: EmptyView,
@@ -42,6 +43,7 @@ const SelectionListView = Marionette.CompositeView.extend({
   initialize(options) {
     this.highlightModel = options.highlightModel;
     this.mapModel = options.mapModel;
+    this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
   },
 
   onDownloadFullResolutionClick() {

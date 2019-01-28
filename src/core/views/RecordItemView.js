@@ -20,6 +20,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     this.highlightModel = options.highlightModel;
     this.collection = this.model.collection;
     this.thumbnailUrlPattern = options.thumbnailUrlPattern;
+    this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
   },
 
   templateHelpers() {
@@ -41,10 +42,17 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
 
   onRender() {
     // TODO: this flickers the image
-    this.$('img')
-      // .css({ opacity: 0 })
+    const $img = this.$('img');
+    $img
       .one('load', () => this.$('img').fadeIn('slow'))
-      .one('error', () => this.$('img').attr('alt', imageError()));
+      .one('error', () => {
+        if (this.fallbackThumbnailUrl) {
+          $img.one('error', () => $img.attr('alt', imageError()));
+          $img.attr('src', this.fallbackThumbnailUrl);
+        } else {
+          $img.attr('alt', imageError());
+        }
+      });
   },
 
   onAttach() {

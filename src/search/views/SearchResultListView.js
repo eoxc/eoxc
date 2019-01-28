@@ -31,6 +31,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
       model: child,
       searchModel: this.model,
       highlightModel: this.highlightModel,
+      fallbackThumbnailUrl: this.fallbackThumbnailUrl,
     });
   },
 
@@ -57,6 +58,7 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     this.searchModel = options.searchModel;
     this.highlightModel = options.highlightModel;
     this.downloadSelectionCollection = options.downloadSelectionCollection;
+    this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
     this.finished = false;
     this.previousCollapsed = false;
     this.prevUpper = 0;
