@@ -47,8 +47,10 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
       .one('load', () => this.$('img').fadeIn('slow'))
       .one('error', () => {
         if (this.fallbackThumbnailUrl) {
-          $img.one('error', () => $img.attr('alt', imageError()));
-          $img.attr('src', this.fallbackThumbnailUrl);
+          $img
+            .one('error', () => $img.attr('alt', imageError()))
+            .attr('src', this.fallbackThumbnailUrl)
+            .addClass('error');
         } else {
           $img.attr('alt', imageError());
         }
