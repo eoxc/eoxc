@@ -6,6 +6,9 @@ require('./RecordDetailsView.css');
 // eslint-disable-next-line max-len
 const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/layers.RecordDetailsView# */{
   template,
+
+  className: 'record-details-view',
+
   regions: {
     map: '.record-details-map',
   },

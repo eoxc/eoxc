@@ -26,6 +26,7 @@ const DownloadView = Marionette.CompositeView.extend({
       collection: child.get('downloadSelection'),
       mapModel: this.mapModel,
       highlightModel: this.highlightModel,
+      fallbackThumbnailUrl: this.fallbackThumbnailUrl,
     });
   },
 
@@ -44,6 +45,7 @@ const DownloadView = Marionette.CompositeView.extend({
     this.highlightModel = options.highlightModel;
     this.termsAndConditionsUrl = options.termsAndConditionsUrl;
     this.downloadEnabled = options.downloadEnabled;
+    this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
 
     this.collection.each((searchModel) => {
       this.listenTo(
