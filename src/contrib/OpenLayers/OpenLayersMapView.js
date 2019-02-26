@@ -7,7 +7,7 @@ import Feature from 'ol/feature';
 import Collection from 'ol/collection';
 import Overlay from 'ol/overlay';
 
-import Draw from 'ol/interaction/draw';
+import Draw, { createBox } from 'ol/interaction/draw';
 
 import Group from 'ol/layer/group';
 
@@ -451,24 +451,19 @@ class OpenLayersMapView extends Marionette.ItemView {
    *
    */
   setupControls() {
+    const boxFunc = createBox();
     this.drawControls = {
       point: new Draw({ type: 'Point' }),
       line: new Draw({ type: 'LineString' }),
       polygon: new Draw({ type: 'Polygon' }),
       bbox: new Draw({
-        type: 'LineString',
-        geometryFunction: (coordinates, geometry) => {
-          const geom = geometry || new Polygon(null);
-          const start = coordinates[0];
-          const end = coordinates[1];
-          geom.setCoordinates([
-            [start, [start[0], end[1]], end, [end[0], start[1]], start],
-          ]);
-          geom.isBox = true;
-          return geom;
-        },
-        maxPoints: 2,
-      }),
+        type: 'Circle',
+        geometryFunction(...args) {
+          const box = boxFunc(...args);
+          box.isBox = true;
+          return box;
+        }
+      })
     };
     const format = new GeoJSON();
     Object.keys(this.drawControls).forEach((key) => {

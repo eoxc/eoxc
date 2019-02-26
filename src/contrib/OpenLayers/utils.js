@@ -145,12 +145,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
               matrixIds,
             }),
             style: displayParams.style,
-            attributions: [
-              displayParams.attribution
-              // new Attribution({
-              //   html: ,
-              // }),
-            ],
+            attributions: displayParams.attribution,
             wrapX: true,
             dimensions: {
               time: '',
@@ -177,12 +172,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
             }),
             urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
             wrapX: true,
-            attributions: [
-              displayParams.attribution
-              // new Attribution({
-              //   html: displayParams.attribution,
-              // }),
-            ],
+            attributions: displayParams.attribution,
           }),
         });
         break;
