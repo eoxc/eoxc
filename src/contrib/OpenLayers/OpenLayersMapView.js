@@ -440,10 +440,10 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     // setup map events
-    this.map.on('pointerdrag', this.onMapPointerDrag, this);
-    this.map.on('moveend', this.onMapMoveEnd, this);
-    this.map.on('pointermove', _.throttle(this.onMapPointerMove, 100), this);
-    this.map.on('click', this.onMapClick, this);
+    this.map.on('pointerdrag', (...args) => this.onMapPointerDrag(...args));
+    this.map.on('moveend', (...args) => this.onMapMoveEnd(...args));
+    this.map.on('pointermove', _.throttle((...args) => this.onMapPointerMove(...args), 100));
+    this.map.on('click', (...args) => this.onMapClick(...args));
   }
 
   /**

@@ -5,9 +5,9 @@ import turfIntersect from '@turf/intersect';
 
 import Map from 'ol/map';
 import View from 'ol/view';
-import proj from 'ol/proj';
-import extent from 'ol/extent';
-import Attribution from 'ol/attribution';
+import { get as getProj } from 'ol/proj';
+import { getWidth as extentGetWidth, getTopLeft as extentGetTopLeft } from 'ol/extent';
+// import Attribution from 'ol/attribution';
 import coordinate from 'ol/coordinate';
 
 import AttributionControl from 'ol/control/attribution';
@@ -17,7 +17,8 @@ import MousePositionControl from 'ol/control/mouseposition';
 import TileLayer from 'ol/layer/tile';
 import VectorLayer from 'ol/layer/vector';
 
-import WMTSSource from 'ol/source/wmts';
+import WMTSCapabilities from 'ol/format/WMTSCapabilities.js';
+import WMTSSource, { optionsFromCapabilities } from 'ol/source/wmts';
 import WMSTileSource from 'ol/source/tilewms';
 import VectorSource from 'ol/source/vector';
 
@@ -60,7 +61,7 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
     ],
     renderer: renderer || 'canvas',
     view: new View({
-      projection: proj.get('EPSG:4326'),
+      projection: getProj('EPSG:4326'),
       center,
       zoom,
       enableRotation: false,
@@ -84,9 +85,9 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
 
   let layer;
 
-  const projection = proj.get('EPSG:4326');
+  const projection = getProj('EPSG:4326');
   const projectionExtent = projection.getExtent();
-  const size = extent.getWidth(projectionExtent) / 256;
+  const size = extentGetWidth(projectionExtent) / 256;
   const resolutions = new Array(18);
   const matrixIds = new Array(18);
 
@@ -112,62 +113,82 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
 
   const layerId = displayParams.id ? displayParams.id : displayParams.ids.join(',');
 
-  switch (displayParams.protocol) {
-    case 'WMTS':
-      layer = new TileLayer({
-        visible: displayParams.visible,
-        source: new WMTSSource({
-          urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+  if (displayParams.capabilitiesUrl) {
+    layer = new TileLayer({
+      visible: displayParams.visible,
+    });
+
+    fetch(displayParams.capabilitiesUrl).then(response => response.text())
+      .then((text) => {
+        const parser = new WMTSCapabilities();
+        const result = parser.read(text);
+        const options = optionsFromCapabilities(result, {
           layer: displayParams.id,
           matrixSet: displayParams.matrixSet,
-          format: displayParams.format,
-          projection: displayParams.projection,
-          tileGrid: new WMTSTileGrid({
-            origin: extent.getTopLeft(projectionExtent),
-            resolutions,
-            matrixIds,
-          }),
-          style: displayParams.style,
-          attributions: [
-            new Attribution({
-              html: displayParams.attribution,
-            }),
-          ],
-          wrapX: true,
-          dimensions: {
-            time: '',
-          }
-        }),
+        });
+        layer.setSource(new WMTSSource(options));
       });
-      break;
-    case 'WMS':
-      layer = new TileLayer({
-        visible: displayParams.visible,
-        source: new WMSTileSource({
-          crossOrigin: 'anonymous',
-          params: Object.assign({
-            LAYERS: layerId,
-            VERSION: displayParams.version || '1.1.0',
-            FORMAT: displayParams.format, // TODO: use format here?
-            STYLES: displayParams.style,
-          }, displayParams.extraParameters),
-          tileGrid: new TileGrid({
-            resolutions,
-            tileSize: tileSize || [256, 256],
-            extent: projectionExtent
-          }),
-          urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
-          wrapX: true,
-          attributions: [
-            new Attribution({
-              html: displayParams.attribution,
+  } else {
+    switch (displayParams.protocol) {
+      case 'WMTS':
+        layer = new TileLayer({
+          visible: displayParams.visible,
+          source: new WMTSSource({
+            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            layer: displayParams.id,
+            matrixSet: displayParams.matrixSet,
+            format: displayParams.format,
+            projection: displayParams.projection,
+            tileGrid: new WMTSTileGrid({
+              origin: extentGetTopLeft(projectionExtent),
+              resolutions,
+              matrixIds,
             }),
-          ],
-        }),
-      });
-      break;
-    default:
-      throw new Error('Unsupported view protocol');
+            style: displayParams.style,
+            attributions: [
+              displayParams.attribution
+              // new Attribution({
+              //   html: ,
+              // }),
+            ],
+            wrapX: true,
+            dimensions: {
+              time: '',
+            },
+            requestEncoding: displayParams.requestEncoding,
+          }),
+        });
+        break;
+      case 'WMS':
+        layer = new TileLayer({
+          visible: displayParams.visible,
+          source: new WMSTileSource({
+            crossOrigin: 'anonymous',
+            params: Object.assign({
+              LAYERS: layerId,
+              VERSION: displayParams.version || '1.1.0',
+              FORMAT: displayParams.format, // TODO: use format here?
+              STYLES: displayParams.style,
+            }, displayParams.extraParameters),
+            tileGrid: new TileGrid({
+              resolutions,
+              tileSize: tileSize || [256, 256],
+              extent: projectionExtent
+            }),
+            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            wrapX: true,
+            attributions: [
+              displayParams.attribution
+              // new Attribution({
+              //   html: displayParams.attribution,
+              // }),
+            ],
+          }),
+        });
+        break;
+      default:
+        throw new Error('Unsupported view protocol');
+    }
   }
   layer.id = layerModel.get('id');
   layer.layerModel = layerModel;

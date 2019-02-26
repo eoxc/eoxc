@@ -85,7 +85,7 @@
     "less": "^2.7.1",
     "libcoverage": "^0.1.9",
     "marionette.sliding-view": "^0.1.0",
-    "ol": "^4.0.1-beta.1",
+    "ol": "^5.3.1",
     "opensearch-browser": "2.0.0-alpha.1",
     "underscore": "^1.8.3",
     "url-parse": "^1.1.7",
