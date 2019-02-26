@@ -5,3 +5,7 @@
   margin-right: -15px;
   height: 500px;
 }
+
+.record-details-title {
+  word-break: break-word;
+}
