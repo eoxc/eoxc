@@ -1,4 +1,4 @@
-import VectorSource from 'ol/source/vector';
+import VectorSource from 'ol/source/Vector';
 
 /**
  * Vector source to map a Backbone collection of result records to openlayers
