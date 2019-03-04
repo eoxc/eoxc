@@ -3,34 +3,34 @@ import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
 
-import Map from 'ol/map';
-import View from 'ol/view';
+import Map from 'ol/Map';
+import View from 'ol/View';
 import { get as getProj } from 'ol/proj';
 import { getWidth as extentGetWidth, getTopLeft as extentGetTopLeft } from 'ol/extent';
 // import Attribution from 'ol/attribution';
 import coordinate from 'ol/coordinate';
 
-import AttributionControl from 'ol/control/attribution';
-import ZoomControl from 'ol/control/zoom';
-import MousePositionControl from 'ol/control/mouseposition';
+import AttributionControl from 'ol/control/Attribution';
+import ZoomControl from 'ol/control/Zoom';
+import MousePositionControl from 'ol/control/MousePosition';
 
-import TileLayer from 'ol/layer/tile';
-import VectorLayer from 'ol/layer/vector';
+import TileLayer from 'ol/layer/Tile';
+import VectorLayer from 'ol/layer/Vector';
 
-import WMTSCapabilities from 'ol/format/WMTSCapabilities.js';
-import WMTSSource, { optionsFromCapabilities } from 'ol/source/wmts';
-import WMSTileSource from 'ol/source/tilewms';
-import VectorSource from 'ol/source/vector';
+import WMTSCapabilities from 'ol/format/WMTSCapabilities';
+import WMTSSource, { optionsFromCapabilities } from 'ol/source/WMTS';
+import WMSTileSource from 'ol/source/TileWMS';
+import VectorSource from 'ol/source/Vector';
 
-import TileGrid from 'ol/tilegrid/tilegrid';
-import WMTSTileGrid from 'ol/tilegrid/wmts';
+import TileGrid from 'ol/tilegrid/TileGrid';
+import WMTSTileGrid from 'ol/tilegrid/WMTS';
 
-import Style from 'ol/style/style';
-import Fill from 'ol/style/fill';
-import Stroke from 'ol/style/stroke';
-import Circle from 'ol/style/circle';
+import Style from 'ol/style/Style';
+import Fill from 'ol/style/Fill';
+import Stroke from 'ol/style/Stroke';
+import Circle from 'ol/style/Circle';
 
-import GeoJSON from 'ol/format/geojson';
+import GeoJSON from 'ol/format/GeoJSON';
 
 import deepEqual from 'deep-equal';
 

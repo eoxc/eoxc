@@ -3,20 +3,20 @@ import Marionette from 'backbone.marionette';
 import $ from 'jquery';
 import _ from 'underscore';
 
-import Feature from 'ol/feature';
-import Collection from 'ol/collection';
-import Overlay from 'ol/overlay';
+import Feature from 'ol/Feature';
+import Collection from 'ol/Collection';
+import Overlay from 'ol/Overlay';
 
-import Draw, { createBox } from 'ol/interaction/draw';
+import Draw, { createBox } from 'ol/interaction/Draw';
 
-import Group from 'ol/layer/group';
+import Group from 'ol/layer/Group';
 
-import WMTSSource from 'ol/source/wmts';
-import WMSTileSource from 'ol/source/tilewms';
+import WMTSSource from 'ol/source/WMTS';
+import WMSTileSource from 'ol/source/TileWMS';
 
-import GeoJSON from 'ol/format/geojson';
+import GeoJSON from 'ol/format/GeoJSON';
 
-import Polygon from 'ol/geom/polygon';
+import Polygon from 'ol/geom/Polygon';
 
 import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
 import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
