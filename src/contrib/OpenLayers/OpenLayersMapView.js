@@ -16,7 +16,7 @@ import WMSTileSource from 'ol/source/TileWMS';
 
 import GeoJSON from 'ol/format/GeoJSON';
 
-import Polygon from 'ol/geom/Polygon';
+import Polygon, {fromExtent} from 'ol/geom/Polygon';
 
 import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
 import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
@@ -406,8 +406,8 @@ class OpenLayersMapView extends Marionette.ItemView {
       } else if (Array.isArray(feature)) {
         const [minx, miny, maxx, maxy] = feature;
 
-        geometry = Polygon.fromExtent([
-          minx, miny, maxx > minx ? maxx : maxx + 360, maxy,
+        geometry = fromExtent([
+          minx, miny, (maxx > minx) ? maxx : maxx + 360, maxy
         ]);
       } else {
         const format = new GeoJSON();
@@ -709,7 +709,7 @@ class OpenLayersMapView extends Marionette.ItemView {
           if (model.geometry || (model.get && model.get('geometry'))) {
             geometry = format.readGeometry(model.geometry || model.get('geometry'));
           } else if (model.bbox || (model.get && model.get('bbox'))) {
-            geometry = Polygon.fromExtent(model.bbox || model.get('bbox'));
+            geometry = fromExtent(model.bbox || model.get('bbox'));
           }
 
           if (geometry) {
