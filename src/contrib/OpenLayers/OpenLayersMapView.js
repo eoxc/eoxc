@@ -407,7 +407,7 @@ class OpenLayersMapView extends Marionette.ItemView {
         const [minx, miny, maxx, maxy] = feature;
 
         geometry = fromExtent([
-          minx, miny, (maxx > minx) ? maxx : maxx + 360, maxy
+          minx, miny, maxx > minx ? maxx : maxx + 360, maxy,
         ]);
       } else {
         const format = new GeoJSON();
