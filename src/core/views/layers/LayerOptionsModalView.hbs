@@ -36,6 +36,14 @@
             </div>
           </div>
         {{/each}}
+        {{#if legendUrl}}
+          <div class="form-group">
+            <label class="col-sm-2 control-label">{{t 'Legend'}}</label>
+            <div class="col-sm-12">
+              <img class="layer-legend-image" src="{{legendUrl}}" alt="Legend" />
+            </div>
+          </div>
+        {{/if}}
       </form>
     </div>
     <div class="modal-footer">
