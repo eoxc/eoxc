@@ -18,6 +18,7 @@
               {{else if this.hasError}}
                 <i class="fa fa-exclamation"></i>
               {{else if this.isCancelled}}
+              {{else if this.isCountInitiallyDisabled}}
               {{else}}
                 {{this.hasLoaded}}/{{this.totalResults}}
               {{/if}}

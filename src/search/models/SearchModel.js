@@ -22,6 +22,7 @@ class SearchModel extends Backbone.Model {
       totalResults: undefined,
       isSearching: false,
       isCancelled: false,
+      isCountInitiallyDisabled: true,
       hasError: false,
       errorMessage: null,
 
@@ -32,6 +33,7 @@ class SearchModel extends Backbone.Model {
       hasLoaded: 0,
       debounceTime: 250,
       searchRequest: null,
+      searchEnabled: true
     };
   }
 
@@ -62,9 +64,12 @@ class SearchModel extends Backbone.Model {
     this.listenTo(this.get('mapModel'), 'change:time', this.onMapTimeChange);
     this.listenTo(this.get('mapModel'), 'change:extendedTime', this.onMapExtendedTimeChange);
     this.listenTo(this.get('mapModel'), 'change:tool', this.onMapToolChange);
-
     this.onDebounceTimeChange();
-    this.set('automaticSearch', layerModel.get('display.visible'));
+    this.set('automaticSearch', layerModel.get('display.visible') && this.get('searchEnabled'));
+    this.set('prevAutomaticSearch', this.get('searchEnabled'));
+    if (this.get('automaticSearch')){
+      this.set('isCountInitiallyDisabled', false);
+    }
   }
 
   search() {
@@ -170,6 +175,7 @@ class SearchModel extends Backbone.Model {
   }
 
   onAutomaticSearchChange() {
+    this.set('isCountInitiallyDisabled', false);
     if (this.get('automaticSearch') && (this.get('hasChanges') || this.get('hasError') || this.get('isCancelled'))) {
       this.search();
       this.set('hasChanges', false);
@@ -180,7 +186,12 @@ class SearchModel extends Backbone.Model {
 
   onLayerVisibleChange() {
     const layerModel = this.get('layerModel');
-    this.set('automaticSearch', layerModel.get('display.visible'));
+    if (layerModel.get('display.visible')){
+      this.set('automaticSearch', this.get('prevAutomaticSearch'));
+    } else {
+      this.set('prevAutomaticSearch', this.get('automaticSearch'));
+      this.set('automaticSearch', false);
+    }
   }
 
   onSearchCollectionReset() {
