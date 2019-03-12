@@ -8,4 +8,8 @@
 
 .record-details-title {
   overflow-wrap: break-word;
+  /*IE11 fixes*/
+  word-wrap: break-word;
+  float: left;
+  width: 100%;
 }
