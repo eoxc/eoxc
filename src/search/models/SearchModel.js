@@ -67,7 +67,7 @@ class SearchModel extends Backbone.Model {
     this.onDebounceTimeChange();
     this.set('automaticSearch', layerModel.get('display.visible') && this.get('searchEnabled'));
     this.set('prevAutomaticSearch', this.get('searchEnabled'));
-    if (this.get('automaticSearch')){
+    if (this.get('automaticSearch')) {
       this.set('isCountInitiallyDisabled', false);
     }
   }
@@ -186,7 +186,7 @@ class SearchModel extends Backbone.Model {
 
   onLayerVisibleChange() {
     const layerModel = this.get('layerModel');
-    if (layerModel.get('display.visible')){
+    if (layerModel.get('display.visible')) {
       this.set('automaticSearch', this.get('prevAutomaticSearch'));
     } else {
       this.set('prevAutomaticSearch', this.get('automaticSearch'));
