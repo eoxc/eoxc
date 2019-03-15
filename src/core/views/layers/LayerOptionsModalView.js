@@ -1,6 +1,7 @@
 import 'jquery';
 import 'bootstrap-slider';
 import 'bootstrap-slider/dist/css/bootstrap-slider.css';
+import './LayerOptionsModalView.css';
 
 import ModalView from '../ModalView';
 import template from './LayerOptionsModalView.hbs';
@@ -17,6 +18,7 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
   templateHelpers() {
     return {
       options: this.getDisplayOptions(),
+      legendUrl: this.getLegendUrl(),
     };
   },
 
@@ -31,29 +33,37 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
 
   getDisplayOptions() {
     const display = this.useDetailsDisplay ? this.model.get('detailsDisplay') : this.model.get('display');
-    const options = display.options
-      .map((option) => {
-        let values = option.values;
-        let low;
-        let high;
-        let targetLow;
-        let targetHigh;
-        const target = option.target;
-        if (values) {
-          values = values.map(value =>
-            Object.assign({}, value, {
-              isCurrent: this.model.get(target) === value.value
-            })
-          );
-        }
-        if (typeof option.min !== 'undefined') {
-          [targetLow, targetHigh] = Array.isArray(target) ? target : target.split(',');
-          low = this.model.get(targetLow);
-          high = this.model.get(targetHigh);
-        }
-        return Object.assign({}, option, { values, low, high, targetLow, targetHigh });
-      });
-    return options;
+    if (typeof display.options !== 'undefined') {
+      const options = display.options
+        .map((option) => {
+          let values = option.values;
+          let low;
+          let high;
+          let targetLow;
+          let targetHigh;
+          const target = option.target;
+          if (values) {
+            values = values.map(value =>
+              Object.assign({}, value, {
+                isCurrent: this.model.get(target) === value.value
+              })
+            );
+          }
+          if (typeof option.min !== 'undefined') {
+            [targetLow, targetHigh] = Array.isArray(target) ? target : target.split(',');
+            low = this.model.get(targetLow);
+            high = this.model.get(targetHigh);
+          }
+          return Object.assign({}, option, { values, low, high, targetLow, targetHigh });
+        });
+      return options;
+    }
+    return {};
+  },
+
+  getLegendUrl() {
+    const display = this.model.get('display');
+    return display.legendUrl;
   },
 
   onRender() {

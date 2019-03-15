@@ -14,10 +14,25 @@
     <i class="fa fa-sort"></i>
     <i class="fa fa-square" style="color: {{displayColor}}"></i>
     {{#if display.options}}
-      <i class="fa fa-wrench layer-show-options"></i>
-    {{ else }}
-      <i class="fa fa-adjust layer-adjust-opacity" data-toggle="popover"></i>
+      {{#if display.legendUrl}}
+        <i class="fa fa-wrench layer-show-options"></i>
+      {{/if}}
     {{/if}}
+    {{#if display.options}}
+      {{#unless display.legendUrl}}
+        <i class="fa fa-wrench layer-show-options"></i>
+      {{/unless}}
+    {{/if}}
+    {{#unless display.options}}
+      {{#if display.legendUrl}}
+        <i class="fa fa-wrench layer-show-options"></i>
+      {{/if}}
+    {{/unless}}
+    {{#unless display.options}}
+      {{#unless display.legendUrl}}
+        <i class="fa fa-adjust layer-adjust-opacity" data-toggle="popover"></i>
+      {{/unless}}
+    {{/unless}}
   </span>
 </div>
 {{else}}
