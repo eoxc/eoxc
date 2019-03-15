@@ -183,6 +183,8 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
         $status.html('<i class="fa fa-exclamation"></i>');
       } else if (searchModel.get('isCancelled')) {
         $status.html('');
+      } else if (searchModel.get('isCountInitiallyDisabled')) {
+        $status.html('');
       } else {
         $status.html(`${searchModel.get('hasLoaded')}/${searchModel.get('totalResults')}`);
       }
