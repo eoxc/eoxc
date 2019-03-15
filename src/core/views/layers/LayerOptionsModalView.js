@@ -33,8 +33,8 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
 
   getDisplayOptions() {
     const display = this.useDetailsDisplay ? this.model.get('detailsDisplay') : this.model.get('display');
-    if (display.options ==! undefined){
-      var options = display.options
+    if (typeof display.options !== 'undefined') {
+      const options = display.options
         .map((option) => {
           let values = option.values;
           let low;
@@ -56,8 +56,9 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
           }
           return Object.assign({}, option, { values, low, high, targetLow, targetHigh });
         });
-      }
-    return options;
+      return options;
+    }
+    return {};
   },
 
   getLegendUrl() {
