@@ -1,7 +1,14 @@
 <div class="record-details-map"/>
 {{#if description}}
 <div class="record-details-description">
-  <b class="record-details-title">{{title}}</b>
-  {{{description}}}
+    <div class="record-details-description-inner">
+        {{#if headerText}}
+        <div class="record-details-header-text">
+            {{headerText}}
+        </div>
+        {{/if}}
+        <b class="record-details-title">{{title}}</b>
+        {{{description}}}
+    </div>
 </div>
 {{/if}}

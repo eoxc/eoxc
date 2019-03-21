@@ -19,6 +19,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
       browseUrl: this.model.getBrowseUrl(),
       description: this.model.getDescription(this.descriptionTemplate),
       title: this.model.getTitle(),
+      headerText: this.headerText,
     };
   },
 
@@ -26,6 +27,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     this.mapView = options.mapView;
     this.mapModel = options.mapModel;
     this.descriptionTemplate = options.descriptionTemplate;
+    this.headerText = options.headerText;
   },
 
   onAttach() {
