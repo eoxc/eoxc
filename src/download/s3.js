@@ -28,6 +28,7 @@ function parseItem(itemNode) {
 function listBucket(origin, bucket, prefix) {
   return fetch(`${origin}/${bucket}?list-type=2&prefix=${prefix}`, {
     credentials: 'include',
+    redirect: 'follow',
   })
     .then(response => response.text())
     .then(content => (new window.DOMParser()).parseFromString(content, 'text/xml'))
