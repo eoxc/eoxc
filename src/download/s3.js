@@ -25,8 +25,8 @@ function parseItem(itemNode) {
 }
 
 
-function listBucket(origin, bucket, prefix) {
-  return fetch(`${origin}/${bucket}?list-type=2&prefix=${prefix}`, {
+function listBucket(originAndPrefix, bucket, prefix) {
+  return fetch(`${originAndPrefix}${bucket}?list-type=2&prefix=${prefix}`, {
     credentials: 'include',
     redirect: 'follow',
   })
@@ -41,16 +41,20 @@ function listBucket(origin, bucket, prefix) {
 export function getDownloadInfos(layerModel, recordModel) {
   const link = recordModel.get('properties').links.find(l => l.rel === 'enclosure');
   if (link) {
+    const pathPrefix = layerModel.get('download.pathPrefix') ?
+      layerModel.get('download.pathPrefix') : '';
+
     const parsed = urlParse(
       rewrite(link.href, layerModel.get('download.rewrite'))
     );
     if (link.href.slice(-4) !== '.zip') {
       const { origin, pathname } = parsed;
-      const [bucket, ...pathParts] = pathname.slice(1).split('/');
+      const originAndPrefix = `${origin}/${pathPrefix}`;
+      const [bucket, ...pathParts] = pathname.slice(1 + pathPrefix.length).split('/');
       const path = pathParts.join('/');
-      return listBucket(origin, bucket, path)
+      return listBucket(originAndPrefix, bucket, path)
         .then(items => items.map(item => ({
-          href: `${origin}/${bucket}/${item.Key}`,
+          href: `${originAndPrefix}${bucket}/${item.Key}`,
           size: item.Size,
           name: item.Key.substring(path.length + 1) !== 'zip' ?
             item.Key.substring(path.length + 1) :
