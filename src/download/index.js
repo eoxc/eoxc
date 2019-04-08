@@ -22,6 +22,8 @@ export function isRecordDownloadable(layerModel, recordModel) {
 
 export function downloadRecord(layerModel, filtersModel, recordModel, options, elementContainer) {
   let element = null;
+  const rewriteRule = layerModel.get('download.rewrite');
+
   if (layerModel.get('download.protocol') === 'EO-WCS') {
     element = downloadEOWCS(layerModel, filtersModel, recordModel, options);
   } else {
@@ -32,7 +34,7 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
         const ia = document.createElement('a');
         ia.style.display = 'none';
         ia.setAttribute('target', '_blank');
-        ia.setAttribute('href', info.href);
+        ia.setAttribute('href', rewrite(info.href, rewriteRule));
 
         // Needed for multiple downloads in Chrome.
         // Adding 'noreferrer' breaks multiple downloads in Firefox
@@ -49,7 +51,7 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options, e
         const $iframe = $('<iframe style="visibility: collapse;"></iframe>');
         $('body').append($iframe);
         const content = $iframe[0].contentDocument;
-        const form = `<form action="${info.href}" method="GET"></form>`;
+        const form = `<form action="${rewrite(info.href, rewriteRule)}" method="GET"></form>`;
         content.write(form);
         $('form', content).submit();
         setTimeout(() => {
