@@ -52,6 +52,7 @@ class SearchModel extends Backbone.Model {
 
     // back reference from results to collection
     this.get('results').searchModel = this;
+    this.get('downloadSelection').searchModel = this;
 
     this.listenTo(this, 'change:debounceTime', this.onDebounceTimeChange);
     this.listenTo(this, 'change:automaticSearch', this.onAutomaticSearchChange);

@@ -18,7 +18,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
 
   initialize(options) {
     this.highlightModel = options.highlightModel;
-    this.collection = this.model.collection;
+    this.collection = this.model.collection || options.collection;
     this.thumbnailUrlPattern = options.thumbnailUrlPattern;
     this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
   },

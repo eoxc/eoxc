@@ -6,6 +6,13 @@ import './LayerControlLayoutView.css';
 // eslint-disable-next-line max-len
 const LayerControlLayoutView = Marionette.LayoutView.extend(/** @lends core/views/layers.LayerControlLayoutView# */{
   template,
+  templateHelpers() {
+    return {
+      baseLayersCollection: this.baseLayersCollection,
+      layersCollection: this.layersCollection,
+      overlayLayersCollection: this.overlayLayersCollection,
+    };
+  },
   regions: {
     baseLayers: '.baseLayers',
     layers: '.layers',
@@ -27,18 +34,24 @@ const LayerControlLayoutView = Marionette.LayoutView.extend(/** @lends core/view
   },
 
   onShow() {
-    this.showChildView('baseLayers', new LayerListView({
-      collection: this.baseLayersCollection,
-      singleChoice: true,
-    }));
-    this.showChildView('layers', new LayerListView({
-      collection: this.layersCollection,
-      fullDisplay: true,
-      sortable: true,
-    }));
-    this.showChildView('overlayLayers', new LayerListView({
-      collection: this.overlayLayersCollection,
-    }));
+    if (typeof this.baseLayersCollection !== 'undefined') {
+      this.showChildView('baseLayers', new LayerListView({
+        collection: this.baseLayersCollection,
+        singleChoice: true,
+      }));
+    }
+    if (typeof this.layersCollection !== 'undefined') {
+      this.showChildView('layers', new LayerListView({
+        collection: this.layersCollection,
+        fullDisplay: true,
+        sortable: true,
+      }));
+    }
+    if (typeof this.overlayLayersCollection !== 'undefined') {
+      this.showChildView('overlayLayers', new LayerListView({
+        collection: this.overlayLayersCollection,
+      }));
+    }
   },
 });
 
