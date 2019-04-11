@@ -1,26 +1,30 @@
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title">{{t 'Overlays'}}</h3>
+{{#if overlayLayersCollection}}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{t 'Overlays'}}</h3>
+    </div>
+    <div class="panel-body">
+      <div class="overlayLayers"></div>
+    </div>
   </div>
-  <div class="panel-body">
-    <div class="overlayLayers"></div>
+{{/if}}
+{{#if layersCollection}}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{t 'Layers'}}</h3>
+    </div>
+    <div class="panel-body">
+      <div class="layers"></div>
+    </div>
   </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title">{{t 'Layers'}}</h3>
+{{/if}}
+{{#if baseLayersCollection}}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{{t 'Base Layers'}}</h3>
+    </div>
+    <div class="panel-body">
+      <div class="baseLayers"></div>
+    </div>
   </div>
-  <div class="panel-body">
-    <div class="layers"></div>
-  </div>
-</div>
-
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <h3 class="panel-title">{{t 'Base Layers'}}</h3>
-  </div>
-  <div class="panel-body">
-    <div class="baseLayers"></div>
-  </div>
-</div>
+{{/if}}
