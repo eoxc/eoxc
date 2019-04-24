@@ -72,7 +72,12 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.selectableInterval = options.selectableInterval;
     this.maxTooltips = options.maxTooltips;
 
+    this.maxMapInterval = options.maxMapInterval;
     this.previousSearches = {};
+    if (this.maxMapInterval) {
+      // initial setup if shared time
+      this.mapModel.set('extendedTime', this.mapModel.get('time'));
+    }
   },
 
   onRender() {
@@ -138,13 +143,14 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.listenTo(this.mapModel, 'change:time', this.onModelSelectionChanged);
     this.listenTo(this.mapModel, 'change:extendedTime', () => {
       const extendedTime = this.mapModel.get('extendedTime');
-      if (extendedTime) {
+      if (extendedTime && !this.maxMapInterval) {
         this.timeSlider.setHighlightInterval(
           extendedTime[0], extendedTime[1],
           this.filterFillColor, this.filterStrokeColor, this.filterOutsideColor,
           true
         );
       } else {
+        // do not highlight timeslider area when maxMapInterval is set
         this.timeSlider.setHighlightInterval(null);
       }
     });
@@ -292,16 +298,22 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   // two way binding of time selection
-
   onSelectionChanged(event) {
     const selection = event.originalEvent.detail;
-    this.mapModel.set('time', [selection.start, selection.end]);
+    const selectionArray = [selection.start, selection.end];
+    if (this.maxMapInterval) {
+      this.mapModel.set('extendedTime', selectionArray);
+    }
+    this.mapModel.set('time', selectionArray);
   },
 
   onRecordClicked(event) {
     const record = event.originalEvent.detail;
     if (record.params) {
       this.mapModel.show(record.params);
+    }
+    if (this.maxMapInterval) {
+      this.mapModel.set('extendedTime', [record.start, record.end]);
     }
     this.mapModel.set('time', [record.start, record.end]);
   },
@@ -335,6 +347,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       }, null);
     if (combinedBbox) {
       this.mapModel.show({ bbox: combinedBbox });
+    }
+    if (this.maxMapInterval) {
+      this.mapModel.set('extendedTime', [detail.start, detail.end]);
     }
     this.mapModel.set('time', [detail.start, detail.end]);
   },
@@ -376,12 +391,15 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onBucketClicked(event) {
     const detail = event.originalEvent.detail;
+    if (this.maxMapInterval) {
+      this.mapModel.set('extendedTime', [detail.start, detail.end]);
+    }
     this.mapModel.set('time', [detail.start, detail.end]);
   },
 
   onModelSelectionChanged(mapModel) {
     // eslint-disable-next-line
-    let [low, high] = mapModel.get('time');
+    let [low, high] = this.maxMapInterval ? mapModel.get('extendedTime') : mapModel.get('time');
     if (this.timeSlider.options.selectionLimit) {
       const maxTime = (this.timeSlider.options.selectionLimit * 1000);
       const dt = high.getTime() - low.getTime();

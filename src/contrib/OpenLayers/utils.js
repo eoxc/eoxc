@@ -185,7 +185,40 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   return layer;
 }
 
-function getLayerParams(mapModel, displayParams, filtersModel) {
+export function parseDuration(duration) {
+  // using code from EOX-A/d3.TimeSlider
+  if (!isNaN(parseFloat(duration))) {
+    return parseFloat(duration);
+  }
+  const regex = RegExp(/^P(?:([0-9]+)Y|)?(?:([0-9]+)M|)?(?:([0-9]+)D|)?T?(?:([0-9]+)H|)?(?:([0-9]+)M|)?(?:([0-9]+)S|)?$/, 'g');
+  const matches = regex.exec(duration);
+  if (matches) {
+    const years = (parseInt(matches[1], 10) || 0); // years
+    const months = (parseInt(matches[2], 10) || 0) + (years * 12); // months with days fixed to 30
+    const days = (parseInt(matches[3], 10) || 0) + (months * 30); // days
+    const hours = (parseInt(matches[4], 10) || 0) + (days * 24); // hours
+    const minutes = (parseInt(matches[5], 10) || 0) + (hours * 60); // minutes
+    return (parseInt(matches[6], 10) || 0) + (minutes * 60); // returns seconds in the end
+  }
+  // should not happen
+  return duration;
+}
+
+export function validateTimeInterval(mapModel, time, maxIntervalSeconds) {
+ // checks if interval does not exceed maximum interval
+ // if yes, returns modified interval of [end - maxInterval, end]
+  let result = time[1] > time[0] ? [time[0], time[1]] : [time[1], time[0]];
+  if ((result[1] - result[0]) > maxIntervalSeconds * 1000) {
+    result = [new Date(time[1] - (maxIntervalSeconds * 1000)), time[1]];
+    // communicating with time filter tool
+    mapModel.trigger('exceed:maxMapInterval', result);
+  } else {
+    mapModel.trigger('exceed:maxMapInterval', null);
+  }
+  return result;
+}
+
+function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
   const params = {};
   let time = mapModel.get('time');
   if (Array.isArray(time)) {
@@ -194,6 +227,9 @@ function getLayerParams(mapModel, displayParams, filtersModel) {
     time = [time, time];
   }
 
+  if (maxMapInterval) {
+    time = validateTimeInterval(mapModel, time, maxMapInterval);
+  }
   if (displayParams.adjustTime) {
     const offset = Array.isArray(displayParams.adjustTime)
       ? displayParams.adjustTime
@@ -264,7 +300,7 @@ function getLayerParams(mapModel, displayParams, filtersModel) {
  *
  */
 export function updateLayerParams(
-  layer, mapModel, layerModel, filtersModel, useDetailsDisplay = false
+  layer, mapModel, layerModel, filtersModel, useDetailsDisplay = false, maxMapInterval = null
 ) {
   const displayParams = useDetailsDisplay
     ? layerModel.get('detailsDisplay') || layerModel.get('display')
@@ -284,7 +320,7 @@ export function updateLayerParams(
 
 
   const params = Object.assign(
-    {}, previousParams, getLayerParams(mapModel, displayParams, filtersModel)
+    {}, previousParams, getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval)
   );
 
   if (!deepEqual(params, previousParams)) {
