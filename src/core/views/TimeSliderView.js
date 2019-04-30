@@ -73,6 +73,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.maxTooltips = options.maxTooltips;
 
     this.maxMapInterval = options.maxMapInterval;
+    this.enableDynamicHistogram = options.enableDynamicHistogram;
     this.previousSearches = {};
     if (this.maxMapInterval) {
       // initial setup if shared time
@@ -133,12 +134,17 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.$('.control#zoom-in').html('<i class="fa fa-plus" />');
     this.$('.control#reload .reload-arrow').replaceWith('<i class="fa fa-refresh fa-fw" />');
 
-    const visibleLayers = this.layersCollection.filter(
-      layerModel => layerModel.get('display.visible')
-    );
+    if (this.enableDynamicHistogram) {
+      this.listenTo(this.mapModel, 'change:area', this.addVisibleLayers);
+      this.listenTo(this.mapModel, 'change:bbox', () => {
+        if (this.mapModel.get('area') === null) {
+          // only trigger refresh of timeslider when no area is selected through filter
+          this.addVisibleLayers();
+        }
+      });
+    }
 
-    visibleLayers.forEach(layerModel => this.addLayer(layerModel));
-    this.checkVisible(false);
+    this.addVisibleLayers();
 
     this.listenTo(this.mapModel, 'change:time', this.onModelSelectionChanged);
     this.listenTo(this.mapModel, 'change:extendedTime', () => {
@@ -168,9 +174,21 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightFeatureChange);
   },
 
+  addVisibleLayers() {
+    const visibleLayers = this.layersCollection.filter(
+      layerModel => layerModel.get('display.visible')
+    );
+    visibleLayers.forEach((layerModel) => {
+      this.removeLayer(layerModel);
+      this.addLayer(layerModel);
+    });
+    this.checkVisible(false);
+  },
+
   addLayer(layerModel) {
     let source;
     let bucketSource;
+    const mapModel = this.enableDynamicHistogram === true ? this.mapModel : null;
     switch (layerModel.get('search').protocol) {
       case 'EOxServer-WPS':
         source = new WPSSource({
@@ -189,7 +207,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
                 : acc
               ), { time: [start, end] }
           ));
-          searchAllRecords(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' })
+          searchAllRecords(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' })
             .on('progress', (result) => {
               callback(result.records.map((record) => {
                 let time = null;
@@ -230,7 +248,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
                 : acc
               ), { time: [start, end] }
           ));
-          getCount(layerModel, filtersModel, null, { mimeType: 'application/atom+xml' })
+          getCount(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' })
             .then(count => callback(count));
         };
         break;
