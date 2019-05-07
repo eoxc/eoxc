@@ -675,6 +675,8 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     const searchFeatures = [];
     const selectedFeatures = [];
+    let sortedSearchFeatures = [];
+    let sortedSelectedFeatures = [];
     [0, 360].forEach((offset) => {
       const offsetCoordinate = [coordinate[0] + offset, coordinate[1]];
       this.searchLayersGroup.getLayers().getArray()
@@ -689,8 +691,11 @@ class OpenLayersMapView extends Marionette.ItemView {
         .forEach(feature => selectedFeatures.indexOf(feature) === -1 ? selectedFeatures.push(feature) : null);
     });
 
-    this.highlightModel.highlight(searchFeatures.map(feature => feature.model));
-    this.showOverlay(event.coordinate, searchFeatures, selectedFeatures);
+    // sorting by model cid to maintain order of search items in which they came from the catalog
+    sortedSearchFeatures = searchFeatures.slice().sort(this.sortByModelId);
+    sortedSelectedFeatures = selectedFeatures.slice().sort(this.sortByModelId);
+    this.highlightModel.highlight(sortedSearchFeatures.map(feature => feature.model));
+    this.showOverlay(event.coordinate, sortedSearchFeatures, sortedSelectedFeatures);
   }
 
   /* helper to create OL features */
@@ -761,6 +766,15 @@ class OpenLayersMapView extends Marionette.ItemView {
     } else {
       this.hideOverlay();
     }
+  }
+
+  sortByModelId(a, b) {
+    // sorts array by model cid ascending
+    if (typeof a.model !== 'undefined' && typeof b.model !== 'undefined') {
+      const cidA = parseInt(a.model.cid.slice(1, a.model.cid.length), 10);
+      const cidB = parseInt(b.model.cid.slice(1, b.model.cid.length), 10);
+      return cidA - cidB;
+    } else return a - b;
   }
 
   hideOverlay() {
