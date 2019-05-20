@@ -44,11 +44,14 @@
     </label>
   </div>
   {{else}}
-  <div class="checkbox">
+  <div class="checkbox input-group">
     <label for="{{id}}-visible">
       <input type="checkbox" id="{{id}}-visible" class="layer-visible" name="multipleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
       {{displayName}}
     </label>
+    <span class="input-group-addon">
+      <i class="fa fa-adjust layer-adjust-opacity" data-toggle="popover"></i>
+    </span>
   </div>
   {{/if}}
 {{/if}}
