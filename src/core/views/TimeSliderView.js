@@ -263,21 +263,38 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         console.warn(`Unexpected search protocol ${layerModel.get('search').protocol}`);
         break;
     }
-
-    this.timeSlider.addDataset({
-      id: layerModel.get('id'),
-      color: layerModel.get('displayColor'),
-      highlightFillColor: this.highlightFillColor,
-      highlightStrokeColor: this.highlightStrokeColor,
-      source,
-      bucket: layerModel.get('search.lightweightBuckets'),
-      bucketSource,
-      histogramThreshold: layerModel.get('search.histogramThreshold'),
-      histogramBinCount: layerModel.get('search.histogramBinCount'),
-      cacheRecords: true,
-      cacheIdField: 'id',
-      cluster: true,
-    });
+    // EEA PROPOSAL SPECIFIC
+    if (layerModel.get('display').protocol === 'XYZ' && layerModel.get('display').timeRecords) {
+      const timeRecords = layerModel.get('display').timeRecords;
+      const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+      const records = timeRecords.map(([start, end]) =>
+        [new Date(start), new Date(end), {
+          id: layerModel.get('display').id + '_' + new Date(start).getFullYear() + months[new Date(start).getMonth()],
+        }]);
+      this.timeSlider.addDataset({
+        id: layerModel.get('id'),
+        color: layerModel.get('displayColor'),
+        highlightFillColor: this.highlightFillColor,
+        highlightStrokeColor: this.highlightStrokeColor,
+        records
+      });
+    // EEA PROPOSAL SPECIFIC
+    } else {
+      this.timeSlider.addDataset({
+        id: layerModel.get('id'),
+        color: layerModel.get('displayColor'),
+        highlightFillColor: this.highlightFillColor,
+        highlightStrokeColor: this.highlightStrokeColor,
+        source,
+        bucket: layerModel.get('search.lightweightBuckets'),
+        bucketSource,
+        histogramThreshold: layerModel.get('search.histogramThreshold'),
+        histogramBinCount: layerModel.get('search.histogramBinCount'),
+        cacheRecords: true,
+        cacheIdField: 'id',
+        cluster: true,
+      });
+    }
     this.onLayersSorted(this.layersCollection);
   },
 
