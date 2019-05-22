@@ -13,6 +13,7 @@ import Group from 'ol/layer/Group';
 
 import WMTSSource from 'ol/source/WMTS';
 import WMSTileSource from 'ol/source/TileWMS';
+import XYZSource from 'ol/source/XYZ';
 
 import GeoJSON from 'ol/format/GeoJSON';
 
@@ -192,7 +193,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       const group = new Group({
         layers: sortLayers(
           collection, collection.map(layerModel => createRasterLayer(
-            layerModel, this.useDetailsDisplay
+            layerModel, this.mapModel, this.useDetailsDisplay
           ))
         ),
       });
@@ -377,7 +378,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.listenTo(this.overlayLayersCollection, 'remove', layerModel =>
       this.removeLayer(layerModel, this.groups.overlayLayers)
     );
-
+    // EEA SPECIFIC
+    this.listenTo(this.mapModel, 'change:time', this.checkTimeXYZ);
     // setup mapModel signals
 
     // directly tie the changes to the map
@@ -792,6 +794,50 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   onResize() {
     this.map.updateSize();
+  }
+
+  checkTimeXYZ(mapModel) {
+    const lgroups = this.map.getLayers().array_;
+    let timeProtLayer = '';
+    _.each(lgroups, function (lgroup) {
+      const blayers = lgroup.values_
+      if (blayers){
+        const clayers = blayers.layers;
+        if (clayers){
+          const dlayers = clayers.array_;
+          if (dlayers) {
+            const properTileLayer = _.find(dlayers, function (ll) {
+              if (ll.layerModel) {
+                return (ll.layerModel.get('display').protocol === 'XYZ');
+              }
+            });
+            if (properTileLayer) {
+              timeProtLayer = properTileLayer;
+            }
+          }
+        }
+      }
+    });
+    const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+    const previousTimes = mapModel.previousAttributes().time;
+    const midIntervalNew = new Date((mapModel.get('time')[0].getTime() + mapModel.get('time')[1].getTime()) / 2);
+    const midIntervalOld = new Date((previousTimes[0].getTime() + previousTimes[1].getTime()) / 2);
+
+    const oldIntervalInUrl = midIntervalOld.getFullYear() + months[midIntervalOld.getMonth()];
+    const newIntervalInUrl = midIntervalNew.getFullYear() + months[midIntervalNew.getMonth()];
+    if (oldIntervalInUrl !== newIntervalInUrl) {
+      const source = timeProtLayer.getSource();
+      const updatedUrl = source.urls[0].replace(oldIntervalInUrl, newIntervalInUrl);
+      const newSource = new XYZSource({
+        crossOrigin: 'anonymous',
+        tileSize: source.tileSize,
+        urls: [updatedUrl],
+        attributions: source.attributions,
+        cacheSize: 4096,
+      });
+      timeProtLayer.setSource(null);
+      timeProtLayer.setSource(newSource);
+    }
   }
 }
 

@@ -79,7 +79,7 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
  * @param {core/models.LayerModel} layerModel The layerModel to create a layer for.
  * @returns {ol.Layer} The OpenLayers layer object
  */
-export function createRasterLayer(layerModel, useDetailsDisplay = false) {
+export function createRasterLayer(layerModel, mapModel, useDetailsDisplay = false) {
   const displayParams = useDetailsDisplay
     ? layerModel.get('detailsDisplay') || layerModel.get('display')
     : layerModel.get('display');
@@ -178,12 +178,15 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
         });
         break;
       case 'XYZ':
+        const midInterval = new Date((mapModel.get('time')[0].getTime() + mapModel.get('time')[1].getTime()) / 2);
+        const months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'];
+        const updatedUrl = [displayParams.url.replace('YYYYMM', midInterval.getFullYear() + months[midInterval.getMonth()])];
         layer = new TileLayer({
           visible: displayParams.visible,
           source: new XYZSource({
             crossOrigin: 'anonymous',
             tileSize: tileSize || [256, 256],
-            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            urls: updatedUrl,
             attributions: displayParams.attribution,
             cacheSize: 4096,
           }),
