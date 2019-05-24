@@ -2,6 +2,7 @@ import _ from 'underscore'; // eslint-disable-line import/no-extraneous-dependen
 import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
+import turfUnion from '@turf/union';
 
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -32,6 +33,7 @@ import Stroke from 'ol/style/Stroke';
 import Circle from 'ol/style/Circle';
 
 import GeoJSON from 'ol/format/GeoJSON';
+import { fromExtent } from 'ol/geom/Polygon';
 
 import deepEqual from 'deep-equal';
 
@@ -79,7 +81,7 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
  * @param {core/models.LayerModel} layerModel The layerModel to create a layer for.
  * @returns {ol.Layer} The OpenLayers layer object
  */
-export function createRasterLayer(layerModel, mapModel, useDetailsDisplay = false) {
+export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay = false) {
   const displayParams = useDetailsDisplay
     ? layerModel.get('detailsDisplay') || layerModel.get('display')
     : layerModel.get('display');
@@ -191,6 +193,75 @@ export function createRasterLayer(layerModel, mapModel, useDetailsDisplay = fals
             cacheSize: 4096,
           }),
         });
+        // EEA MOCKUP HACK THAT XYZ LAYER IS DRAWN ONLY ON TOP OF DRAWN VECTOR FEATURES
+        // IT IS CURRENTLY VERY SLOW WITH INCREASING NUMBER OF FEATURES
+        if (map.XYZOnlyOverProducts) {
+          layer.on('precompose', (event) => {
+            const ctx = event.context;
+            const vecCtx = event.vectorContext;
+            ctx.save();
+            const lgroups = map.getLayers().array_;
+            const vectFeatures = [];
+            _.each(lgroups, (lgroup) => {
+              const blayers = lgroup.values_
+              if (blayers) {
+                const clayers = blayers.layers;
+                if (clayers) {
+                  const dlayers = clayers.array_;
+                  if (dlayers) {
+                    _.each(dlayers, (ll) => {
+                      const ss = ll.values_.source;
+                        if (ss){
+                          if (typeof ss.getFeatures === 'function') {
+                            const ff = ss.getFeatures();
+                              _.each(ff, (f) => {
+                                vectFeatures.push(f);
+                              })
+                          }
+                        }
+                    });
+                  }
+                }
+              }
+            });
+            // sort features by ID to allow safer union
+            const ids = [];
+            const vectFeaturesSorted = vectFeatures.sort(sortByModelId);
+            const GeoJSONFormat = new GeoJSON();
+            let unionedPolys = null;
+            _.each(vectFeaturesSorted, (feature) => {
+              if (!ids.includes(feature.ol_uid)) {
+                // take only polygons with unique id
+                // usually there is at least a set of double, sometimes more (fill, highlight, frame, download)
+                ids.push(feature.ol_uid);
+                const geoJSONFeature = GeoJSONFormat.writeFeatureObject(feature);
+                if (unionedPolys === null) {
+                  // first item
+                  unionedPolys = geoJSONFeature;
+                } else {
+                  // union polygons
+                  unionedPolys = turfUnion(unionedPolys, geoJSONFeature);
+                }
+              }
+            });
+            const emptyStyle = createStyle();
+            vecCtx.setStyle(emptyStyle);
+            if (unionedPolys !== null) {
+              // draw geometry to canvas
+              const backToOlFormat = GeoJSONFormat.readFeature(unionedPolys);
+              vecCtx.drawGeometry(backToOlFormat.getGeometry());
+            } else {
+              // draw a tiny circle somewhere to not show the layer at all
+              const polygonGeom = fromExtent([0, 0, 1, 1]);
+              vecCtx.drawGeometry(polygonGeom);
+            }
+            ctx.clip();
+          });
+          layer.on('postcompose', (event) => {
+            const ctx = event.context;
+            ctx.restore();
+          });
+        }
         break;
       default:
         throw new Error('Unsupported view protocol');
@@ -647,4 +718,13 @@ export function createCutOut(geometry, format, fillColor, outerColor, strokeColo
   }
 
   return [outerFeature, innerFeature];
+}
+
+function sortByModelId(a, b) {
+  // sorts array by model cid ascending
+  if (typeof a.model !== 'undefined' && typeof b.model !== 'undefined') {
+    const cidA = parseInt(a.model.cid.slice(1, a.model.cid.length), 10);
+    const cidB = parseInt(b.model.cid.slice(1, b.model.cid.length), 10);
+    return cidA - cidB;
+  } else return a - b;
 }

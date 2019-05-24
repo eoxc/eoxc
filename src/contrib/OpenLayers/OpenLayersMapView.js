@@ -113,6 +113,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.staticHighlight = options.staticHighlight;
     this.useDetailsDisplay = options.useDetailsDisplay;
     this.maxMapInterval = options.maxMapInterval;
+    // EEA PHENOLOGY SPECIFIC
+    this.XYZOnlyOverProducts = options.XYZOnlyOverProducts;
 
     this.map = undefined;
 
@@ -187,13 +189,15 @@ class OpenLayersMapView extends Marionette.ItemView {
       maxZoom + 1
     );
 
+    // EEA PHENOLOGY SPECIFIC
+    this.map.XYZOnlyOverProducts = this.XYZOnlyOverProducts;
     // create layer groups for base, normal and overlay layers
 
     const createGroupForCollection = (collection) => {
       const group = new Group({
         layers: sortLayers(
           collection, collection.map(layerModel => createRasterLayer(
-            layerModel, this.mapModel, this.useDetailsDisplay
+            layerModel, this.mapModel, this.map, this.useDetailsDisplay
           ))
         ),
       });
@@ -378,7 +382,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.listenTo(this.overlayLayersCollection, 'remove', layerModel =>
       this.removeLayer(layerModel, this.groups.overlayLayers)
     );
-    // EEA SPECIFIC
+    // EEA PHENOLOGY SPECIFIC
     this.listenTo(this.mapModel, 'change:time', this.checkTimeXYZ);
     // setup mapModel signals
 
