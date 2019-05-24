@@ -23,6 +23,7 @@ import WMTSSource, { optionsFromCapabilities } from 'ol/source/WMTS';
 import WMSTileSource from 'ol/source/TileWMS';
 import XYZSource from 'ol/source/XYZ';
 import VectorSource from 'ol/source/Vector';
+import GeoJSON from 'ol/format/GeoJSON'
 
 import TileGrid from 'ol/tilegrid/TileGrid';
 import WMTSTileGrid from 'ol/tilegrid/WMTS';
@@ -31,8 +32,6 @@ import Style from 'ol/style/Style';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Circle from 'ol/style/Circle';
-
-import GeoJSON from 'ol/format/GeoJSON';
 import { fromExtent } from 'ol/geom/Polygon';
 
 import deepEqual from 'deep-equal';
@@ -201,9 +200,14 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
             const vecCtx = event.vectorContext;
             ctx.save();
             const lgroups = map.getLayers().array_;
+            const ids = [];
+            const uniqueSearchModels = [];
             const vectFeatures = [];
+            const emptyStyle = createStyle();
+            vecCtx.setStyle(emptyStyle);
+
             _.each(lgroups, (lgroup) => {
-              const blayers = lgroup.values_
+              const blayers = lgroup.values_;
               if (blayers) {
                 const clayers = blayers.layers;
                 if (clayers) {
@@ -211,52 +215,68 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
                   if (dlayers) {
                     _.each(dlayers, (ll) => {
                       const ss = ll.values_.source;
-                        if (ss){
-                          if (typeof ss.getFeatures === 'function') {
-                            const ff = ss.getFeatures();
-                              _.each(ff, (f) => {
-                                vectFeatures.push(f);
-                              })
-                          }
+                      if (ss) {
+                        if (typeof ss.getFeatures === 'function') {
+                          const ff = ss.getFeatures();
+                          _.each(ff, (f) => {
+                            // take only polygons with unique id
+                            // usually there is at least a set of double, sometimes more (fill, highlight, frame, download)
+                            if (!ids.includes(f.ol_uid)) {
+                              ids.push(f.ol_uid);
+                              vectFeatures.push(f);
+                              if (!_.any(uniqueSearchModels, model =>
+                                model.cid === f.searchModel.cid
+                              )) {
+                                uniqueSearchModels.push(f.searchModel);
+                              }
+                            }
+                          });
                         }
+                      }
                     });
                   }
                 }
               }
             });
-            // sort features by ID to allow safer union
-            const ids = [];
-            const vectFeaturesSorted = vectFeatures.sort(sortByModelId);
-            const GeoJSONFormat = new GeoJSON();
-            let unionedPolys = null;
-            _.each(vectFeaturesSorted, (feature) => {
-              if (!ids.includes(feature.ol_uid)) {
-                // take only polygons with unique id
-                // usually there is at least a set of double, sometimes more (fill, highlight, frame, download)
-                ids.push(feature.ol_uid);
-                const geoJSONFeature = GeoJSONFormat.writeFeatureObject(feature);
-                if (unionedPolys === null) {
-                  // first item
-                  unionedPolys = geoJSONFeature;
-                } else {
-                  // union polygons
-                  unionedPolys = turfUnion(unionedPolys, geoJSONFeature);
-                }
-              }
+            //TODO GET UNIQUE layers - unique search models
+            const anySearchModelIsSearching = _.some(uniqueSearchModels, function (model) {
+              return model.get('isSearching');
             });
-            const emptyStyle = createStyle();
-            vecCtx.setStyle(emptyStyle);
-            if (unionedPolys !== null) {
+            if (vectFeatures.length > 0 && !anySearchModelIsSearching) {
+              let idsFromCache = [];
+              if (layer.cacheVectFeatures) {
+                idsFromCache = layer.cacheVectFeatures.map(feature => feature.id);
+              }
+              const idsFromMap = vectFeatures.map(feature => feature.id);
+              const GeoJSONFormat = new GeoJSON();
+              if (!layer.cacheVectFeatures || !_.isEqual(idsFromCache, idsFromMap)) {
+                // perform union
+                let unionedPolygons = null;
+                _.each(vectFeatures, (feature) => {
+                  const geoJSONFeature = GeoJSONFormat.writeFeatureObject(feature);
+                  if (unionedPolygons === null) {
+                    // first item
+                    unionedPolygons = geoJSONFeature;
+                  } else {
+                    // union polygons
+                    unionedPolygons = turfUnion(unionedPolygons, geoJSONFeature);
+                  }
+                });
+                // primitive caching of features and unionedPolygons
+                layer.cacheVectFeatures = vectFeatures;
+                layer.unionedPolygons = unionedPolygons;
+              }
               // draw geometry to canvas
-              const backToOlFormat = GeoJSONFormat.readFeature(unionedPolys);
+              const backToOlFormat = GeoJSONFormat.readFeature(layer.unionedPolygons);
               vecCtx.drawGeometry(backToOlFormat.getGeometry());
             } else {
-              // draw a tiny circle somewhere to not show the layer at all
+              // draw a tiny polygon somewhere to not show the layer at all
               const polygonGeom = fromExtent([0, 0, 1, 1]);
               vecCtx.drawGeometry(polygonGeom);
             }
             ctx.clip();
           });
+
           layer.on('postcompose', (event) => {
             const ctx = event.context;
             ctx.restore();
