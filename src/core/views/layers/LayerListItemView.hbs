@@ -36,22 +36,13 @@
   </span>
 </div>
 {{else}}
-  {{#if singleChoice}}
-  <div class="radio">
-    <label for="{{id}}-visible">
-      <input type="radio" id="{{id}}-visible" class="layer-visible" name="singleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
-      {{displayName}}
-    </label>
-  </div>
-  {{else}}
   <div class="checkbox input-group">
     <label for="{{id}}-visible">
-      <input type="checkbox" id="{{id}}-visible" class="layer-visible" name="multipleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
+      <input type={{#if singleChoice}}"radio"{{/if}}{{#unless singleChoice}}"checkbox"{{/unless}}id="{{id}}-visible" class="layer-visible" name="singleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
       {{displayName}}
     </label>
     <span class="input-group-addon">
       <i class="fa fa-adjust layer-adjust-opacity" data-toggle="popover"></i>
     </span>
   </div>
-  {{/if}}
 {{/if}}
