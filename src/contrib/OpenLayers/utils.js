@@ -186,6 +186,7 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
           visible: displayParams.visible,
           source: new XYZSource({
             crossOrigin: 'anonymous',
+            projection: displayParams.projection || projection,
             tileSize: tileSize || [256, 256],
             urls: updatedUrl,
             attributions: displayParams.attribution,
@@ -238,7 +239,6 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
                 }
               }
             });
-            //TODO GET UNIQUE layers - unique search models
             const anySearchModelIsSearching = _.some(uniqueSearchModels, function (model) {
               return model.get('isSearching');
             });
