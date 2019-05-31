@@ -20,6 +20,7 @@ import VectorLayer from 'ol/layer/Vector';
 import WMTSCapabilities from 'ol/format/WMTSCapabilities';
 import WMTSSource, { optionsFromCapabilities } from 'ol/source/WMTS';
 import WMSTileSource from 'ol/source/TileWMS';
+import XYZSource from 'ol/source/XYZ';
 import VectorSource from 'ol/source/Vector';
 
 import TileGrid from 'ol/tilegrid/TileGrid';
@@ -172,6 +173,18 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
             }),
             urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
             wrapX: true,
+            attributions: displayParams.attribution,
+          }),
+        });
+        break;
+      case 'XYZ':
+        layer = new TileLayer({
+          visible: displayParams.visible,
+          source: new XYZSource({
+            crossOrigin: 'anonymous',
+            projection: displayParams.projection || projection,
+            tileSize: tileSize || [256, 256],
+            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
             attributions: displayParams.attribution,
           }),
         });
