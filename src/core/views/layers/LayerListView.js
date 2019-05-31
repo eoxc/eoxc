@@ -55,6 +55,7 @@ const LayerListView = Marionette.CollectionView.extend(/** @lends core/views/lay
 
   onSortStop() {
     // get the new order of the layers from the DOM
+    this.children.call('hidePopover');
     this.children
       .map(view => [
         view.$('.input-group').attr('id').substr(11),

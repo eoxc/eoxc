@@ -71,7 +71,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.displayInterval = options.displayInterval;
     this.selectableInterval = options.selectableInterval;
     this.maxTooltips = options.maxTooltips;
-
+    this.timeSliderAlternativeBrush = options.timeSliderAlternativeBrush;
     this.maxMapInterval = options.maxMapInterval;
     this.enableDynamicHistogram = options.enableDynamicHistogram;
     this.previousSearches = {};
@@ -97,6 +97,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       datasets: [],
       constrain: this.constrainTimeDomain,
       controls: this.timeSliderControls,
+      alternativeBrush: this.timeSliderAlternativeBrush,
       displayLimit: this.displayInterval,
       selectionLimit: this.selectableInterval,
       recordFilter: this.createRecordFilter(this.mapModel.get('bbox')),
@@ -270,6 +271,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       highlightFillColor: this.highlightFillColor,
       highlightStrokeColor: this.highlightStrokeColor,
       source,
+      noBorder: layerModel.get('noTimeSliderBorder'),
       bucket: layerModel.get('search.lightweightBuckets'),
       bucketSource,
       histogramThreshold: layerModel.get('search.histogramThreshold'),

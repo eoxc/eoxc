@@ -115,9 +115,11 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
 
   onPopoverHidden() {
     this.isPopoverShown = false;
-    this.$slider.off('slide');
-    this.$slider.off('change');
-    this.$slider.slider('destroy');
+    if (typeof this.$slider !== 'undefined') {
+      this.$slider.off('slide');
+      this.$slider.off('change');
+      this.$slider.slider('destroy');
+    }
   },
 
   onLayerVisibleChange() {
@@ -131,7 +133,11 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   onModelChange(model) {
     // TODO: other fields required too?
     this.$('.layer-visible').prop('checked', model.get('display.visible'));
-  }
+  },
+
+  hidePopover() {
+    this.$popoverButton.popover('hide');
+  },
 });
 
 export default LayerListItemView;
