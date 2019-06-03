@@ -111,7 +111,6 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.staticHighlight = options.staticHighlight;
     this.useDetailsDisplay = options.useDetailsDisplay;
-    this.maxMapInterval = options.maxMapInterval;
 
     this.map = undefined;
 
@@ -318,7 +317,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       filtersModel = layer.searchModel.get('filtersModel');
     }
     updateLayerParams(
-      layer, mapModel, layer.layerModel, filtersModel, this.useDetailsDisplay, this.maxMapInterval);
+      layer, mapModel, layer.layerModel, filtersModel, this.useDetailsDisplay);
   }
 
   /**
@@ -432,7 +431,7 @@ class OpenLayersMapView extends Marionette.ItemView {
         const cqlParameterName = layerModel.get('display.cqlParameterName');
         if (cqlParameterName) {
           const layer = this.getLayerOfGroup(layerModel, this.groups.layers);
-          updateLayerParams(layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay, this.maxMapInterval,
+          updateLayerParams(layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay,
           );
         }
       });
@@ -552,7 +551,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (layer.searchModel) {
       filtersModel = layer.searchModel.get('filtersModel');
     }
-    updateLayerParams(layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay, this.maxMapInterval);
+    updateLayerParams(layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay);
 
     const display = this.useDetailsDisplay
       ? layerModel.get('detailsDisplay') || layerModel.get('display')

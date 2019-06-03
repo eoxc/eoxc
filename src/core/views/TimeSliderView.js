@@ -72,9 +72,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.selectableInterval = options.selectableInterval;
     this.maxTooltips = options.maxTooltips;
     this.timeSliderAlternativeBrush = options.timeSliderAlternativeBrush;
-    this.maxMapInterval = options.maxMapInterval;
     this.enableDynamicHistogram = options.enableDynamicHistogram;
     this.previousSearches = {};
+    this.maxMapInterval = this.mapModel.get('maxMapInterval');
     if (this.maxMapInterval) {
       // initial setup if shared time
       this.mapModel.set('extendedTime', this.mapModel.get('time'));

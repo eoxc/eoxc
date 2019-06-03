@@ -217,9 +217,10 @@ export function parseDuration(duration) {
   return duration;
 }
 
-export function validateTimeInterval(mapModel, time, maxIntervalSeconds) {
- // checks if interval does not exceed maximum interval
- // if yes, returns modified interval of [end - maxInterval, end]
+export function validateTimeInterval(mapModel, time) {
+  // checks if interval does not exceed maximum interval
+  // if yes, returns modified interval of [end - maxInterval, end]
+  const maxIntervalSeconds = mapModel.get('maxMapInterval');
   let result = time[1] > time[0] ? [time[0], time[1]] : [time[1], time[0]];
   if ((result[1] - result[0]) > maxIntervalSeconds * 1000) {
     result = [new Date(time[1] - (maxIntervalSeconds * 1000)), time[1]];
@@ -231,7 +232,7 @@ export function validateTimeInterval(mapModel, time, maxIntervalSeconds) {
   return result;
 }
 
-function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
+function getLayerParams(mapModel, displayParams, filtersModel) {
   const params = {};
   let time = mapModel.get('time');
   if (Array.isArray(time)) {
@@ -240,8 +241,8 @@ function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
     time = [time, time];
   }
 
-  if (maxMapInterval) {
-    time = validateTimeInterval(mapModel, time, maxMapInterval);
+  if (mapModel.get('maxMapInterval')) {
+    time = validateTimeInterval(mapModel, time);
   }
   if (displayParams.adjustTime) {
     const offset = Array.isArray(displayParams.adjustTime)
@@ -313,7 +314,7 @@ function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
  *
  */
 export function updateLayerParams(
-  layer, mapModel, layerModel, filtersModel, useDetailsDisplay = false, maxMapInterval = null
+  layer, mapModel, layerModel, filtersModel, useDetailsDisplay = false
 ) {
   const displayParams = useDetailsDisplay
     ? layerModel.get('detailsDisplay') || layerModel.get('display')
@@ -333,7 +334,7 @@ export function updateLayerParams(
 
 
   const params = Object.assign(
-    {}, previousParams, getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval)
+    {}, previousParams, getLayerParams(mapModel, displayParams, filtersModel)
   );
 
   if (!deepEqual(params, previousParams)) {
