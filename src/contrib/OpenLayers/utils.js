@@ -186,6 +186,8 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
             tileSize: tileSize || [256, 256],
             urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
             attributions: displayParams.attribution,
+            minZoom: displayParams.minZoom,
+            maxZoom: displayParams.maxZoom,
           }),
         });
         break;
@@ -195,6 +197,11 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   }
   layer.id = layerModel.get('id');
   layer.layerModel = layerModel;
+  if (displayParams.noAntialiasing) {
+    layer.on('precompose', (event) => {
+      event.context.imageSmoothingEnabled = false;
+    });
+  }
   return layer;
 }
 
