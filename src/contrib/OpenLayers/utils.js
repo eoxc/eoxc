@@ -8,7 +8,6 @@ import View from 'ol/View';
 import { get as getProj } from 'ol/proj';
 import { getWidth as extentGetWidth, getTopLeft as extentGetTopLeft } from 'ol/extent';
 // import Attribution from 'ol/attribution';
-import coordinate from 'ol/coordinate';
 
 import AttributionControl from 'ol/control/Attribution';
 import ZoomControl from 'ol/control/Zoom';
@@ -40,7 +39,7 @@ import CollectionSource from './CollectionSource';
 import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
 
 
-export function createMap(center, zoom, renderer, minZoom, maxZoom) {
+export function createMap(center, zoom, renderer, minZoom, maxZoom, projection) {
   return new Map({
     controls: [
       new AttributionControl(),
@@ -56,13 +55,14 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
           }
           return `${x.toFixed(2)}, ${y.toFixed(2)}`;
         },
-        projection: 'EPSG:4326',
+        // hardcoding mouse position tooltip crs
+        projection: getProj('EPSG:4326'),
         undefinedHTML: '',
       }),
     ],
     renderer: renderer || 'canvas',
     view: new View({
-      projection: getProj('EPSG:4326'),
+      projection,
       center,
       zoom,
       enableRotation: false,
@@ -86,16 +86,16 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
 
   let layer;
 
-  const projection = getProj('EPSG:4326');
+  const projection = getProj(displayParams.projection || 'EPSG:4326');
   const projectionExtent = projection.getExtent();
-  const size = extentGetWidth(projectionExtent) / 256;
+  const size = extentGetWidth(projectionExtent) / (displayParams.tileSize || 256);
   const resolutions = new Array(18);
   const matrixIds = new Array(18);
-
+  const customAdditionBasedOnProj = projection.getCode() === 'EPSG:4326' ? 1 : 0;
   for (let z = 0; z < 18; ++z) {
     // generate resolutions and matrixIds arrays for this WMTS
     // eslint-disable-next-line no-restricted-properties
-    resolutions[z] = size / Math.pow(2, (z + 1));
+    resolutions[z] = size / Math.pow(2, (z + customAdditionBasedOnProj));
     let id = z;
 
     if (displayParams.matrixIdPrefix) {
@@ -139,7 +139,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
             layer: displayParams.id,
             matrixSet: displayParams.matrixSet,
             format: displayParams.format,
-            projection: displayParams.projection,
+            projection,
             tileGrid: new WMTSTileGrid({
               origin: extentGetTopLeft(projectionExtent),
               resolutions,
@@ -182,7 +182,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
           visible: displayParams.visible,
           source: new XYZSource({
             crossOrigin: 'anonymous',
-            projection: displayParams.projection || projection,
+            projection,
             tileSize: tileSize || [256, 256],
             urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
             attributions: displayParams.attribution,
