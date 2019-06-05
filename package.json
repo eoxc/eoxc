@@ -1,6 +1,6 @@
 {
   "name": "eoxc",
-  "version": "1.1.0-rc.14",
+  "version": "1.1.0-rc.15",
   "description": "EOxC client generator",
   "main": "dist/eoxc.js",
   "scripts": {
@@ -65,8 +65,7 @@
     "@turf/bbox": "^3.7.5",
     "@turf/difference": "^3.7.5",
     "@turf/intersect": "^3.7.5",
-    "@turf/union": "^3.7.5",
-    "D3.TimeSlider": "^1.5.1",
+    "D3.TimeSlider": "^1.6.0",
     "backbone": "^1.3.3",
     "backbone-nested": "^2.0.4",
     "backbone.marionette": "^2.4.5",

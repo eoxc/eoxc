@@ -9,7 +9,6 @@ import View from 'ol/View';
 import { get as getProj } from 'ol/proj';
 import { getWidth as extentGetWidth, getTopLeft as extentGetTopLeft } from 'ol/extent';
 // import Attribution from 'ol/attribution';
-import coordinate from 'ol/coordinate';
 
 import AttributionControl from 'ol/control/Attribution';
 import ZoomControl from 'ol/control/Zoom';
@@ -41,7 +40,7 @@ import CollectionSource from './CollectionSource';
 import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
 
 
-export function createMap(center, zoom, renderer, minZoom, maxZoom) {
+export function createMap(center, zoom, renderer, minZoom, maxZoom, projection) {
   return new Map({
     controls: [
       new AttributionControl(),
@@ -57,13 +56,14 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
           }
           return `${x.toFixed(2)}, ${y.toFixed(2)}`;
         },
-        projection: 'EPSG:4326',
+        // coordinate label crs now set hardcoded
+        projection: getProj('EPSG:4326'),
         undefinedHTML: '',
       }),
     ],
     renderer: renderer || 'canvas',
     view: new View({
-      projection: getProj('EPSG:4326'),
+      projection,
       center,
       zoom,
       enableRotation: false,
@@ -87,16 +87,16 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
 
   let layer;
 
-  const projection = getProj('EPSG:4326');
+  const projection = getProj(displayParams.projection || 'EPSG:4326');
   const projectionExtent = projection.getExtent();
-  const size = extentGetWidth(projectionExtent) / 256;
+  const size = extentGetWidth(projectionExtent) / (displayParams.tileSize || 256);
   const resolutions = new Array(18);
   const matrixIds = new Array(18);
-
+  const customAdditionBasedOnProj = projection.getCode() === 'EPSG:4326' ? 1 : 0;
   for (let z = 0; z < 18; ++z) {
     // generate resolutions and matrixIds arrays for this WMTS
     // eslint-disable-next-line no-restricted-properties
-    resolutions[z] = size / Math.pow(2, (z + 1));
+    resolutions[z] = size / Math.pow(2, (z + customAdditionBasedOnProj));
     let id = z;
 
     if (displayParams.matrixIdPrefix) {
@@ -140,7 +140,7 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
             layer: displayParams.id,
             matrixSet: displayParams.matrixSet,
             format: displayParams.format,
-            projection: displayParams.projection,
+            projection,
             tileGrid: new WMTSTileGrid({
               origin: extentGetTopLeft(projectionExtent),
               resolutions,
@@ -186,11 +186,12 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
           visible: displayParams.visible,
           source: new XYZSource({
             crossOrigin: 'anonymous',
-            projection: displayParams.projection || projection,
+            projection,
             tileSize: tileSize || [256, 256],
             urls: updatedUrl,
             attributions: displayParams.attribution,
-            cacheSize: 4096,
+            minZoom: displayParams.minZoom,
+            maxZoom: displayParams.maxZoom,
           }),
         });
         // EEA MOCKUP HACK THAT XYZ LAYER IS DRAWN ONLY ON TOP OF DRAWN VECTOR FEATURES
@@ -239,21 +240,23 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
                 }
               }
             });
-            const anySearchModelIsSearching = _.some(uniqueSearchModels, function (model) {
+            const anySearchModelIsSearching = _.some(uniqueSearchModels, (model) => {
               return model.get('isSearching');
             });
             if (vectFeatures.length > 0 && !anySearchModelIsSearching) {
               let idsFromCache = [];
               if (layer.cacheVectFeatures) {
-                idsFromCache = layer.cacheVectFeatures.map(feature => feature.id);
+                idsFromCache = _.uniq(layer.cacheVectFeatures.map(feature => feature.getId()).sort(),true);
               }
-              const idsFromMap = vectFeatures.map(feature => feature.id);
+              const idsFromMap =  _.uniq(vectFeatures.map(feature => feature.getId()).sort(), true);
               const GeoJSONFormat = new GeoJSON();
               if (!layer.cacheVectFeatures || !_.isEqual(idsFromCache, idsFromMap)) {
                 // perform union
                 let unionedPolygons = null;
                 _.each(vectFeatures, (feature) => {
-                  const geoJSONFeature = GeoJSONFormat.writeFeatureObject(feature);
+                  const geoJSONFeature = GeoJSONFormat.writeFeatureObject(feature, {
+                    featureProjection: projection,
+                  });
                   if (unionedPolygons === null) {
                     // first item
                     unionedPolygons = geoJSONFeature;
@@ -267,7 +270,9 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
                 layer.unionedPolygons = unionedPolygons;
               }
               // draw geometry to canvas
-              const backToOlFormat = GeoJSONFormat.readFeature(layer.unionedPolygons);
+              const backToOlFormat = GeoJSONFormat.readFeature(layer.unionedPolygons, {
+                featureProjection: projection,
+              });
               vecCtx.drawGeometry(backToOlFormat.getGeometry());
             } else {
               // draw a tiny polygon somewhere to not show the layer at all
@@ -276,10 +281,8 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
             }
             ctx.clip();
           });
-
-          layer.on('postcompose', (event) => {
-            const ctx = event.context;
-            ctx.restore();
+          layer.on('postcompose', (evt) => {
+            evt.context.restore();
           });
         }
         break;
@@ -289,6 +292,11 @@ export function createRasterLayer(layerModel, mapModel, map, useDetailsDisplay =
   }
   layer.id = layerModel.get('id');
   layer.layerModel = layerModel;
+  if (displayParams.noAntialiasing) {
+    layer.on('precompose', (event) => {
+      event.context.imageSmoothingEnabled = false;
+    });
+  }
   return layer;
 }
 
@@ -311,9 +319,10 @@ export function parseDuration(duration) {
   return duration;
 }
 
-export function validateTimeInterval(mapModel, time, maxIntervalSeconds) {
- // checks if interval does not exceed maximum interval
- // if yes, returns modified interval of [end - maxInterval, end]
+export function validateTimeInterval(mapModel, time) {
+  // checks if interval does not exceed maximum interval
+  // if yes, returns modified interval of [end - maxInterval, end]
+  const maxIntervalSeconds = mapModel.get('maxMapInterval');
   let result = time[1] > time[0] ? [time[0], time[1]] : [time[1], time[0]];
   if ((result[1] - result[0]) > maxIntervalSeconds * 1000) {
     result = [new Date(time[1] - (maxIntervalSeconds * 1000)), time[1]];
@@ -325,7 +334,7 @@ export function validateTimeInterval(mapModel, time, maxIntervalSeconds) {
   return result;
 }
 
-function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
+function getLayerParams(mapModel, displayParams, filtersModel) {
   const params = {};
   let time = mapModel.get('time');
   if (Array.isArray(time)) {
@@ -334,8 +343,8 @@ function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
     time = [time, time];
   }
 
-  if (maxMapInterval) {
-    time = validateTimeInterval(mapModel, time, maxMapInterval);
+  if (mapModel.get('maxMapInterval')) {
+    time = validateTimeInterval(mapModel, time);
   }
   if (displayParams.adjustTime) {
     const offset = Array.isArray(displayParams.adjustTime)
@@ -407,7 +416,7 @@ function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
  *
  */
 export function updateLayerParams(
-  layer, mapModel, layerModel, filtersModel, useDetailsDisplay = false, maxMapInterval = null
+  layer, mapModel, layerModel, filtersModel, useDetailsDisplay = false
 ) {
   const displayParams = useDetailsDisplay
     ? layerModel.get('detailsDisplay') || layerModel.get('display')
@@ -427,7 +436,7 @@ export function updateLayerParams(
 
 
   const params = Object.assign(
-    {}, previousParams, getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval)
+    {}, previousParams, getLayerParams(mapModel, displayParams, filtersModel)
   );
 
   if (!deepEqual(params, previousParams)) {

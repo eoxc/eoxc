@@ -43,10 +43,12 @@ MapModel.prototype.defaults = {
   zoom: 2,
   minZoom: 0,
   maxZoom: 28,
+  projection: null,
 
   // the current start/end time selection
   time: [null, null],
   extendedTime: null,
+  maxMapInterval: null,
 
   tool: null,
 

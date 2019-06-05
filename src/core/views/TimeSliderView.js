@@ -71,10 +71,10 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.displayInterval = options.displayInterval;
     this.selectableInterval = options.selectableInterval;
     this.maxTooltips = options.maxTooltips;
-
-    this.maxMapInterval = options.maxMapInterval;
+    this.timeSliderAlternativeBrush = options.timeSliderAlternativeBrush;
     this.enableDynamicHistogram = options.enableDynamicHistogram;
     this.previousSearches = {};
+    this.maxMapInterval = this.mapModel.get('maxMapInterval');
     if (this.maxMapInterval) {
       // initial setup if shared time
       this.mapModel.set('extendedTime', this.mapModel.get('time'));
@@ -97,6 +97,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       datasets: [],
       constrain: this.constrainTimeDomain,
       controls: this.timeSliderControls,
+      alternativeBrush: this.timeSliderAlternativeBrush,
       displayLimit: this.displayInterval,
       selectionLimit: this.selectableInterval,
       recordFilter: this.createRecordFilter(this.mapModel.get('bbox')),

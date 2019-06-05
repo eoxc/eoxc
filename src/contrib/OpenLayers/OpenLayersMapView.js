@@ -11,13 +11,10 @@ import Draw, { createBox } from 'ol/interaction/Draw';
 
 import Group from 'ol/layer/Group';
 
-import WMTSSource from 'ol/source/WMTS';
-import WMSTileSource from 'ol/source/TileWMS';
-import XYZSource from 'ol/source/XYZ';
-
 import GeoJSON from 'ol/format/GeoJSON';
 
-import Polygon, {fromExtent} from 'ol/geom/Polygon';
+import { fromExtent } from 'ol/geom/Polygon';
+import { get as getProj, transform, transformExtent } from 'ol/proj';
 
 import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
 import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
@@ -112,10 +109,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.staticHighlight = options.staticHighlight;
     this.useDetailsDisplay = options.useDetailsDisplay;
-    this.maxMapInterval = options.maxMapInterval;
-    // EEA PHENOLOGY SPECIFIC
     this.XYZOnlyOverProducts = options.XYZOnlyOverProducts;
-
     this.map = undefined;
 
     this.isPanning = false;
@@ -155,12 +149,18 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.$el.css({
       width: '100%',
       height: '100%',
-      // 'min-height': '100%',
-      // 'background-color': 'red',
-      // position: 'absolute',
     });
 
-    const minZoom = this.layersCollection.map(
+    // for internal conversions
+    this.projection = getProj(this.mapModel.get('projection') || 'EPSG:4326');
+    this.geoJSONFormat = new GeoJSON();
+    this.readerOptions = {
+      featureProjection: this.projection,
+    };
+
+    // noAntialiasing === true layers do not influence global min/maxzoom
+    const minZoom = this.layersCollection.filter(layer => !layer.get('display').noAntialiasing)
+    .map(
       layer => (
         this.useDetailsDisplay && layer.get('detailsDisplay')
           ? layer.get('detailsDisplay')
@@ -170,7 +170,8 @@ class OpenLayersMapView extends Marionette.ItemView {
       .filter(layerMinZoom => typeof layerMinZoom !== 'undefined')
       .reduce((acc, layerMinZoom) => Math.max(acc, layerMinZoom), this.mapModel.get('minZoom'));
 
-    const maxZoom = this.layersCollection.map(
+    const maxZoom = this.layersCollection.filter(layer => !layer.get('display').noAntialiasing)
+    .map(
       layer => (
         this.useDetailsDisplay && layer.get('detailsDisplay')
           ? layer.get('detailsDisplay')
@@ -186,7 +187,8 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.mapModel.get('zoom') + 1 || 2,
       options.mapRenderer || 'canvas',
       minZoom + 1,
-      maxZoom + 1
+      maxZoom + 1,
+      this.projection || 'EPSG:4326'
     );
 
     // EEA PHENOLOGY SPECIFIC
@@ -233,6 +235,9 @@ class OpenLayersMapView extends Marionette.ItemView {
         new CollectionSource({
           collection: searchModel.get('results'),
           transformModel: model => this.createMapFeatures(model, searchModel)[0],
+          format: new GeoJSON({
+            featureProjection: this.projection,
+          }),
         }));
         searchLayer.id = searchModel.get('layerModel').get('id');
         searchLayer.searchModel = searchModel;
@@ -261,6 +266,9 @@ class OpenLayersMapView extends Marionette.ItemView {
         }, new CollectionSource({
           collection: searchModel.get('downloadSelection'),
           transformModel: model => this.createMapFeatures(model, searchModel)[0],
+          format: new GeoJSON({
+            featureProjection: this.projection,
+          }),
         }));
         downloadSelectionLayer.id = searchModel.get('layerModel').get('id');
         return downloadSelectionLayer;
@@ -281,6 +289,9 @@ class OpenLayersMapView extends Marionette.ItemView {
       model: this.highlightModel,
       attributeName: 'highlightFeature',
       transformAttribute: attr => this.createMapFeatures(attr),
+      format: new GeoJSON({
+        featureProjection: this.projection,
+      }),
     });
 
     const highlightLayer = createVectorLayer({
@@ -323,7 +334,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       filtersModel = layer.searchModel.get('filtersModel');
     }
     updateLayerParams(
-      layer, mapModel, layer.layerModel, filtersModel, this.useDetailsDisplay, this.maxMapInterval);
+      layer, mapModel, layer.layerModel, filtersModel, this.useDetailsDisplay);
   }
 
   /**
@@ -389,7 +400,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     // directly tie the changes to the map
     this.listenTo(this.mapModel, 'change:center', (mapModel) => {
       if (!this.isPanning) {
-        this.map.getView().setCenter(mapModel.get('center'));
+        this.map.getView().setCenter(transform(mapModel.get('center'), 'EPSG:4326', this.projection));
       }
     });
     this.listenTo(this.mapModel, 'change:zoom', (mapModel) => {
@@ -406,24 +417,21 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.listenTo(this.mapModel, 'change:tool', this.onToolChange);
 
     this.listenTo(this.mapModel, 'show', (feature) => {
+      // assume EPSG:4326 object is received
       let geometry = null;
       if (feature.bbox) {
-        geometry = feature.bbox;
+        geometry = transformExtent(feature.bbox, 'EPSG:4326', this.projection);
       } else if (Array.isArray(feature)) {
         const [minx, miny, maxx, maxy] = feature;
-
-        geometry = fromExtent([
+        geometry = transformExtent(fromExtent([
           minx, miny, maxx > minx ? maxx : maxx + 360, maxy,
-        ]);
+        ]), 'EPSG:4326', this.projection);
+      } else if (feature.geometry.type === 'Point') {
+        const c = feature.geometry.coordinates;
+        const b = 0.5;
+        geometry = transformExtent([c[0] - b, c[1] - b, c[0] + b, c[1] + b], 'EPSG:4326', this.projection);
       } else {
-        const format = new GeoJSON();
-        if (feature.geometry.type === 'Point') {
-          const c = feature.geometry.coordinates;
-          const b = 0.5;
-          geometry = [c[0] - b, c[1] - b, c[0] + b, c[1] + b];
-        } else {
-          geometry = format.readGeometry(feature.geometry);
-        }
+        geometry = this.geoJSONFormat.readGeometry(feature.geometry, this.readerOptions);
       }
       this.map.getView().fit(geometry, { duration: 250 });
     });
@@ -438,7 +446,7 @@ class OpenLayersMapView extends Marionette.ItemView {
         const cqlParameterName = layerModel.get('display.cqlParameterName');
         if (cqlParameterName) {
           const layer = this.getLayerOfGroup(layerModel, this.groups.layers);
-          updateLayerParams(layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay, this.maxMapInterval,
+          updateLayerParams(layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay,
           );
         }
       });
@@ -470,19 +478,18 @@ class OpenLayersMapView extends Marionette.ItemView {
         }
       })
     };
-    const format = new GeoJSON();
     Object.keys(this.drawControls).forEach((key) => {
       const control = this.drawControls[key];
       control.on('drawend', (event) => {
         this.selectionSource.clear();
         let geom;
         const bounds = [-180, -90, 180, 90];
-        const extent = event.feature.getGeometry().getExtent();
+        const extent = transformExtent(event.feature.getGeometry().getExtent(), this.projection, 'EPSG:4326');
         if (event.feature.getGeometry().isBox) {
           geom = wrapToBounds(extent, bounds);
         } else {
           // TODO: check that feature is within bounds
-          geom = wrapToBounds(format.writeFeatureObject(event.feature), bounds);
+          geom = wrapToBounds(this.geoJSONFormat.writeFeatureObject(event.feature, this.readerOptions), bounds);
         }
 
 
@@ -558,7 +565,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (layer.searchModel) {
       filtersModel = layer.searchModel.get('filtersModel');
     }
-    updateLayerParams(layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay, this.maxMapInterval);
+    updateLayerParams(layer, this.mapModel, layerModel, filtersModel, this.useDetailsDisplay);
 
     const display = this.useDetailsDisplay
       ? layerModel.get('detailsDisplay') || layerModel.get('display')
@@ -598,9 +605,11 @@ class OpenLayersMapView extends Marionette.ItemView {
         area, format, this.filterFillColor, this.filterOutsideColor, this.filterStrokeColor, 1
       );
       if (outer) {
+        outer.getGeometry().transform('EPSG:4326', this.projection);
         this.selectionSource.addFeature(outer);
       }
       if (inner) {
+        inner.getGeometry().transform('EPSG:4326', this.projection);
         this.selectionSource.addFeature(inner);
       }
     }
@@ -628,12 +637,12 @@ class OpenLayersMapView extends Marionette.ItemView {
   }
 
   onMapMoveEnd() {
-    let bbox = this.map.getView().calculateExtent(this.map.getSize());
+    let bbox = transformExtent(this.map.getView().calculateExtent(this.map.getSize()), this.projection, 'EPSG:4326');
     // wrap minX and maxX to fit -180, 180
     bbox = wrapBox(bbox);
 
     this.mapModel.set({
-      center: this.map.getView().getCenter(),
+      center: wrapCoordinate(transform(this.map.getView().getCenter(), this.projection, 'EPSG:4326')),
       zoom: this.map.getView().getZoom(),
       bbox,
     });
@@ -646,19 +655,19 @@ class OpenLayersMapView extends Marionette.ItemView {
       return;
     }
     if (!this.staticHighlight && !this.isOverlayShown()) {
-      const wrappedCoordinate = wrapCoordinate(event.coordinate);
-
+      const wrappedCoordinate = wrapCoordinate(transform(event.coordinate, this.projection, 'EPSG:4326'));
 
       const rawFeatures = [0, 360].map((offset) => {
         const coordinate = [wrappedCoordinate[0] + offset, wrappedCoordinate[1]];
+        const convertedCoordinate = transform(coordinate, 'EPSG:4326', this.projection);
         const features = this.searchLayersGroup.getLayers().getArray()
           .filter(layer => layer.getVisible())
           .map(layer => layer.getSource())
-          .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
+          .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(convertedCoordinate)), [])
           .concat(this.downloadSelectionLayerGroup.getLayers().getArray()
             .filter(layer => layer.getVisible())
             .map(layer => layer.getSource())
-            .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(coordinate)), [])
+            .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(convertedCoordinate)), [])
           );
 
         return features.map((feature) => {
@@ -677,7 +686,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (this.mapModel.get('tool') || this.mapModel.get('noclick')) {
       return;
     }
-    const coordinate = wrapCoordinate(event.coordinate);
+    const coordinate = wrapCoordinate(transform(event.coordinate, this.projection, 'EPSG:4326'));
 
     const searchFeatures = [];
     const selectedFeatures = [];
@@ -685,15 +694,17 @@ class OpenLayersMapView extends Marionette.ItemView {
     let sortedSelectedFeatures = [];
     [0, 360].forEach((offset) => {
       const offsetCoordinate = [coordinate[0] + offset, coordinate[1]];
+      const convertedCoordinate = transform(offsetCoordinate, 'EPSG:4326', this.projection);
+
       this.searchLayersGroup.getLayers().getArray()
         .filter(layer => layer.getVisible())
         .map(layer => layer.getSource())
-        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(offsetCoordinate)), [])
+        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(convertedCoordinate)), [])
         .forEach(feature => searchFeatures.indexOf(feature) === -1 ? searchFeatures.push(feature) : null);
 
       this.downloadSelectionLayerGroup.getLayers().getArray()
         .map(layer => layer.getSource())
-        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(offsetCoordinate)), [])
+        .reduce((acc, source) => acc.concat(source.getFeaturesAtCoordinate(convertedCoordinate)), [])
         .forEach(feature => selectedFeatures.indexOf(feature) === -1 ? selectedFeatures.push(feature) : null);
     });
 
@@ -711,15 +722,14 @@ class OpenLayersMapView extends Marionette.ItemView {
     }
     const actualModels = models.map ? models : [models];
 
-    const format = new GeoJSON();
     return actualModels
       .map((model) => {
         if (model) {
           let geometry = null;
           if (model.geometry || (model.get && model.get('geometry'))) {
-            geometry = format.readGeometry(model.geometry || model.get('geometry'));
+            geometry = this.geoJSONFormat.readGeometry(model.geometry || model.get('geometry'), this.readerOptions);
           } else if (model.bbox || (model.get && model.get('bbox'))) {
-            geometry = fromExtent(model.bbox || model.get('bbox'));
+            geometry = this.geoJSONFormat.readGeometry(fromExtent(model.bbox || model.get('bbox')), this.readerOptions);
           }
 
           if (geometry) {
