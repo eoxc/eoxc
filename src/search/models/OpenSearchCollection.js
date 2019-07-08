@@ -16,6 +16,28 @@ class OpenSearchRecordModel extends RecordModel {
       if (media) {
         return media.url;
       }
+      // if thumbnailUrl not present, try quickLook as a fallback option
+      const quickLook = properties.media.find(m => m.category === 'QUICKLOOK');
+      if (quickLook) {
+        return quickLook.url;
+      }
+    }
+    return null;
+  }
+
+  getQuickLookUrl(quickLookUrlTemplate = undefined) {
+    if (quickLookUrlTemplate) {
+      return _.template(quickLookUrlTemplate, {
+        interpolate: /\{\{(.+?)\}\}/g
+      })(this.toJSON());
+    }
+
+    const properties = this.get('properties');
+    if (properties && properties.media) {
+      const quickLook = properties.media.find(m => m.category === 'QUICKLOOK');
+      if (quickLook) {
+        return quickLook.url;
+      }
     }
     return null;
   }
