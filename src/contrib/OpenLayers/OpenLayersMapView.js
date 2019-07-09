@@ -643,7 +643,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       const wrappedCoordinate = wrapCoordinate(event.coordinate);
 
 
-      const rawFeatures = [0, 360].map((offset) => {
+      const rawFeatures = [-360, 0, 360].map((offset) => {
         const coordinate = [wrappedCoordinate[0] + offset, wrappedCoordinate[1]];
         const features = this.searchLayersGroup.getLayers().getArray()
           .filter(layer => layer.getVisible())
@@ -677,7 +677,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     const selectedFeatures = [];
     let sortedSearchFeatures = [];
     let sortedSelectedFeatures = [];
-    [0, 360].forEach((offset) => {
+    [-360, 0, 360].forEach((offset) => {
       const offsetCoordinate = [coordinate[0] + offset, coordinate[1]];
       this.searchLayersGroup.getLayers().getArray()
         .filter(layer => layer.getVisible())

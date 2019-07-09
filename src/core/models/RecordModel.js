@@ -12,6 +12,11 @@ class RecordModel extends Backbone.Model {
     return null;
   }
 
+  getQuickLookUrl() {
+    // overwrite in sub-class
+    return null;
+  }
+
   getTitle() {
     return this.get('id');
   }
