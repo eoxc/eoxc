@@ -2,6 +2,7 @@ import _ from 'underscore'; // eslint-disable-line import/no-extraneous-dependen
 import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
+import turfRewind from '@turf/rewind';
 
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -583,6 +584,13 @@ export function wrapToBounds(featureOrExtent, bounds) {
     // check that geom is within bounds
     if (!turfIntersect(geom, boundsFeature)) {
       geom = null;
+    }
+
+    // enforce counter-clockwise polygon/multipolygon as opensearch standard requires
+    if (geom.geometry && (geom.geometry.type === 'Polygon' || geom.geometry.type === 'MultiPolygon')) {
+      turfRewind(geom, {
+        mutate: true
+      });
     }
   } else if (Array.isArray(geom)) {
     if (geom[2] > 180) {
