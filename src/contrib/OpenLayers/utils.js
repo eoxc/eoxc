@@ -3,6 +3,7 @@ import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
 import turfRewind from '@turf/rewind';
+import $ from 'jquery';
 
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -37,7 +38,7 @@ import deepEqual from 'deep-equal';
 
 import CollectionSource from './CollectionSource';
 
-import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
+import { getISODateTimeString, filtersToCQL } from '../../core/util';
 
 
 export function createMap(center, zoom, renderer, minZoom, maxZoom, projection) {
@@ -549,6 +550,40 @@ export function toNormalizedFeature(geometry) {
   return [feature, feature];
 }
 
+const globalPolygon = featureFromExtent([-180, -90, 180, 90]);
+
+export function featureCoordsToBounds(feature, bounds) {
+  // transforms all feature coordinates to crs bounds by subtracting or adding bounds until it fits, returns [new feature, original feature]
+  // assuming bounds is bbox array(4)
+  if (bounds.length !== 4) {
+    return [feature, feature];
+  }
+  const maxWidth = bounds[2] - bounds[0];
+  const maxHeight = bounds[3] - bounds[1];
+  if (feature && feature.type === 'Feature' && feature.geometry && feature.geometry.type === 'Polygon' && typeof Array.isArray(feature.geometry.coordinates)) {
+    const newGeom = $.extend(true, {}, feature);
+    _.each(newGeom.geometry.coordinates[0], (coordPair) => {
+      const coords = coordPair;
+      if (coords.length === 2) {
+        while (coords[0] > bounds[2]) {
+          coords[0] -= maxWidth;
+        }
+        while (coords[0] < bounds[0]) {
+          coords[0] += maxWidth;
+        }
+        while (coords[1] > bounds[3]) {
+          coords[1] -= maxHeight;
+        }
+        while (coords[1] < bounds[1]) {
+          coords[1] += maxHeight;
+        }
+      }
+    });
+    return [newGeom, feature];
+  }
+  return [feature, feature];
+}
+
 export function wrapToBounds(featureOrExtent, bounds) {
   let geom;
   let extentArray;
@@ -599,9 +634,6 @@ export function wrapToBounds(featureOrExtent, bounds) {
   }
   return geom;
 }
-
-
-const globalPolygon = featureFromExtent([-180, -90, 180, 90]);
 
 /*
  * Create OL coutout features.

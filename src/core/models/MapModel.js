@@ -14,17 +14,9 @@ import Backbone from 'backbone';
  * @param {Number} [attributes.heading] The heading
  * @param {Number} [attributes.pitch] The pitch
  * @param {Number} [attributes.roll] The roll
- * @param {string?} [attributes.displayMode] The display mode of the map. One of 'map',
-                                             'columbus' and 'globe'
  */
 
 class MapModel extends Backbone.Model {
-  validate(attrs) {
-    if ([null, 'map', 'columbus', 'globe'].indexOf(attrs.displayMode) !== -1) {
-      return 'invalid display mode';
-    }
-    return null;
-  }
 
   show(featureOrExtent) {
     this.trigger('show', featureOrExtent);
@@ -39,11 +31,12 @@ MapModel.prototype.defaults = {
   // the current center and zoom of the map view
   center: [0, 0],
   bbox: [0, 0, 1, 1],
-  area: null,
+  area: null, // area that is used for search
   zoom: 2,
   minZoom: 0,
   maxZoom: 28,
   projection: null,
+  drawnArea: null, // area that will be drawn (over crs bounds)
 
   // the current start/end time selection
   time: [null, null],
@@ -60,8 +53,6 @@ MapModel.prototype.defaults = {
   heading: 0,
   pitch: 0,
   roll: 0,
-
-  displayMode: null, // one of 'map', 'columbus', 'globe'
 
   highlightFeature: null,
 };

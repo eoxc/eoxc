@@ -16,8 +16,8 @@ import GeoJSON from 'ol/format/GeoJSON';
 import { fromExtent } from 'ol/geom/Polygon';
 import { get as getProj, transform, transformExtent } from 'ol/proj';
 
-import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
-import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds } from './utils';
+import { uniqueBy } from '../../core/util';
+import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import ProgressBar from './progressbar';
@@ -116,6 +116,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.isZooming = false;
 
     this.onFeatureClicked = options.onFeatureClicked;
+    this.constrainOutCoords = options.constrainOutCoords;
 
     this.template = template;
   }
@@ -477,22 +478,29 @@ class OpenLayersMapView extends Marionette.ItemView {
     Object.keys(this.drawControls).forEach((key) => {
       const control = this.drawControls[key];
       control.on('drawend', (event) => {
+        this.mapModel.set('drawnArea', null);
         this.selectionSource.clear();
         let geom;
+        let newGeom = null;
         const bounds = [-180, -90, 180, 90];
         const extent = transformExtent(event.feature.getGeometry().getExtent(), this.projection, 'EPSG:4326');
         if (event.feature.getGeometry().isBox) {
           geom = wrapToBounds(extent, bounds);
         } else {
-          // TODO: check that feature is within bounds
+          // it is a feature (point/polygon)
           geom = wrapToBounds(this.geoJSONFormat.writeFeatureObject(event.feature, this.readerOptions), bounds);
+          if (this.constrainOutCoords) {
+            // clip coordinates to CRS bounds
+            [newGeom, geom] = featureCoordsToBounds(geom, bounds);
+          }
         }
 
 
         // to avoid a zoom-in on a final double click
         setTimeout(() => this.mapModel.set({
-          area: geom,
+          area: newGeom || geom,
           tool: null,
+          drawnArea: geom,
         }));
       });
     });
@@ -592,7 +600,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   onMapAreaChange(mapModel) {
     this.selectionSource.clear();
-    const area = mapModel.get('area');
+    const area = mapModel.get('drawnArea') || mapModel.get('area');
 
     const format = new GeoJSON();
 
