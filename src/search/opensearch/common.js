@@ -1,3 +1,6 @@
+import turfUnion from '@turf/union';
+import { polygon as turfPolygon } from '@turf/helpers';
+
 function prepareBox(bbox) {
   const b = [...bbox];
   b[1] = Math.max(b[1], -90);
@@ -16,11 +19,13 @@ function prepareBox(bbox) {
 
 /**
  * Prepares the records retrieved from OpenSearch. This involves "unwrapping" of
- * dateline wrapped geometries and adjusting the bbox.
+ * dateline wrapped geometries and adjusting the bbox. MultiPolygons coordinates have switched order if necessary
+ * If its polygons are contiguous, merge them to a single polygon.
  * @param {object[]} records the retrieved records
+ * @param {boolean} > if polygon coordinates are received in switched order
  * @returns {object[]} the adjusted records.
  */
-export function prepareRecords(records) {
+export function prepareRecords(records, switchMultiPolygonCoordinates) {
   return records.map((record) => {
     let adjustedGeometry = false;
     if (record.geometry && record.geometry.type === 'Polygon') {
@@ -43,25 +48,60 @@ export function prepareRecords(records) {
           last = current;
         }
       }
-
+    } else if (record.geometry && record.geometry.type === 'MultiPolygon') {
+      for (let polygonIndex = 0; polygonIndex < record.geometry.coordinates.length; ++polygonIndex) {
+        for (let ringIndex = 0; ringIndex < record.geometry.coordinates[polygonIndex].length; ++ringIndex) {
+          const ring = record.geometry.coordinates[polygonIndex][ringIndex];
+          for (let i = 0; i < ring.length; ++i) {
+            if (switchMultiPolygonCoordinates) {
+              // switch latitude and longitude
+              ring[i].reverse();
+            }
+          }
+        }
+      }
+      if (record.geometry.coordinates.length === 2) {
+        // add 360 to the second polygon if necessary to exceed srs bounds and allow polygon union
+        const outerRingL = record.geometry.coordinates[1][0];
+        const outerRingLLongitudes = Array.from(outerRingL, x => x[0]);
+        const outerRingR = record.geometry.coordinates[0][0];
+        const outerRingRLongitudes = Array.from(outerRingR, x => x[0]);
+        if (Math.abs(Math.min(...outerRingLLongitudes) + 180.0) < 1e-8 && Math.abs(Math.max(...outerRingRLongitudes) - 180.0) < 1e-8) {
+          adjustedGeometry = true;
+          for (let i = 0; i < outerRingL.length; ++i) {
+            outerRingL[i][0] += 360;
+          }
+        } else if (Math.abs(Math.min(...outerRingRLongitudes) + 180.0) < 1e-8 && Math.abs(Math.max(...outerRingLLongitudes) - 180.0) < 1e-8) {
+          adjustedGeometry = true;
+          for (let i = 0; i < outerRingR.length; ++i) {
+            outerRingR[i][0] += 360;
+          }
+        }
+      }
+      const polygonL = turfPolygon(record.geometry.coordinates[0]);
+      const polygonR = turfPolygon(record.geometry.coordinates[1]);
+      // union to a single polygon
+      const unioned = turfUnion(polygonL, polygonR);
+      // eslint-disable-next-line no-param-reassign
+      record.geometry = unioned.geometry;
+    }
       // (re-)calculate the bounding box when not available or when the geometry
       // was adjusted in the step before
-      if (!record.bbox || adjustedGeometry) {
-        const outer = record.geometry.coordinates[0];
-        let minx = outer[0][0];
-        let miny = outer[0][1];
-        let maxx = outer[0][0];
-        let maxy = outer[0][1];
+    if (!record.bbox || adjustedGeometry) {
+      const outer = record.geometry.coordinates[0];
+      let minx = outer[0][0];
+      let miny = outer[0][1];
+      let maxx = outer[0][0];
+      let maxy = outer[0][1];
 
-        for (let i = 1; i < outer.length; ++i) {
-          minx = Math.min(minx, outer[i][0]);
-          miny = Math.min(miny, outer[i][1]);
-          maxx = Math.max(maxx, outer[i][0]);
-          maxy = Math.max(maxy, outer[i][1]);
-        }
-        // eslint-disable-next-line no-param-reassign
-        record.bbox = [minx, miny, maxx, maxy];
+      for (let i = 1; i < outer.length; ++i) {
+        minx = Math.min(minx, outer[i][0]);
+        miny = Math.min(miny, outer[i][1]);
+        maxx = Math.max(maxx, outer[i][0]);
+        maxy = Math.max(maxy, outer[i][1]);
       }
+      // eslint-disable-next-line no-param-reassign
+      record.bbox = [minx, miny, maxx, maxy];
     }
     return record;
   });

@@ -36,6 +36,7 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
   const format = options.mimeType || layerModel.get('search.format') || null;
   const maxUrlLength = layerModel.get('search.maxUrlLength') || 4000;
   const dropEmptyParameters = layerModel.get('search.dropEmptyParameters') || false;
+  const switchMultiPolygonCoordinates = layerModel.get('search.switchMultiPolygonCoordinates') || false;
 
   return getService(url)
     .then((service) => {
@@ -55,7 +56,7 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
     })
     .then((result) => {
       // eslint-disable-next-line no-param-reassign
-      result.records = prepareRecords(result.records);
+      result.records = prepareRecords(result.records, switchMultiPolygonCoordinates);
       return result;
     });
 }
@@ -66,6 +67,7 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
   const format = options.mimeType || layerModel.get('search.format') || null;
   const maxUrlLength = layerModel.get('search.maxUrlLength') || 4000;
   const dropEmptyParameters = layerModel.get('search.dropEmptyParameters') || false;
+  const switchMultiPolygonCoordinates = layerModel.get('search.switchMultiPolygonCoordinates') || false;
 
   const filterParams = filtersModel ? filtersModel.toJSON() : {};
   const mapParams = mapModel ? mapModel.toJSON() : null;
@@ -91,6 +93,7 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
     maxUrlLength,
     dropEmptyParameters,
     parseOptions,
+    switchMultiPolygonCoordinates,
   }]);
 
   worker.onmessage = ({ data }) => {

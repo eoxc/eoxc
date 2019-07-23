@@ -1,6 +1,7 @@
 module.exports = {
   "extends": "airbnb",
   "rules": {
+    "max-len": ["error", { "code": 160 }],
     "comma-dangle": ["error", {
       "functions": "ignore",
       "arrays": "only-multiline",
