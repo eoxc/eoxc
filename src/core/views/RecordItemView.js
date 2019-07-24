@@ -41,12 +41,21 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   },
 
   onRender() {
-    // TODO: this flickers the image
     const $img = this.$('img');
     $img
       .one('load', () => this.$('img').fadeIn('slow'))
       .one('error', () => {
-        if (this.fallbackThumbnailUrl) {
+        const quickLookUrl = this.model.getQuickLookUrl(
+          this.collection ? this.collection.searchModel.get('layerModel').get('search.quickLookUrlTemplate')
+                          : undefined
+        );
+        if (quickLookUrl) {
+          $img
+          .attr('src', quickLookUrl)
+          .one('load', () => this.$('img').fadeIn('slow'))
+          .one('error', () => {
+          });
+        } else if (this.fallbackThumbnailUrl) {
           $img
             .one('error', () => $img.attr('alt', imageError()))
             .attr('src', this.fallbackThumbnailUrl)

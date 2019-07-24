@@ -661,7 +661,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (!this.staticHighlight && !this.isOverlayShown()) {
       const wrappedCoordinate = wrapCoordinate(transform(event.coordinate, this.projection, 'EPSG:4326'));
 
-      const rawFeatures = [0, 360].map((offset) => {
+      const rawFeatures = [-360, 0, 360].map((offset) => {
         const coordinate = [wrappedCoordinate[0] + offset, wrappedCoordinate[1]];
         const convertedCoordinate = transform(coordinate, 'EPSG:4326', this.projection);
         const features = this.searchLayersGroup.getLayers().getArray()
@@ -696,7 +696,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     const selectedFeatures = [];
     let sortedSearchFeatures = [];
     let sortedSelectedFeatures = [];
-    [0, 360].forEach((offset) => {
+    [-360, 0, 360].forEach((offset) => {
       const offsetCoordinate = [coordinate[0] + offset, coordinate[1]];
       const convertedCoordinate = transform(offsetCoordinate, 'EPSG:4326', this.projection);
 
