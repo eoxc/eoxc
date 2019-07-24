@@ -2,13 +2,14 @@ import _ from 'underscore'; // eslint-disable-line import/no-extraneous-dependen
 import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
+import turfRewind from '@turf/rewind';
+import $ from 'jquery';
 
 import Map from 'ol/Map';
 import View from 'ol/View';
 import { get as getProj } from 'ol/proj';
 import { getWidth as extentGetWidth, getTopLeft as extentGetTopLeft } from 'ol/extent';
 // import Attribution from 'ol/attribution';
-import coordinate from 'ol/coordinate';
 
 import AttributionControl from 'ol/control/Attribution';
 import ZoomControl from 'ol/control/Zoom';
@@ -20,6 +21,7 @@ import VectorLayer from 'ol/layer/Vector';
 import WMTSCapabilities from 'ol/format/WMTSCapabilities';
 import WMTSSource, { optionsFromCapabilities } from 'ol/source/WMTS';
 import WMSTileSource from 'ol/source/TileWMS';
+import XYZSource from 'ol/source/XYZ';
 import VectorSource from 'ol/source/Vector';
 
 import TileGrid from 'ol/tilegrid/TileGrid';
@@ -36,10 +38,10 @@ import deepEqual from 'deep-equal';
 
 import CollectionSource from './CollectionSource';
 
-import { getISODateTimeString, uniqueBy, filtersToCQL } from '../../core/util';
+import { getISODateTimeString, filtersToCQL } from '../../core/util';
 
 
-export function createMap(center, zoom, renderer, minZoom, maxZoom) {
+export function createMap(center, zoom, renderer, minZoom, maxZoom, projection) {
   return new Map({
     controls: [
       new AttributionControl(),
@@ -55,13 +57,14 @@ export function createMap(center, zoom, renderer, minZoom, maxZoom) {
           }
           return `${x.toFixed(2)}, ${y.toFixed(2)}`;
         },
-        projection: 'EPSG:4326',
+        // hardcoding mouse position tooltip crs
+        projection: getProj('EPSG:4326'),
         undefinedHTML: '',
       }),
     ],
     renderer: renderer || 'canvas',
     view: new View({
-      projection: getProj('EPSG:4326'),
+      projection,
       center,
       zoom,
       enableRotation: false,
@@ -85,16 +88,16 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
 
   let layer;
 
-  const projection = getProj('EPSG:4326');
+  const projection = getProj(displayParams.projection || 'EPSG:4326');
   const projectionExtent = projection.getExtent();
-  const size = extentGetWidth(projectionExtent) / 256;
+  const size = extentGetWidth(projectionExtent) / (displayParams.tileSize || 256);
   const resolutions = new Array(18);
   const matrixIds = new Array(18);
-
+  const customAdditionBasedOnProj = projection.getCode() === 'EPSG:4326' ? 1 : 0;
   for (let z = 0; z < 18; ++z) {
     // generate resolutions and matrixIds arrays for this WMTS
     // eslint-disable-next-line no-restricted-properties
-    resolutions[z] = size / Math.pow(2, (z + 1));
+    resolutions[z] = size / Math.pow(2, (z + customAdditionBasedOnProj));
     let id = z;
 
     if (displayParams.matrixIdPrefix) {
@@ -138,7 +141,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
             layer: displayParams.id,
             matrixSet: displayParams.matrixSet,
             format: displayParams.format,
-            projection: displayParams.projection,
+            projection,
             tileGrid: new WMTSTileGrid({
               origin: extentGetTopLeft(projectionExtent),
               resolutions,
@@ -176,12 +179,31 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
           }),
         });
         break;
+      case 'XYZ':
+        layer = new TileLayer({
+          visible: displayParams.visible,
+          source: new XYZSource({
+            crossOrigin: 'anonymous',
+            projection,
+            tileSize: tileSize || [256, 256],
+            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            attributions: displayParams.attribution,
+            minZoom: displayParams.minZoom,
+            maxZoom: displayParams.maxZoom,
+          }),
+        });
+        break;
       default:
         throw new Error('Unsupported view protocol');
     }
   }
   layer.id = layerModel.get('id');
   layer.layerModel = layerModel;
+  if (displayParams.noAntialiasing) {
+    layer.on('precompose', (event) => {
+      event.context.imageSmoothingEnabled = false;
+    });
+  }
   return layer;
 }
 
@@ -204,9 +226,10 @@ export function parseDuration(duration) {
   return duration;
 }
 
-export function validateTimeInterval(mapModel, time, maxIntervalSeconds) {
- // checks if interval does not exceed maximum interval
- // if yes, returns modified interval of [end - maxInterval, end]
+export function validateTimeInterval(mapModel, time) {
+  // checks if interval does not exceed maximum interval
+  // if yes, returns modified interval of [end - maxInterval, end]
+  const maxIntervalSeconds = mapModel.get('maxMapInterval');
   let result = time[1] > time[0] ? [time[0], time[1]] : [time[1], time[0]];
   if ((result[1] - result[0]) > maxIntervalSeconds * 1000) {
     result = [new Date(time[1] - (maxIntervalSeconds * 1000)), time[1]];
@@ -218,7 +241,7 @@ export function validateTimeInterval(mapModel, time, maxIntervalSeconds) {
   return result;
 }
 
-function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
+function getLayerParams(mapModel, displayParams, filtersModel) {
   const params = {};
   let time = mapModel.get('time');
   if (Array.isArray(time)) {
@@ -227,8 +250,8 @@ function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
     time = [time, time];
   }
 
-  if (maxMapInterval) {
-    time = validateTimeInterval(mapModel, time, maxMapInterval);
+  if (mapModel.get('maxMapInterval')) {
+    time = validateTimeInterval(mapModel, time);
   }
   if (displayParams.adjustTime) {
     const offset = Array.isArray(displayParams.adjustTime)
@@ -300,7 +323,7 @@ function getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval) {
  *
  */
 export function updateLayerParams(
-  layer, mapModel, layerModel, filtersModel, useDetailsDisplay = false, maxMapInterval = null
+  layer, mapModel, layerModel, filtersModel, useDetailsDisplay = false
 ) {
   const displayParams = useDetailsDisplay
     ? layerModel.get('detailsDisplay') || layerModel.get('display')
@@ -320,7 +343,7 @@ export function updateLayerParams(
 
 
   const params = Object.assign(
-    {}, previousParams, getLayerParams(mapModel, displayParams, filtersModel, maxMapInterval)
+    {}, previousParams, getLayerParams(mapModel, displayParams, filtersModel)
   );
 
   if (!deepEqual(params, previousParams)) {
@@ -527,6 +550,40 @@ export function toNormalizedFeature(geometry) {
   return [feature, feature];
 }
 
+const globalPolygon = featureFromExtent([-180, -90, 180, 90]);
+
+export function featureCoordsToBounds(feature, bounds) {
+  // transforms all feature coordinates to crs bounds by subtracting or adding bounds until it fits, returns [new feature, original feature]
+  // assuming bounds is bbox array(4)
+  if (bounds.length !== 4) {
+    return [feature, feature];
+  }
+  const maxWidth = bounds[2] - bounds[0];
+  const maxHeight = bounds[3] - bounds[1];
+  if (feature && feature.type === 'Feature' && feature.geometry && feature.geometry.type === 'Polygon' && typeof Array.isArray(feature.geometry.coordinates)) {
+    const newGeom = $.extend(true, {}, feature);
+    _.each(newGeom.geometry.coordinates[0], (coordPair) => {
+      const coords = coordPair;
+      if (coords.length === 2) {
+        while (coords[0] > bounds[2]) {
+          coords[0] -= maxWidth;
+        }
+        while (coords[0] < bounds[0]) {
+          coords[0] += maxWidth;
+        }
+        while (coords[1] > bounds[3]) {
+          coords[1] -= maxHeight;
+        }
+        while (coords[1] < bounds[1]) {
+          coords[1] += maxHeight;
+        }
+      }
+    });
+    return [newGeom, feature];
+  }
+  return [feature, feature];
+}
+
 export function wrapToBounds(featureOrExtent, bounds) {
   let geom;
   let extentArray;
@@ -563,6 +620,13 @@ export function wrapToBounds(featureOrExtent, bounds) {
     if (!turfIntersect(geom, boundsFeature)) {
       geom = null;
     }
+
+    // enforce counter-clockwise polygon/multipolygon as opensearch standard requires
+    if (geom.geometry && (geom.geometry.type === 'Polygon' || geom.geometry.type === 'MultiPolygon')) {
+      turfRewind(geom, {
+        mutate: true
+      });
+    }
   } else if (Array.isArray(geom)) {
     if (geom[2] > 180) {
       geom[2] -= 360;
@@ -570,9 +634,6 @@ export function wrapToBounds(featureOrExtent, bounds) {
   }
   return geom;
 }
-
-
-const globalPolygon = featureFromExtent([-180, -90, 180, 90]);
 
 /*
  * Create OL coutout features.

@@ -66,7 +66,7 @@ self.onmessage = function onMessage({ data }) {
     case 'searchAll': {
       const {
         url, method, filterParams, mapParams, options, format, description,
-        maxUrlLength, dropEmptyParameters, parseOptions
+        maxUrlLength, dropEmptyParameters, parseOptions, switchMultiPolygonCoordinates
       } = params;
       self.search = searchAll(
         url, method, filterParams, mapParams, options, format, description,
@@ -76,8 +76,8 @@ self.onmessage = function onMessage({ data }) {
         .then((emitter) => {
           self.emitter = emitter;
           emitter
-            .on('page', page => self.postMessage(['progress', Object.assign(page, { records: prepareRecords(page.records) })]))
-            .on('success', result => self.postMessage(['success', Object.assign(result, { records: prepareRecords(result.records) })]))
+            .on('page', page => self.postMessage(['progress', Object.assign(page, { records: prepareRecords(page.records, switchMultiPolygonCoordinates) })]))
+            .on('success', result => self.postMessage(['success', Object.assign(result, { records: prepareRecords(result.records, switchMultiPolygonCoordinates) })]))
             .on('error', error => self.postMessage(['error', error.toString()]));
         }, error => self.postMessage(['error', error.toString()]));
       break;
