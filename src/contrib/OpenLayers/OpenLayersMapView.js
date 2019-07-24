@@ -420,9 +420,9 @@ class OpenLayersMapView extends Marionette.ItemView {
         geometry = transformExtent(feature.bbox, 'EPSG:4326', this.projection);
       } else if (Array.isArray(feature)) {
         const [minx, miny, maxx, maxy] = feature;
-        geometry = transformExtent(fromExtent([
+        geometry = fromExtent([
           minx, miny, maxx > minx ? maxx : maxx + 360, maxy,
-        ]), 'EPSG:4326', this.projection);
+        ]).transform('EPSG:4326', this.projection);
       } else if (feature.geometry.type === 'Point') {
         const c = feature.geometry.coordinates;
         const b = 0.5;
