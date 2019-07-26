@@ -13,7 +13,9 @@ import Group from 'ol/layer/Group';
 
 import GeoJSON from 'ol/format/GeoJSON';
 
-import { fromExtent } from 'ol/geom/Polygon';
+import Polygon, { fromExtent } from 'ol/geom/Polygon';
+import Point from 'ol/geom/Point';
+
 import { get as getProj, transform, transformExtent } from 'ol/proj';
 
 import { uniqueBy } from '../../core/util';
@@ -454,6 +456,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.map.on('moveend', (...args) => this.onMapMoveEnd(...args));
     this.map.on('pointermove', _.throttle((...args) => this.onMapPointerMove(...args), 100));
     this.map.on('click', (...args) => this.onMapClick(...args));
+    this.listenTo(this.mapModel, 'manual:filterFromConfig', this.filterFromConfig);
   }
 
   /**
@@ -478,30 +481,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     Object.keys(this.drawControls).forEach((key) => {
       const control = this.drawControls[key];
       control.on('drawend', (event) => {
-        this.mapModel.set('drawnArea', null);
-        this.selectionSource.clear();
-        let geom;
-        let newGeom = null;
-        const bounds = [-180, -90, 180, 90];
-        const extent = transformExtent(event.feature.getGeometry().getExtent(), this.projection, 'EPSG:4326');
-        if (event.feature.getGeometry().isBox) {
-          geom = wrapToBounds(extent, bounds);
-        } else {
-          // it is a feature (point/polygon)
-          geom = wrapToBounds(this.geoJSONFormat.writeFeatureObject(event.feature, this.readerOptions), bounds);
-          if (this.constrainOutCoords) {
-            // clip coordinates to CRS bounds
-            [newGeom, geom] = featureCoordsToBounds(geom, bounds);
-          }
-        }
-
-
-        // to avoid a zoom-in on a final double click
-        setTimeout(() => this.mapModel.set({
-          area: newGeom || geom,
-          tool: null,
-          drawnArea: newGeom ? geom : null,
-        }));
+        this.onDrawFinished(event);
       });
     });
 
@@ -554,6 +534,59 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
   }
 
+  filterFromConfig(type, values) {
+    let feature = null;
+    if (type === 'Point' && values.length === 2) {
+      feature = new Feature({
+        geometry: new Point(values).transform(this.projection, 'EPSG:4326'),
+      });
+    } else if (type === 'Rectangle' && values.length === 4) {
+      const [minx, miny, maxx, maxy] = values;
+      const geometry = fromExtent([
+        minx, miny, maxx > minx ? maxx : maxx + 360, maxy,
+      ]).transform('EPSG:4326', this.projection);
+      geometry.isBox = true;
+      feature = new Feature({
+        geometry
+      });
+    } else if (type === 'Polygon') {
+      feature = new Feature({
+        geometry: new Polygon(values).transform(this.projection, 'EPSG:4326'),
+      });
+    } else {
+      console.log(`Not implemented or unknown type: ${type}.`);
+    }
+    if (feature !== null) {
+      this.onDrawFinished({ feature });
+    }
+  }
+
+  onDrawFinished(event) {
+    this.mapModel.set('drawnArea', null);
+    this.selectionSource.clear();
+    let geom;
+    let newGeom = null;
+    const bounds = [-180, -90, 180, 90];
+    const extent = transformExtent(event.feature.getGeometry().getExtent(), this.projection, 'EPSG:4326');
+    if (event.feature.getGeometry().isBox) {
+      geom = wrapToBounds(extent, bounds);
+    } else {
+      // it is a feature (point/polygon)
+      geom = wrapToBounds(this.geoJSONFormat.writeFeatureObject(event.feature, this.readerOptions), bounds);
+      if (this.constrainOutCoords) {
+        // clip coordinates to CRS bounds
+        [newGeom, geom] = featureCoordsToBounds(geom, bounds);
+      }
+    }
+
+    // to avoid a zoom-in on a final double click
+    setTimeout(() => this.mapModel.set({
+      area: newGeom || geom,
+      tool: null,
+      drawnArea: newGeom ? geom : null,
+    }));
+  }
+
   // collection/model signal handlers
 
   onLayersSorted(layersCollection) {
@@ -589,6 +622,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       searchFillLayer.setVisible(display.visible && searchModel.get('automaticSearch'));
     }
   }
+
 
   onTimeChange() {
     this.layersCollection.forEach((layerModel) => {
