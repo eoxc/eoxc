@@ -500,7 +500,7 @@ class OpenLayersMapView extends Marionette.ItemView {
         setTimeout(() => this.mapModel.set({
           area: newGeom || geom,
           tool: null,
-          drawnArea: geom,
+          drawnArea: newGeom ? geom : null,
         }));
       });
     });
