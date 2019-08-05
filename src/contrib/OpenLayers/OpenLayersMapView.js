@@ -534,14 +534,14 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
   }
 
-  filterFromConfig(type, values) {
+  filterFromConfig(type, coordinates) {
     let feature = null;
-    if (type === 'Point' && values.length === 2) {
+    if (type === 'Point' && coordinates.length === 2) {
       feature = new Feature({
-        geometry: new Point(values).transform(this.projection, 'EPSG:4326'),
+        geometry: new Point(coordinates).transform(this.projection, 'EPSG:4326'),
       });
-    } else if (type === 'Rectangle' && values.length === 4) {
-      const [minx, miny, maxx, maxy] = values;
+    } else if (type === 'Rectangle' && coordinates.length === 4) {
+      const [minx, miny, maxx, maxy] = coordinates;
       const geometry = fromExtent([
         minx, miny, maxx > minx ? maxx : maxx + 360, maxy,
       ]).transform('EPSG:4326', this.projection);
@@ -551,7 +551,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       });
     } else if (type === 'Polygon') {
       feature = new Feature({
-        geometry: new Polygon(values).transform(this.projection, 'EPSG:4326'),
+        geometry: new Polygon(coordinates).transform(this.projection, 'EPSG:4326'),
       });
     } else {
       console.log(`Not implemented or unknown type: ${type}.`);
