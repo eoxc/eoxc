@@ -1,6 +1,5 @@
-import 'jquery';
-import 'bootstrap-slider';
-import 'bootstrap-slider/dist/css/bootstrap-slider.css';
+import 'bootstrap-slider/dist/bootstrap-slider.min';
+import 'bootstrap-slider/dist/css/bootstrap-slider.min.css';
 import './LayerOptionsModalView.css';
 
 import ModalView from '../ModalView';
@@ -70,7 +69,7 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
     const display = this.useDetailsDisplay ? this.model.get('detailsDisplay') : this.model.get('display');
     let opacity = display.opacity;
     opacity = typeof opacity === 'undefined' ? 1 : opacity;
-    this.$slider = this.$('.opacity-slider').slider({
+    this.$slider = this.$('.opacity-slider').bootstrapSlider({
       min: 0,
       max: 100,
       value: opacity * 100,
@@ -88,7 +87,7 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
 
     const $dataSliders = this.$('input[data-slider-min]');
     if ($dataSliders.length) {
-      $dataSliders.slider()
+      $dataSliders.bootstrapSlider()
         .on('slideStop', (event) => {
           const $target = $(event.target);
           this.model.set({

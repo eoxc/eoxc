@@ -17,8 +17,6 @@ import RootLayoutView from './views/RootLayoutView';
 import NavBarView from './views/NavBarView';
 import ToolsView from './views/ToolsView';
 
-import $ from 'jquery';
-
 // require styles
 require('bootstrap/dist/css/bootstrap.min.css');
 require('bootstrap/dist/js/bootstrap.min.js');

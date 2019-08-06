@@ -1,7 +1,5 @@
 import Marionette from 'backbone.marionette';
 
-import $ from 'jquery';
-
 import Feature from 'ol/Feature';
 import Collection from 'ol/Collection';
 import Overlay from 'ol/Overlay';

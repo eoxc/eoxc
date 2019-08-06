@@ -1,8 +1,7 @@
-import $ from 'jquery';
 import { saveAs } from 'file-saver';
 
 import { download as downloadEOWCS, getDownloadInfos as getDownloadInfosEOWCS } from './eowcs';
-import { download as downloadUrl, getDownloadInfos as getDownloadInfosUrl } from './url';
+import { getDownloadInfos as getDownloadInfosUrl } from './url';
 import { getDownloadInfos as getDownloadInfosS3 } from './s3';
 import rewrite from './rewrite';
 

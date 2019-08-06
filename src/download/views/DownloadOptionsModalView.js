@@ -7,10 +7,7 @@ import './DownloadOptionsModalView.css';
 
 import FiltersModel from '../../core/models/FiltersModel';
 
-import { downloadRecord, getDownloadUrl } from '../../download';
-
-
-import $ from 'jquery';
+import { downloadRecord } from '../../download';
 
 export default ModalView.extend({
   template,

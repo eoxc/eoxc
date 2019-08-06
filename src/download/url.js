@@ -1,4 +1,3 @@
-import $ from 'jquery';
 import urlParse from 'url-parse';
 
 export function download(recordModel) {

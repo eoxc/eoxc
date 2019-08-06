@@ -1,5 +1,4 @@
 import Marionette from 'backbone.marionette';
-import $ from 'jquery';
 
 import { isRecordDownloadable } from '../../download';
 
