@@ -1,7 +1,6 @@
 /* eslint-disable */
 import Marionette from 'backbone.marionette';
-require('jquery-ui/draggable');
-require('font-awesome-webpack');
+import 'jquery-ui/ui/widgets/draggable';
 import _ from 'underscore';
 
 const template = require('./PanelView.hbs');

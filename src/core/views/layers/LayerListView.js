@@ -1,6 +1,5 @@
 import Marionette from 'backbone.marionette';
 import 'jquery-ui/ui/widgets/sortable';
-import 'font-awesome-webpack';
 import $ from 'jquery';
 
 import LayerListItemView from './LayerListItemView';

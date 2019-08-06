@@ -1,5 +1,5 @@
-import 'core-js/fn/array/from';
-import 'core-js/fn/object/assign';
+import 'core-js/features/array/from';
+import 'core-js/features/object/assign';
 
 import { discover, config, deserialize } from 'opensearch-browser';
 import { DOMParser } from 'xmldom';
