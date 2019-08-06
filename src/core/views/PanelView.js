@@ -1,7 +1,6 @@
 /* eslint-disable */
 import Marionette from 'backbone.marionette';
 import 'jquery-ui/ui/widgets/draggable';
-import _ from 'underscore';
 
 const template = require('./PanelView.hbs');
 require('./PanelView.css');

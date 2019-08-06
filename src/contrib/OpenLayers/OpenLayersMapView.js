@@ -1,7 +1,6 @@
 import Marionette from 'backbone.marionette';
 
 import $ from 'jquery';
-import _ from 'underscore';
 
 import Feature from 'ol/Feature';
 import Collection from 'ol/Collection';

@@ -2,7 +2,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  height: 4px;
+  height: 4px!important;
   background: white;
   width: 0;
   transition: width 250ms;

@@ -1,6 +1,5 @@
 const webpack = require('webpack');
 const path = require('path');
-const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const packageJson = require('./package.json');
 
@@ -15,20 +14,19 @@ const babelConfigLoader = {
 
 module.exports = {
   entry: {
-    openlayers: path.join(__dirname, 'test', 'apps', 'OpenLayers', 'main.js'),
-    //cesium: 'test/apps/Cesium/main.js',
+    eoxc: [path.join(__dirname, 'test', 'apps', 'OpenLayers', 'preload.js'), path.join(__dirname, 'test', 'apps', 'OpenLayers', 'main.js')]
   },
   resolve: {
     alias: {
       // necessary to avoid multiple packings of backbone due to marionette
       backbone: path.join(__dirname, 'node_modules', 'backbone', 'backbone'),
       'opensearch-browser': 'opensearch-browser/dist',
-      handlebars: 'handlebars/dist/handlebars.min.js',
+      handlebars: path.join('handlebars', 'dist', 'handlebars.min.js'),
     },
   },
   output: {
     path: path.join(__dirname, 'test', 'apps', 'dist'),
-    filename: 'openlayers.bundle.js',
+    filename: `[name].bundle.${packageJson.version}.js`,
     library: 'eoxc',
     libraryTarget: 'umd',
   },
@@ -49,9 +47,6 @@ module.exports = {
           options: 'jQuery'
         }]
       },
-      { test: /node_modules.*eoxc.*js$/, use: babelConfigLoader },
-      { test: /node_modules.*opensearch.*js$/, use: babelConfigLoader },
-      { test: /node_modules.*ol.*js$/, use: babelConfigLoader },
       { test: /\.js$/, exclude: /node_modules/, use: babelConfigLoader },
       { test: /\.coffee$/, loader: 'coffee-loader' },
       { test: /\.less$/,
@@ -108,7 +103,6 @@ module.exports = {
     ],
   },
   plugins: [
-    new CleanWebpackPlugin(),
     new MiniCssExtractPlugin({
       filename: `[name].bundle.${packageJson.version}.css`
     }),

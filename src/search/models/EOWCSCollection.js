@@ -1,4 +1,3 @@
-import _ from 'underscore';
 import Backbone from 'backbone';
 import RecordModel from '../../core/models/RecordModel';
 

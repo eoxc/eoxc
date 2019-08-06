@@ -1,4 +1,3 @@
-import 'd3/d3';
 import Marionette from 'backbone.marionette';
 import TimeSlider from 'D3.TimeSlider/src/d3.timeslider.coffee';
 import WMSSource from 'D3.TimeSlider/src/sources/wms.coffee';
@@ -7,7 +6,6 @@ import WPSSource from 'D3.TimeSlider/src/sources/eoxserver-wps.coffee';
 import { searchAllRecords, getCount } from '../../search';
 import FiltersModel from '../models/FiltersModel';
 
-// require('D3.TimeSlider/build/d3.timeslider.plugins');
 require('D3.TimeSlider/src/d3.timeslider.less');
 require('./TimeSliderView.css');
 

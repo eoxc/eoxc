@@ -1,9 +1,7 @@
-import _ from 'underscore'; // eslint-disable-line import/no-extraneous-dependencies
 import turfDifference from '@turf/difference';
 import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
 import turfRewind from '@turf/rewind';
-import $ from 'jquery';
 
 import Map from 'ol/Map';
 import View from 'ol/View';

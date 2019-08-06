@@ -1,12 +1,13 @@
 import Marionette from 'backbone.marionette';
+import 'font-awesome/scss/font-awesome.scss';
 
-// import LayerModel from '../../../src/core/models/LayerModel';
 import LayersCollection from '../../../src/core/models/LayersCollection';
 import MapModel from '../../../src/core/models/MapModel';
 import FiltersModel from '../../../src/core/models/FiltersModel';
 
 import LayerControlLayoutView from '../../../src/core/views/layers/LayerControlLayoutView';
 import LayerOptionsView from '../../../src/core/views/layers/LayerOptionsView';
+import HighlightModel from '../../../src/core/models/HighlightModel';
 
 import OpenLayersMapView from '../../../src/contrib/OpenLayers/OpenLayersMapView';
 import TimeSliderView from '../../../src/core/views/TimeSliderView';
@@ -20,8 +21,7 @@ import $ from 'jquery';
 
 // require styles
 require('bootstrap/dist/css/bootstrap.min.css');
-require('imports?jQuery=jquery!bootstrap/dist/js/bootstrap.min.js');
-
+require('bootstrap/dist/js/bootstrap.min.js');
 const config = require('./config.json');
 
 
