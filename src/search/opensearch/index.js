@@ -1,6 +1,6 @@
 import { discover, config as configureOpenSearch } from 'opensearch-browser';
-import { PagedSearchProgressEmitter } from 'opensearch-browser/paginator';
 import BluebirdPromise from 'bluebird';
+import { PagedSearchProgressEmitter } from 'opensearch-browser/dist/paginator';
 
 // eslint-disable-next-line
 import OpenSearchWorker from 'worker-loader!./OpenSearchWorker';

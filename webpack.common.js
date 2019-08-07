@@ -20,8 +20,6 @@ module.exports = {
     alias: {
       // necessary to avoid multiple packings of backbone due to marionette
       backbone: path.join(__dirname, 'node_modules', 'backbone', 'backbone'),
-      'opensearch-browser': 'opensearch-browser/dist',
-      handlebars: path.join('handlebars', 'dist', 'handlebars.min.js'),
     },
   },
   output: {
