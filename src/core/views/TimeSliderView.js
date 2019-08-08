@@ -2,12 +2,12 @@ import Marionette from 'backbone.marionette';
 import TimeSlider from 'D3.TimeSlider/src/d3.timeslider.coffee';
 import WMSSource from 'D3.TimeSlider/src/sources/wms.coffee';
 import WPSSource from 'D3.TimeSlider/src/sources/eoxserver-wps.coffee';
+import 'D3.TimeSlider/src/d3.timeslider.less';
 
 import { searchAllRecords, getCount } from '../../search';
 import FiltersModel from '../models/FiltersModel';
 
-require('D3.TimeSlider/src/d3.timeslider.less');
-require('./TimeSliderView.css');
+import './TimeSliderView.css';
 
 
 function intersects(a, b) {

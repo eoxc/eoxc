@@ -1,7 +1,7 @@
 import Marionette from 'backbone.marionette';
+import './RecordDetailsView.css';
 
-const template = require('./RecordDetailsView.hbs');
-require('./RecordDetailsView.css');
+import template from './RecordDetailsView.hbs';
 
 // eslint-disable-next-line max-len
 const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/layers.RecordDetailsView# */{

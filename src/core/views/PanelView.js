@@ -2,8 +2,8 @@
 import Marionette from 'backbone.marionette';
 import 'jquery-ui/ui/widgets/draggable';
 
-const template = require('./PanelView.hbs');
-require('./PanelView.css');
+import template from './PanelView.hbs';
+import './PanelView.css';
 
 
 const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# */{

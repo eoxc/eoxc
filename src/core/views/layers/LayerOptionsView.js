@@ -1,6 +1,6 @@
 import Marionette from 'backbone.marionette';
 
-const template = require('./LayerOptionsView.hbs');
+import template from './LayerOptionsView.hbs';
 
 // eslint-disable-next-line max-len
 const LayerOptionsView = Marionette.ItemView.extend(/** @lends core/views/layers.LayerOptionsView# */{
