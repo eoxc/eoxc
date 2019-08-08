@@ -1,6 +1,6 @@
 import Marionette from 'backbone.marionette';
-import 'bootstrap-slider/dist/bootstrap-slider.min';
-import 'bootstrap-slider/dist/css/bootstrap-slider.min.css';
+import 'bootstrap-slider';
+import 'bootstrap-slider/dist/css/bootstrap-slider.css';
 
 import template from './LayerListItemView.hbs';
 import './LayerListItemView.css';

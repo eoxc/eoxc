@@ -64,8 +64,7 @@
     "webpack": "^4.38.0",
     "webpack-cli": "^3.3.6",
     "webpack-dev-server": "^3.7.2",
-    "webpack-merge": "^4.2.1",
-    "worker-loader": "^2.0.0"
+    "webpack-merge": "^4.2.1"
   },
   "dependencies": {
     "@turf/bbox": "^5.1.5",
@@ -96,7 +95,8 @@
     "script-path": "^1.0.1",
     "underscore": "^1.9.1",
     "url-parse": "^1.4.7",
-    "xmldom": "^0.1.27"
+    "xmldom": "^0.1.27",
+    "worker-loader": "^2.0.0"
   },
   "browserslist": {
     "production": [
