@@ -87,7 +87,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onAttach() {
     const tooltipFormatter = record => (
-      (record && record[2] && record[2].id) ? record[2].id : `${record[0].toISOString() - record[1].toISOString()}`
+      (record && record[2] && record[2].id) ? record[2].id : `${record[0].toISOString()}`
     );
     const options = {
       domain: this.domain,
@@ -172,7 +172,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
       this.timeSlider.setRecordFilter(this.createRecordFilter(mapModel.get('bbox')));
     });
-    this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightFeatureChange);
+    //disable highlight
+    // this.listenTo(this.highlightModel, 'change:highlightFeature', this.onHighlightFeatureChange);
   },
 
   addVisibleLayers() {
@@ -184,6 +185,17 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       this.addLayer(layerModel);
     });
     this.checkVisible(false);
+  },
+
+  getDateArray(start, end, dateInterval = 1) {
+    const arr = [];
+    const dt = new Date(start);
+    const de = new Date(end);
+    while (dt <= de) {
+      arr.push(new Date(dt));
+      dt.setDate(dt.getDate() + dateInterval);
+    }
+    return arr;
   },
 
   addLayer(layerModel) {
@@ -264,22 +276,39 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         console.warn(`Unexpected search protocol ${layerModel.get('search').protocol}`);
         break;
     }
-
-    this.timeSlider.addDataset({
-      id: layerModel.get('id'),
-      color: layerModel.get('displayColor'),
-      highlightFillColor: this.highlightFillColor,
-      highlightStrokeColor: this.highlightStrokeColor,
-      source,
-      noBorder: layerModel.get('noTimeSliderBorder'),
-      bucket: layerModel.get('search.lightweightBuckets'),
-      bucketSource,
-      histogramThreshold: layerModel.get('search.histogramThreshold'),
-      histogramBinCount: layerModel.get('search.histogramBinCount'),
-      cacheRecords: true,
-      cacheIdField: 'id',
-      cluster: true,
-    });
+    //////////////////////////////////////////
+    // DCFS SHOWCASE AS NO OPENSEARCH USED
+    //////////////////////////////////////////
+    if (layerModel.get('display').timeRecords) {
+      const timeRecords = layerModel.get('display').timeRecords;
+      const generatedPoints = this.getDateArray(timeRecords.start, timeRecords.end, 1);
+      const records = generatedPoints.map(start =>
+        [new Date(start), new Date(start)]);
+      this.timeSlider.addDataset({
+        id: layerModel.get('id'),
+        color: layerModel.get('displayColor'),
+        records
+      });
+    //////////////////////////////////////////
+    // DCFS SHOWCASE AS NO OPENSEARCH USED
+    //////////////////////////////////////////
+    } else {
+      this.timeSlider.addDataset({
+        id: layerModel.get('id'),
+        color: layerModel.get('displayColor'),
+        highlightFillColor: this.highlightFillColor,
+        highlightStrokeColor: this.highlightStrokeColor,
+        source,
+        noBorder: layerModel.get('noTimeSliderBorder'),
+        bucket: layerModel.get('search.lightweightBuckets'),
+        bucketSource,
+        histogramThreshold: layerModel.get('search.histogramThreshold'),
+        histogramBinCount: layerModel.get('search.histogramBinCount'),
+        cacheRecords: true,
+        cacheIdField: 'id',
+        cluster: true,
+      });
+    }
     this.onLayersSorted(this.layersCollection);
   },
 
@@ -329,24 +358,24 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onRecordClicked(event) {
     const record = event.originalEvent.detail;
-    if (record.params) {
-      this.mapModel.show(record.params);
-    }
-    if (this.maxMapInterval) {
-      this.mapModel.set('extendedTime', [record.start, record.end]);
-    }
-    this.mapModel.set('time', [record.start, record.end]);
+    // if (record.params) {
+    //   this.mapModel.show(record.params);
+    // }
+    // if (this.maxMapInterval) {
+    //   this.mapModel.set('extendedTime', [record.start, record.end]);
+    // }
+    // this.mapModel.set('time', [record.start, record.end]);
   },
 
   onRecordMouseover(event) {
     const record = event.originalEvent.detail;
     const feature = Object.assign({}, record.params, { layerId: record.dataset });
-    this.highlightModel.highlight(feature);
+    // this.highlightModel.highlight(feature);
   },
 
   onRecordMouseout(event) {
     const record = event.originalEvent.detail;
-    this.highlightModel.unHighlight(record.params);
+    // this.highlightModel.unHighlight(record.params);
   },
 
   onRecordsClicked(event) {
