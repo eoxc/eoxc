@@ -10,9 +10,9 @@ import template from './LayerOptionsModalView.hbs';
 const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.LayerOptionsModalView# */{
   template,
   events: {
-    'change [name="layer-visible"]': 'onLayerVisibleChange',
     'input #layer-options-opacity': 'onOpacitySlide',
-    'change .layer-option': 'onLayerOptionChange'
+    'change .layer-option': 'onLayerOptionChange',
+    'change .layer-option-three': 'onSelectThreeChange'
   },
 
   templateHelpers() {
@@ -42,12 +42,27 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
           let targetLow;
           let targetHigh;
           const target = option.target;
+          let bands;
           if (values) {
-            values = values.map(value =>
-              Object.assign({}, value, {
-                isCurrent: this.model.get(target) === value.value
-              })
-            );
+            const tar = this.model.get(target);
+            if (typeof tar !== 'undefined') {
+              bands = tar.split(',');
+            }
+            if (option.selectThree) {
+              values = values.map((value) => {
+                return Object.assign({}, value, {
+                  isCurrentB1: bands ? bands[0] === value.value : null,
+                  isCurrentB2: bands ? bands[1] === value.value : null,
+                  isCurrentB3: bands ? bands[2] === value.value : null,
+                })
+              });
+            } else {
+              values = values.map(value =>
+                Object.assign({}, value, {
+                  isCurrent: tar === value.value
+                })
+              );
+            }
           }
           if (typeof option.min !== 'undefined') {
             [targetLow, targetHigh] = Array.isArray(target) ? target : target.split(',');
@@ -99,11 +114,6 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
     }
   },
 
-  onLayerVisibleChange(event) {
-    const $target = $(event.target);
-    this.model.set(`${this.useDetailsDisplay ? 'detailsDisplay' : 'display'}.visible`, $target.is(':checked'));
-  },
-
   onOpacitySlide() {
     const display = Object.assign({}, this.model.get('display'));
     display.opacity = this.$('.opacity-slider').val();
@@ -114,6 +124,29 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
     const $target = $(event.target);
     this.model.set(`${$target.attr('name')}`, $target.val());
   },
+
+  onSelectThreeChange(event) {
+    const $target = $(event.target);
+    const $targetGroup = $target.parent().parent().find('.layer-option-three');
+    let allThreeSelected = true;
+    const values = [];
+    const replace = this.model.get('display').replace;
+    $targetGroup.each((i, el) => {
+      if (el.value === '') {
+        allThreeSelected = false;
+        return;
+      } else {
+        values.push(el.value);
+      }
+    });
+    if (allThreeSelected) {
+      const valuesString = values.join(',');
+      this.model.set(`${$target.attr('name')}`, valuesString);
+      if (replace && replace.target && replace.value) {
+        this.model.set(replace.target, replace.value);
+      }
+    }
+  }
 });
 
 export default LayerOptionsModalView;
