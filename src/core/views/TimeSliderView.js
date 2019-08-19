@@ -193,7 +193,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     const de = new Date(end);
     while (dt <= de) {
       arr.push(new Date(dt));
-      dt.setDate(dt.getDate() + dateInterval);
+      dt.setUTCDate(dt.getUTCDate() + dateInterval);
     }
     return arr;
   },
@@ -283,7 +283,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       const timeRecords = layerModel.get('display').timeRecords;
       const generatedPoints = this.getDateArray(timeRecords.start, timeRecords.end, 1);
       const records = generatedPoints.map(start =>
-        [new Date(start), new Date(start)]);
+        [start, start]);
       this.timeSlider.addDataset({
         id: layerModel.get('id'),
         color: layerModel.get('displayColor'),
