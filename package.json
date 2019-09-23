@@ -58,8 +58,7 @@
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
     "webpack": "^1.12.9",
-    "webpack-dev-server": "^1.14.1",
-    "worker-loader": "^0.7.1"
+    "webpack-dev-server": "^1.14.1"
   },
   "dependencies": {
     "@turf/bbox": "^5.1.5",
@@ -91,6 +90,7 @@
     "opensearch-browser": "2.0.0-alpha.2",
     "underscore": "^1.8.3",
     "url-parse": "^1.1.7",
+    "worker-loader": "^0.7.1",
     "xmldom": "^0.1.27"
   }
 }
