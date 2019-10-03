@@ -33,6 +33,8 @@ function getService(url, description) {
 
 function searchAll(url, method, filterParams, mapParams, options, format, description, maxUrlLength, dropEmptyParameters, parseOptions) {
   const maxCount = options.maxCount;
+  const totalResults = options.totalResults;
+  const itemsPerPage = options.itemsPerPage;
 
   return getService(url, description)
     .then((service) => {
@@ -44,6 +46,8 @@ function searchAll(url, method, filterParams, mapParams, options, format, descri
         maxUrlLength,
         dropEmptyParameters,
         parseOptions,
+        totalResults,
+        serverItemsPerPage: itemsPerPage,
       });
       return paginator.searchFirstRecords(maxCount);
     });

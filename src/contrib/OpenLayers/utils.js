@@ -141,6 +141,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
             layer: displayParams.id,
             matrixSet: displayParams.matrixSet,
             format: displayParams.format,
+            cacheSize: 0,
             projection,
             tileGrid: new WMTSTileGrid({
               origin: extentGetTopLeft(projectionExtent),
@@ -162,6 +163,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
           visible: displayParams.visible,
           source: new WMSTileSource({
             crossOrigin: 'anonymous',
+            cacheSize: 0,
             params: Object.assign({
               LAYERS: layerId,
               VERSION: displayParams.version || '1.1.0',
@@ -184,6 +186,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
           visible: displayParams.visible,
           source: new XYZSource({
             crossOrigin: 'anonymous',
+            cacheSize: 0,
             projection,
             tileSize: tileSize || [256, 256],
             urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
@@ -200,6 +203,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   layer.id = layerModel.get('id');
   layer.layerModel = layerModel;
   if (displayParams.noAntialiasing) {
+    // TODO: when we migrate to OL6, this needs to be updated, see changelog
     layer.on('precompose', (event) => {
       event.context.imageSmoothingEnabled = false;
     });

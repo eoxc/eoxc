@@ -77,13 +77,13 @@ export function prepareRecords(records, switchMultiPolygonCoordinates) {
             outerRingR[i][0] += 360;
           }
         }
+        const polygonL = turfPolygon(record.geometry.coordinates[0]);
+        const polygonR = turfPolygon(record.geometry.coordinates[1]);
+        // union to a single polygon
+        const unioned = turfUnion(polygonL, polygonR);
+        // eslint-disable-next-line no-param-reassign
+        record.geometry = unioned.geometry;
       }
-      const polygonL = turfPolygon(record.geometry.coordinates[0]);
-      const polygonR = turfPolygon(record.geometry.coordinates[1]);
-      // union to a single polygon
-      const unioned = turfUnion(polygonL, polygonR);
-      // eslint-disable-next-line no-param-reassign
-      record.geometry = unioned.geometry;
     }
       // (re-)calculate the bounding box when not available or when the geometry
       // was adjusted in the step before
