@@ -68,6 +68,7 @@ export default ModalView.extend({
     this.checkSize();
     this.checkValidity();
     this.checkBands();
+    this.$('input:checkbox').prop('checked', false);
   },
 
   events: {
