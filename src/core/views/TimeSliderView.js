@@ -358,13 +358,13 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   onRecordClicked(event) {
     const record = event.originalEvent.detail;
-    // if (record.params) {
-    //   this.mapModel.show(record.params);
-    // }
-    // if (this.maxMapInterval) {
-    //   this.mapModel.set('extendedTime', [record.start, record.end]);
-    // }
-    // this.mapModel.set('time', [record.start, record.end]);
+    if (record.params) {
+      this.mapModel.show(record.params);
+    }
+    if (this.maxMapInterval) {
+      this.mapModel.set('extendedTime', [record.start, record.end]);
+    }
+    this.mapModel.set('time', [record.start, record.end]);
   },
 
   onRecordMouseover(event) {
