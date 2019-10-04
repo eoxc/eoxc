@@ -12,13 +12,13 @@
           </div>
           <div class="col-sm-10">
             <div class="form-control input-group">
-              <input class="form-control input-sm" disabled="true" placeholder="Min-X" value="{{bbox.[0]}}">
+              <input type="number" step=0.01 class="form-control show-bbox input-sm" placeholder="Min-X" value="{{bbox.[0]}}">
               <span class="input-group-addon"> </span>
-              <input class="form-control input-sm" disabled="true" placeholder="Min-Y" value="{{bbox.[1]}}">
+              <input type="number" step=0.01 class="form-control show-bbox input-sm" placeholder="Min-Y" value="{{bbox.[1]}}">
               <span class="input-group-addon"> </span>
-              <input class="form-control input-sm" disabled="true" placeholder="Max-X" value="{{bbox.[2]}}">
+              <input type="number" step=0.01 class="form-control show-bbox input-sm" placeholder="Max-X" value="{{bbox.[2]}}">
               <span class="input-group-addon"> </span>
-              <input class="form-control input-sm" disabled="true" placeholder="Max-Y" value="{{bbox.[3]}}">
+              <input type="number" step=0.01 class="form-control show-bbox input-sm" placeholder="Max-Y" value="{{bbox.[3]}}">
               <span class="input-group-addon"> </span>
               <div class="input-group-btn">
                 <button type="button" class="btn btn-default btn-draw-bbox">{{t 'Draw Bounding Box'}}</button>
@@ -154,6 +154,9 @@
       </form>
       <div class="size-warning alert alert-danger">
         {{t 'download_size_warning' }}
+      </div>
+      <div class="bbox-warning alert alert-danger">
+        {{t 'max_bbox_warning' }}
       </div>
       <div class="bands-warning alert alert-danger">
         {{t 'download_bands_warning' }}

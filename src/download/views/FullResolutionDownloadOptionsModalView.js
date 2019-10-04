@@ -1,6 +1,6 @@
 import turfBBox from '@turf/bbox';
 import i18next from 'i18next';
-
+import $ from 'jquery';
 import ModalView from '../../core/views/ModalView';
 
 import template from './FullResolutionDownloadOptionsModalView.hbs';
@@ -68,7 +68,7 @@ export default ModalView.extend({
     this.checkSize();
     this.checkValidity();
     this.checkBands();
-    this.$('input:checkbox').prop('checked', false);
+    this.checkBbox();
   },
 
   events: {
@@ -83,6 +83,7 @@ export default ModalView.extend({
     'submit form': 'onFormSubmit',
     'click .start-download': 'onStartDownloadClicked',
     'click .btn-draw-bbox': 'onDrawBBoxClicked',
+    'change .show-bbox': 'onBBoxInputChange',
   },
 
   initialize(options) {
@@ -267,6 +268,19 @@ export default ModalView.extend({
     });
   },
 
+  onBBoxInputChange() {
+    const bbox = this.$('.show-bbox')
+      .map((index, elem) => $(elem).val())
+      .get()
+      .map(parseFloat);
+
+    if (bbox.reduce((prev, current) => prev && !isNaN(current), true)) {
+      this.mapModel.set('drawnArea', null);
+      this.mapModel.set('area', bbox);
+    }
+    this.checkBbox();
+  },
+
 
   updatePreferences(key, value) {
     const preferences = this.getPreferences();
@@ -311,7 +325,7 @@ export default ModalView.extend({
       $sizeWarning.html(i18next.t('download_size_warning', { estimated_size: parseFloat(estimated_size).toFixed(0) }));
       $sizeWarning.fadeIn();
     } else if ($sizeWarning.is(':visible')) {
-      $sizeWarning.fadeOut();
+      $sizeWarning.hide();
     } else {
       $sizeWarning.hide();
     }
@@ -390,10 +404,35 @@ export default ModalView.extend({
         );
         $bandsWarning.fadeIn();
       } else {
-        setTimeout(() => $bandsWarning.stop(true, true).fadeOut());
+        setTimeout(() => $bandsWarning.stop(true, true).hide());
       }
     } else {
-      setTimeout(() => $bandsWarning.stop(true, true).fadeOut());
+      setTimeout(() => $bandsWarning.stop(true, true).hide());
+    }
+  },
+
+  checkBbox() {
+    // TODO: make max_bbox_axis configurable
+    const $bboxWarning = this.$('.bbox-warning');
+    const maxBboxSize = this.layerModel.get('fullResolution.maxBboxEdgeSize');
+    if (this.bbox[3] - this.bbox[1] >= maxBboxSize) {
+      $bboxWarning.html(i18next.t('max_bbox_warning', {
+        max_bbox_size: maxBboxSize,
+        max_bbox_axis: 'lat',
+        max_bbox_exceed: (this.bbox[3] - this.bbox[1] - maxBboxSize).toFixed(4),
+      }));
+      $bboxWarning.fadeIn();
+    } else if (this.bbox[2] - this.bbox[0] >= maxBboxSize) {
+      $bboxWarning.html(i18next.t('max_bbox_warning', {
+        max_bbox_size: maxBboxSize,
+        max_bbox_axis: 'lon',
+        max_bbox_exceed: (this.bbox[2] - this.bbox[0] - maxBboxSize).toFixed(4),
+      }));
+      $bboxWarning.fadeIn();
+    } else if ($bboxWarning.is(':visible')) {
+      $bboxWarning.hide();
+    } else {
+      $bboxWarning.hide();
     }
   },
 
