@@ -1,6 +1,6 @@
 import $ from 'jquery';
 
-import { filtersToCQL, getISODateTimeString } from '../core/util';
+import { filtersToCQL, getISODateTimeString, getDateString } from '../core/util';
 import FiltersModel from '../core/models/FiltersModel';
 
 function getCoverageXML(coverageid, options = {}) {
@@ -194,12 +194,20 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
     interpolation: options.interpolation,
     axisNames: layerModel.get('fullResolution.axisNames'),
   };
-  const id = layerModel.get('fullResolution.id');
+  let id = layerModel.get('fullResolution.id');
+  /// SH specific ///
+  if (layerModel.get('fullResolution.disableTimeSubsetting') && mapModel.get('time').length === 2) {
+    // need to add __%Y%m%d to ID for current config
+    // TODO: make this a configurable template
+    const formattedTime = getDateString(mapModel.get('time')[1]);
+    id += `__${formattedTime}`;
+  }
+  //////////////////
   let kvp = getCoverageKVP(id, requestOptions);
 
 
   const time = mapModel.get('time');
-  if (time) {
+  if (time && !layerModel.get('fullResolution.disableTimeSubsetting')) {
     kvp = `${kvp}&subset=http://www.opengis.net/def/axis/OGC/0/time("${getISODateTimeString(time[0])}","${getISODateTimeString(time[1])}")`;
   }
 
