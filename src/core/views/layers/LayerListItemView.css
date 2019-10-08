@@ -25,11 +25,13 @@ input[type="checkbox"].layer-visible + label span:before, input[type="checkbox"]
 input[type="checkbox"].layer-visible + label span:before, input[type="checkbox"].layer-visible + span:before {
   content: "\f070"; /* eye-slash */
   color: #b3b3b3;
+  cursor:pointer;
 }
 
 input[type="checkbox"].layer-visible:checked + label span:before, input[type="checkbox"].layer-visible:checked + span:before {
   content: "\f06e"; /* eye */
   color: #555;
+  cursor:pointer;
 }
 
 .layer-list-item .radio label span:before {
