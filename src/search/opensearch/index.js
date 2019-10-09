@@ -37,6 +37,8 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
   const maxUrlLength = layerModel.get('search.maxUrlLength') || 4000;
   const dropEmptyParameters = layerModel.get('search.dropEmptyParameters') || false;
   const switchMultiPolygonCoordinates = layerModel.get('search.switchMultiPolygonCoordinates') || false;
+  // coordinate check not necessary when search used only to get total count
+  const skipCoordinateCheck = options.skipCoordinateCheck || false;
 
   return getService(url)
     .then((service) => {
@@ -55,8 +57,10 @@ export function search(layerModel, filtersModel, mapModel, options = {}) {
       );
     })
     .then((result) => {
-      // eslint-disable-next-line no-param-reassign
-      result.records = prepareRecords(result.records, switchMultiPolygonCoordinates);
+      if (!skipCoordinateCheck) {
+        // eslint-disable-next-line no-param-reassign
+        result.records = prepareRecords(result.records, switchMultiPolygonCoordinates);
+      }
       return result;
     });
 }

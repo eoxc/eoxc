@@ -81,7 +81,8 @@ self.onmessage = function onMessage({ data }) {
           self.emitter = emitter;
           emitter
             .on('page', page => self.postMessage(['progress', Object.assign(page, { records: prepareRecords(page.records, switchMultiPolygonCoordinates) })]))
-            .on('success', result => self.postMessage(['success', Object.assign(result, { records: prepareRecords(result.records, switchMultiPolygonCoordinates) })]))
+            // success does not need to save records, page callback does that
+            .on('success', result => self.postMessage(['success', result]))
             .on('error', error => self.postMessage(['error', error.toString()]));
         }, error => self.postMessage(['error', error.toString()]));
       break;
