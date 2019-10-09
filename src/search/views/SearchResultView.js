@@ -133,7 +133,7 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     let sizeAccum = 0;
     for (let i = 0; i < this.children.length; ++i) {
       const view = this.children.findByIndex(i);
-      view.setSlice(sizeAccum - scrollTop, height);
+      view.setSlice(sizeAccum - scrollTop, height, view, 57, 0, 153);
       sizeAccum += view.$el.outerHeight(true);
     }
     elem.scrollTop = scrollTop;

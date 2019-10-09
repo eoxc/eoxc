@@ -22,7 +22,8 @@ export function search(layerModel, filtersModel, mapModel, options) {
 
 export function getCount(layerModel, filtersModel, mapModel, options) {
   const itemsPerPage = layerModel.get('search.countZeroRecords') ? 0 : 1;
-  const newOptions = Object.assign({}, options, { itemsPerPage });
+  const skipCoordinateCheck = true;
+  const newOptions = Object.assign({}, options, { itemsPerPage, skipCoordinateCheck });
   switch (layerModel.get('search.protocol')) {
     case 'EO-WCS':
       return eowcs.search(layerModel, filtersModel, mapModel, newOptions)

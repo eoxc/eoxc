@@ -1,9 +1,11 @@
 import Marionette from 'backbone.marionette';
+import Backbone from 'backbone';
 
 import template from './SelectionListView.hbs';
+import './SelectionListView.css';
 import emptyTemplate from './SelectionListViewEmpty.hbs';
 import SelectionListItemView from './SelectionListItemView';
-import { downloadFullResolution } from '../eowcs';
+import { setSlice } from '../../search/utils';
 
 const EmptyView = Marionette.ItemView.extend({
   template: emptyTemplate,
@@ -27,10 +29,16 @@ const SelectionListView = Marionette.CompositeView.extend({
       model: child,
       highlightModel: this.highlightModel,
       fallbackThumbnailUrl: this.fallbackThumbnailUrl,
+      collection: this.collection,
     });
   },
   emptyView: EmptyView,
 
+  constructor(options) {
+    Marionette.CompositeView.prototype.constructor.call(this, Object.assign({}, options, {
+      collection: new Backbone.Collection(),
+    }));
+  },
   events: {
     'click .btn-download-full-res': 'onDownloadFullResolutionClick',
     'click .btn-processing': 'onProcessingClick',
@@ -44,6 +52,8 @@ const SelectionListView = Marionette.CompositeView.extend({
     this.highlightModel = options.highlightModel;
     this.mapModel = options.mapModel;
     this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
+    this.referenceCollection = options.referenceCollection;
+    this.setSlice = setSlice;
   },
 
   onDownloadFullResolutionClick() {
