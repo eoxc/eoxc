@@ -48,15 +48,13 @@ export function prepareRecords(records, switchMultiPolygonCoordinates) {
           last = current;
         }
       }
-    } else if (record.geometry && record.geometry.type === 'MultiPolygon') {
+    } else if (switchMultiPolygonCoordinates && record.geometry && record.geometry.type === 'MultiPolygon') {
       for (let polygonIndex = 0; polygonIndex < record.geometry.coordinates.length; ++polygonIndex) {
         for (let ringIndex = 0; ringIndex < record.geometry.coordinates[polygonIndex].length; ++ringIndex) {
           const ring = record.geometry.coordinates[polygonIndex][ringIndex];
           for (let i = 0; i < ring.length; ++i) {
-            if (switchMultiPolygonCoordinates) {
-              // switch latitude and longitude
-              ring[i].reverse();
-            }
+            // switch latitude and longitude
+            ring[i].reverse();
           }
         }
       }
