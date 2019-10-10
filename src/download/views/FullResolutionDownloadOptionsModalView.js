@@ -286,7 +286,7 @@ export default ModalView.extend({
     const preferences = this.getPreferences();
     preferences[key] = value;
     localStorage.setItem(
-      `full-resolution-download-options-view-preferences-${this.layerModel.get('layerId')}`,
+      `full-resolution-download-options-view-preferences-${this.layerModel.get('id')}`,
       JSON.stringify(preferences),
     );
   },
@@ -439,7 +439,7 @@ export default ModalView.extend({
   getPreferences() {
     try {
       return JSON.parse(localStorage.getItem(
-        `full-resolution-download-options-view-preferences-${this.layerModel.get('layerId')}`
+        `full-resolution-download-options-view-preferences-${this.layerModel.get('id')}`
       ) || '{}');
     } catch (error) {
       return {};
