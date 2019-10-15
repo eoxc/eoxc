@@ -1,6 +1,7 @@
 import 'jquery';
 import 'bootstrap-slider';
 import 'bootstrap-slider/dist/css/bootstrap-slider.css';
+import _ from 'underscore';
 import './LayerOptionsModalView.css';
 
 import ModalView from '../ModalView';
@@ -12,7 +13,8 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
   events: {
     'input #layer-options-opacity': 'onOpacitySlide',
     'change .layer-option': 'onLayerOptionChange',
-    'change .layer-option-three': 'onSelectThreeChange'
+    'change .layer-option-three': 'onLayerOptionThreeChange',
+    'change input[name="options_selector"]': 'onVisualizationChange'
   },
 
   templateHelpers() {
@@ -44,22 +46,25 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
           const target = option.target;
           let bands;
           if (values) {
+            // get currently set values
             const tar = this.model.get(target);
             if (typeof tar !== 'undefined') {
               bands = tar.split(',');
             }
             if (option.selectThree) {
-              values = values.map((value) => {
-                return Object.assign({}, value, {
-                  isCurrentB1: bands ? bands[0] === value.value : null,
-                  isCurrentB2: bands ? bands[1] === value.value : null,
-                  isCurrentB3: bands ? bands[2] === value.value : null,
-                })
-              });
+              // select used item
+              values = values.map(value => Object.assign({}, value, {
+                isCurrentB1: bands ? bands[0] === value.value : null,
+                isCurrentB2: bands ? bands[1] === value.value : null,
+                isCurrentB3: bands ? bands[2] === value.value : null,
+                label: typeof (value.label) !== 'undefined' ? value.label : value.value,
+              }));
             } else {
+              // select used item
               values = values.map(value =>
                 Object.assign({}, value, {
-                  isCurrent: tar === value.value
+                  isCurrent: tar === value.value,
+                  label: typeof (value.label) !== 'undefined' ? value.label : value.value,
                 })
               );
             }
@@ -71,6 +76,10 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
           }
           return Object.assign({}, option, { values, low, high, targetLow, targetHigh });
         });
+        // TODO: FIX THIS
+      if (typeof (_.find(options, option => option.isChosen === true) === 'undefined')) {
+        options[0].isChosen = true;
+      }
       return options;
     }
     return {};
@@ -122,30 +131,34 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
 
   onLayerOptionChange(event) {
     const $target = $(event.target);
+    // TODO: add replaceParameters() once it is configured per-option
     this.model.set(`${$target.attr('name')}`, $target.val());
+    // TODO: enable corresponding input
   },
 
-  onSelectThreeChange(event) {
+  onLayerOptionThreeChange(event) {
     const $target = $(event.target);
     const $targetGroup = $target.parent().parent().find('.layer-option-three');
-    let allThreeSelected = true;
     const values = [];
-    const replace = this.model.get('display').replace;
     $targetGroup.each((i, el) => {
-      if (el.value === '') {
-        allThreeSelected = false;
-        return;
-      } else {
-        values.push(el.value);
+      values.push(el.value);
+    });
+    this.replaceParameters();
+    this.model.set(`${$target.attr('name')}`, values.join(','));
+    // TODO: enable corresponding input
+  },
+
+  replaceParameters() {
+    const replaceList = this.useDetailsDisplay ? this.model.get('detailsDisplay').replace : this.model.get('display').replace;
+    _.each(replaceList, (config) => {
+      if (typeof config.target !== 'undefined' && typeof config.value !== 'undefined' && this.model.get(config.target) !== config.value) {
+        this.model.set(config.target, config.value);
       }
     });
-    if (allThreeSelected) {
-      const valuesString = values.join(',');
-      this.model.set(`${$target.attr('name')}`, valuesString);
-      if (replace && replace.target && replace.value) {
-        this.model.set(replace.target, replace.value);
-      }
-    }
+  },
+
+  onVisualizationChange() {
+    // get corresponding input
   }
 });
 
