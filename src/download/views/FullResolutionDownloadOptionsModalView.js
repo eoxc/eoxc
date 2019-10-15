@@ -1,6 +1,7 @@
 import turfBBox from '@turf/bbox';
 import i18next from 'i18next';
 import $ from 'jquery';
+import _ from 'underscore';
 import ModalView from '../../core/views/ModalView';
 
 import template from './FullResolutionDownloadOptionsModalView.hbs';
@@ -15,6 +16,8 @@ export default ModalView.extend({
       bbox: this.bbox.map(v => v.toFixed(4)),
       fields: this.layerModel.get('fullResolution.fields'),
       interpolations: this.layerModel.get('fullResolution.interpolations'),
+      availableProjections: this.model.get('availableProjections'),
+      availableDownloadFormats: this.model.get('availableDownloadFormats'),
     };
   },
 
@@ -109,6 +112,7 @@ export default ModalView.extend({
       }
     });
     this.resolution = this.layerModel.get('fullResolution.maxSizeResolution');
+    this.defaultLabelsSet();
   },
 
   onProjectionChange() {
@@ -444,5 +448,30 @@ export default ModalView.extend({
     } catch (error) {
       return {};
     }
-  }
+  },
+
+  defaultLabelsSet() {
+    _.each(this.model.get('availableDownloadFormats'), (format) => {
+      if (!format.get('name') && format.get('mimeType')) {
+        format.set('name', format.get('mimeType'));
+      }
+    });
+    _.each(this.model.get('availableProjections'), (proj) => {
+      if (!proj.get('name') && proj.get('identifier')) {
+        proj.set('name', proj.get('identifier'));
+      }
+    });
+    _.each(this.layerModel.get('fullResolution.fields'), (field) => {
+      if (typeof (field.name) === 'undefined' && typeof (field.identifier) !== 'undefined') {
+        // eslint-disable-next-line no-param-reassign
+        field.name = field.identifier;
+      }
+    });
+    _.each(this.layerModel.get('fullResolution.interpolations'), (interpolation) => {
+      if (typeof (interpolation.name) === 'undefined' && typeof (interpolation.identifier) !== 'undefined') {
+        // eslint-disable-next-line no-param-reassign
+        interpolation.name = interpolation.identifier;
+      }
+    });
+  },
 });
