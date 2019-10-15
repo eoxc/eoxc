@@ -117,14 +117,14 @@ export default ModalView.extend({
 
   onProjectionChange() {
     const val = this.$('.select-projection').val();
-    this.model.set('projection', val !== '' ? val : null);
-    this.updatePreferences('preferredProjection', val !== '' ? val : null);
+    this.model.set('projection', (val !== '' && val !== '---') ? val : null);
+    this.updatePreferences('preferredProjection', (val !== '' && val !== '---') ? val : null);
   },
 
   onFormatChange() {
     const val = this.$('.select-format').val();
-    this.model.set('format', val !== '' ? val : null);
-    this.updatePreferences('preferredFormat', val !== '' ? val : null);
+    this.model.set('format', (val !== '' && val !== '---') ? val : null);
+    this.updatePreferences('preferredFormat', (val !== '' && val !== '---') ? val : null);
     this.checkBands();
   },
 
@@ -140,8 +140,8 @@ export default ModalView.extend({
 
   onInterpolationChange() {
     const val = this.$('select[name="interpolation"]').val();
-    this.model.set('interpolation', val !== '' ? val : null);
-    this.updatePreferences('preferredInterpolation', val !== '' ? val : null);
+    this.model.set('interpolation', (val !== '' && val !== '---') ? val : null);
+    this.updatePreferences('preferredInterpolation', (val !== '' && val !== '---') ? val : null);
   },
 
   onScaleMethodChange() {
