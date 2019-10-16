@@ -14,24 +14,27 @@
         </div>
         {{#each options}}
           <div class="form-group">
-            <label class="col-sm-2 control-label"><input type="radio" name="options_selector" {{#if this.isChosen}} checked{{/if}}>{{t this.name}}</label>
+            <label for="visualization-selector_{{this.id}}" class="col-sm-2 control-label">
+              <input type="radio" id="visualization-selector_{{this.id}}" name="visualization-selector" class="visualization-selector" {{#if this.isChosen}} checked{{/if}}><span>{{t this.name}}</span>
+              </input>
+            </label>
             {{#if this.selectThree}}
               <div class="col-sm-4">
-                <select class="form-control layer-option-three" name="{{this.target}}">
+                <select class="form-control layer-option" name="{{this.target}}">
                   {{#each this.values}}
                     <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
                   {{/each}}
                 </select>
               </div>
               <div class="col-sm-4">
-                <select class="form-control layer-option-three" name="{{this.target}}">
+                <select class="form-control layer-option" name="{{this.target}}">
                   {{#each this.values}}
                     <option value="{{this.value}}" {{#if this.isCurrentB2}} selected="selected"{{/if}}>{{this.label}}</option>
                   {{/each}}
                 </select>
               </div>
               <div class="col-sm-4">
-                <select class="form-control layer-option-three" name="{{this.target}}">
+                <select class="form-control layer-option" name="{{this.target}}">
                   {{#each this.values}}
                     <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
                   {{/each}}
@@ -49,6 +52,14 @@
           {{/unless}}
           </div>
         {{/each}}
+        {{#if legendUrl}}
+          <div class="form-group">
+            <label class="col-sm-2 control-label">{{t 'Legend'}}</label>
+            <div class="col-sm-12">
+              <img class="layer-legend-image" src="{{legendUrl}}" alt="Legend" />
+            </div>
+          </div>
+        {{/if}}
       </form>
     </div>
   </div>
