@@ -34,3 +34,8 @@ input[type="radio"].visualization-selector:checked + span:before {
   content: "\f06e"; /* eye */
   color: #555;
 }
+
+.option-row {
+  padding-left: 7px;
+  padding-right: 7px;
+}

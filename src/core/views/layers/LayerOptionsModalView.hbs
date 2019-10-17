@@ -19,21 +19,21 @@
               </input>
             </label>
             {{#if this.selectThree}}
-              <div class="col-sm-4">
+              <div class="col-sm-4 option-row">
                 <select class="form-control layer-option" name="{{this.target}}">
                   {{#each this.values}}
                     <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
                   {{/each}}
                 </select>
               </div>
-              <div class="col-sm-4">
+              <div class="col-sm-4 option-row">
                 <select class="form-control layer-option" name="{{this.target}}">
                   {{#each this.values}}
                     <option value="{{this.value}}" {{#if this.isCurrentB2}} selected="selected"{{/if}}>{{this.label}}</option>
                   {{/each}}
                 </select>
               </div>
-              <div class="col-sm-4">
+              <div class="col-sm-4 option-row">
                 <select class="form-control layer-option" name="{{this.target}}">
                   {{#each this.values}}
                     <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
@@ -42,10 +42,10 @@
               </div>
             {{/if}}
           {{#unless this.selectThree }}
-            <div class="col-sm-10">
+            <div class="col-sm-10 option-row">
               <select class="form-control layer-option" name="{{this.target}}">
                 {{#each this.values}}
-                  <option value="{{this.value}}" {{#if this.isCurrent}} selected="selected"{{/if}}>{{this.label}}</option>
+                  <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
                 {{/each}}
               </select>
             </div>

@@ -27,12 +27,29 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
     ModalView.prototype.initialize.call(this, options);
     // determine if details display or simple display is being configured
     this.useDetailsDisplay = options.useDetailsDisplay && !!this.model.get('detailsDisplay');
-    this.display = this.useDetailsDisplay ? this.model.get('detailsDisplay') : this.model.get('display');
+    this.displayOption = this.useDetailsDisplay ? 'detailsDisplay' : 'display';
+    this.display = this.model.get(this.displayOption);
   },
 
   getDisplayOptions() {
     if (typeof this.display.options !== 'undefined') {
       // if opened for the first time, choose the first option
+      if (_.filter(this.display.options, option => option.isChosen === true).length === 0) {
+        this.display.options[0].isChosen = true;
+      }
+      // if opened for the first time, preset b1, b2, b3 as indices[0, 1, 2]
+      _.each(this.display.options, (option) => {
+        if (option.values) {
+          const result = _.every(['isCurrentB1', 'isCurrentB2', 'isCurrentB3'], isCurrent => _.filter(option.values, val => val[isCurrent] === true).length === 0);
+          if (result && option.selectThree) {
+            option.values[0].isCurrentB1 = true;
+            option.values[1].isCurrentB2 = true;
+            option.values[2].isCurrentB3 = true;
+          } else if (result) {
+            option.values[0].isCurrentB1 = true;
+          }
+        }
+      });
       if (_.filter(this.display.options, option => option.isChosen === true).length === 0) {
         this.display.options[0].isChosen = true;
       }
@@ -46,32 +63,16 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
           let targetLow;
           let targetHigh;
           const target = option.target;
-          let bands;
           const id = counter;
           if (values) {
-            // get currently set values
-            const tar = this.model.get(target);
-            if (typeof tar !== 'undefined') {
-              bands = tar.split(',');
-            }
-            if (option.selectThree === true) {
-              // select used items
-              values = values.map(value => Object.assign({}, value, {
-                isCurrentB1: bands ? bands[0] === value.value : null,
-                isCurrentB2: bands ? bands[1] === value.value : null,
-                isCurrentB3: bands ? bands[2] === value.value : null,
-                // set value as label if label not set
-                label: typeof (value.label) !== 'undefined' ? value.label : value.value,
-              }));
-            } else {
-              // select used item
-              values = values.map(value =>
-                Object.assign({}, value, {
-                  isCurrent: tar === value.value,
-                  label: typeof (value.label) !== 'undefined' ? value.label : value.value,
-                })
-              );
-            }
+            // select used items
+            values = values.map(value => Object.assign({}, value, {
+              isCurrentB1: value.isCurrentB1 ? true : null,
+              isCurrentB2: value.isCurrentB2 ? true : null,
+              isCurrentB3: value.isCurrentB3 ? true : null,
+              // set value as label if label not set
+              label: typeof (value.label) !== 'undefined' ? value.label : value.value,
+            }));
           }
           if (typeof option.min !== 'undefined') {
             [targetLow, targetHigh] = Array.isArray(target) ? target : target.split(',');
@@ -129,7 +130,7 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
     // set the corresponding visualization to be used and apply changes
     const $target = this.$(event.target);
     const $input = $target.parent().parent().find('.visualization-selector');
-    // to trigger onchange event if necessary
+    // to trigger onchange event on input if necessary
     $input.click();
     this.applySettings();
   },
@@ -147,9 +148,8 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
   onVisualizationChange(event) {
     // find checked input and reset option.isChosen based on id of that input
     _.each(this.display.options, (option) => { option.isChosen = false; });
-    // get #id
     const id = event.target.id;
-    // get the number at the end - index
+    // get the number at the end of #id - index
     const idNum = id.substring(id.lastIndexOf('_') + 1, id.length);
     // set isChosen on underlying option object
     this.display.options[idNum].isChosen = true;
@@ -175,7 +175,8 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
         this.model.set(`${$forms.attr('name')}`, '');
       }
     });
-  }
+    this.model.set(this.displayOption, this.display);
+  },
 });
 
 export default LayerOptionsModalView;
