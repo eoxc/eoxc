@@ -162,11 +162,30 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
       // get corresponding form/s
       const $forms = this.$(`#visualization-selector_${index}`).parent().parent().find('.layer-option');
       const values = [];
+      const selectedIndices = [];
       $forms.each((i, el) => {
         values.push(el.value);
+        selectedIndices.push(el.selectedIndex)
       });
+
+      // reset isSelected in model and update it with what is selected in ui
+      _.each(this.display.options, (opt) => {
+        _.each(opt.values, (value) => {
+          value.isSelectedB1 = false;
+          value.isSelectedB2 = false;
+          value.isSelectedB3 = false;
+        })
+      });
+      if (option.selectThree) {
+        option.values[selectedIndices[0]].isCurrentB1 = true;
+        option.values[selectedIndices[1]].isCurrentB2 = true;
+        option.values[selectedIndices[2]].isCurrentB3 = true;
+      } else {
+        option.values[selectedIndices[0]].isCurrentB1 = true;
+      }
+
       if (option.isChosen === true) {
-        // set option
+        // set option to model
         this.model.set(`${$forms.attr('name')}`, values.join(','));
         // if replace was configured for this option, apply it
         this.replaceLayerParameters(option);
@@ -175,6 +194,7 @@ const LayerOptionsModalView = ModalView.extend(/** @lends core/views/layers.Laye
         this.model.set(`${$forms.attr('name')}`, '');
       }
     });
+    // save changed ui state to underlying layermodel from current view
     this.model.set(this.displayOption, this.display);
   },
 });
