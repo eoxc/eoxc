@@ -12,6 +12,7 @@ BluebirdPromise.config({
 
 configureOpenSearch({
   useXHR: true,
+  Promise: BluebirdPromise,
 });
 
 // cached services
@@ -21,7 +22,7 @@ const serializedServices = {};
 function getService(url) {
   if (!services[url]) {
     // add a new promise
-    services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise })
+    services[url] = discover(url)
       .then((service) => {
         serializedServices[url] = service.serialize();
         return service;

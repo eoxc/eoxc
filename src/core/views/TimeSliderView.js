@@ -73,7 +73,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.maxTooltips = options.maxTooltips;
     this.timeSliderAlternativeBrush = options.timeSliderAlternativeBrush;
     this.enableDynamicHistogram = options.enableDynamicHistogram;
-    this.previousSearches = {};
+    this.searchRequests = [];
     this.maxMapInterval = this.mapModel.get('maxMapInterval');
     if (this.maxMapInterval) {
       // initial setup if shared time
@@ -176,6 +176,16 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   addVisibleLayers() {
+    // cancel ongoing timeslider requests
+    this.searchRequests.forEach((req) => {
+      if (typeof req.emit === 'function') {
+        // PagedSearchProgressEmitter
+        req.emit('cancel');
+      } else if (typeof req.cancel === 'function') {
+        // Bluebird Promise
+        req.cancel();
+      }
+    });
     const visibleLayers = this.layersCollection.filter(
       layerModel => layerModel.get('display.visible')
     );
@@ -208,37 +218,38 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
                 : acc
               ), { time: [start, end] }
           ));
-          searchAllRecords(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' })
-            .on('progress', (result) => {
-              callback(result.records.map((record) => {
-                let time = null;
-                const properties = record.properties;
-                if (record.time) {
-                  time = record.time;
-                  if (time instanceof Date) {
-                    time = [time, time];
-                  }
-                } else if (properties) {
-                  // TODO: other property names than begin_time/end_time
-                  if (properties.begin_time && properties.end_time) {
-                    time = [new Date(properties.begin_time), new Date(properties.end_time)];
-                  } else if (properties.time) {
-                    if (Array.isArray(properties.time)) {
-                      time = properties.time;
-                    } else {
-                      time = [properties.time];
-                    }
+          const emitter = searchAllRecords(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' });
+          emitter.on('progress', (result) => {
+            callback(result.records.map((record) => {
+              let time = null;
+              const properties = record.properties;
+              if (record.time) {
+                time = record.time;
+                if (time instanceof Date) {
+                  time = [time, time];
+                }
+              } else if (properties) {
+                // TODO: other property names than begin_time/end_time
+                if (properties.begin_time && properties.end_time) {
+                  time = [new Date(properties.begin_time), new Date(properties.end_time)];
+                } else if (properties.time) {
+                  if (Array.isArray(properties.time)) {
+                    time = properties.time;
+                  } else {
+                    time = [properties.time];
                   }
                 }
+              }
 
-                if (time === null) {
-                  return null;
-                }
+              if (time === null) {
+                return null;
+              }
 
-                return [...time, record];
-              }).filter(item => item !== null));
-            })
-            .on('error', () => callback([]));
+              return [...time, record];
+            }).filter(item => item !== null));
+          });
+          emitter.on('error', () => callback([]));
+          this.searchRequests.push(emitter);
         };
 
         bucketSource = (start, end, params, callback) => {
@@ -249,8 +260,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
                 : acc
               ), { time: [start, end] }
           ));
-          getCount(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' })
-            .then(count => callback(count));
+          const result = getCount(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' });
+          result.then(count => callback(count));
+          this.searchRequests.push(result);
         };
         break;
       case 'WMS':
