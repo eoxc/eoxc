@@ -33,6 +33,8 @@ function getService(url, description) {
 
 function searchAll(url, method, filterParams, mapParams, options, format, description, maxUrlLength, dropEmptyParameters, parseOptions) {
   const maxCount = options.maxCount;
+  const totalResults = options.totalResults;
+  const itemsPerPage = options.itemsPerPage;
 
   return getService(url, description)
     .then((service) => {
@@ -44,6 +46,8 @@ function searchAll(url, method, filterParams, mapParams, options, format, descri
         maxUrlLength,
         dropEmptyParameters,
         parseOptions,
+        totalResults,
+        serverItemsPerPage: itemsPerPage,
       });
       return paginator.searchFirstRecords(maxCount);
     });
@@ -77,7 +81,8 @@ self.onmessage = function onMessage({ data }) {
           self.emitter = emitter;
           emitter
             .on('page', page => self.postMessage(['progress', Object.assign(page, { records: prepareRecords(page.records, switchMultiPolygonCoordinates) })]))
-            .on('success', result => self.postMessage(['success', Object.assign(result, { records: prepareRecords(result.records, switchMultiPolygonCoordinates) })]))
+            // success does not need to save records, page callback does that
+            .on('success', result => self.postMessage(['success', result]))
             .on('error', error => self.postMessage(['error', error.toString()]));
         }, error => self.postMessage(['error', error.toString()]));
       break;

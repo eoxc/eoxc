@@ -627,6 +627,20 @@ class OpenLayersMapView extends Marionette.ItemView {
         this.getLayerOfGroup(layerModel, this.groups.layers), this.mapModel, layerModel
       );
     }, this);
+    this.baseLayersCollection.forEach((layerModel) => {
+      if (layerModel.get('display.synchronizeTime')) {
+        this.applyLayerFilters(
+          this.getLayerOfGroup(layerModel, this.groups.baseLayers), this.mapModel, layerModel
+        );
+      }
+    }, this);
+    this.overlayLayersCollection.forEach((layerModel) => {
+      if (layerModel.get('display.synchronizeTime')) {
+        this.applyLayerFilters(
+          this.getLayerOfGroup(layerModel, this.groups.overlayLayers), this.mapModel, layerModel
+        );
+      }
+    }, this);
   }
 
   onMapAreaChange(mapModel) {

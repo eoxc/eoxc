@@ -85,16 +85,17 @@ class SearchModel extends Backbone.Model {
     const layerModel = this.get('layerModel');
     const filtersModel = this.get('filtersModel');
     const mapModel = this.get('mapModel');
-
-    this.doSearchDebounced(layerModel, filtersModel, mapModel, false, this.get('hasLoaded'));
+    // if loading more, total results information can be used
+    this.doSearchDebounced(layerModel, filtersModel, mapModel, false, this.get('hasLoaded'), this.get('totalResults'));
   }
 
-  doSearch(layerModel, filtersModel, mapModel, reset = true, startIndex = 0) {
+  doSearch(layerModel, filtersModel, mapModel, reset = true, startIndex = 0, totalResults = undefined) {
     this.cancelSearch();
     const searchOptions = {
-      itemsPerPage: this.get('defaultPageSize'),
+      itemsPerPage: this.get('itemsPerPage') || this.get('defaultPageSize'),
       maxCount: (startIndex === 0) ? this.get('maxCount') : this.get('loadMore'),
       startIndex,
+      totalResults,
     };
     const request = searchAllRecords(layerModel, filtersModel, mapModel, searchOptions);
     this.prevRequest = request;

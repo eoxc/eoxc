@@ -48,20 +48,18 @@ export function prepareRecords(records, switchMultiPolygonCoordinates) {
           last = current;
         }
       }
-    } else if (record.geometry && record.geometry.type === 'MultiPolygon') {
+    } else if (switchMultiPolygonCoordinates && record.geometry && record.geometry.type === 'MultiPolygon') {
       for (let polygonIndex = 0; polygonIndex < record.geometry.coordinates.length; ++polygonIndex) {
         for (let ringIndex = 0; ringIndex < record.geometry.coordinates[polygonIndex].length; ++ringIndex) {
           const ring = record.geometry.coordinates[polygonIndex][ringIndex];
           for (let i = 0; i < ring.length; ++i) {
-            if (switchMultiPolygonCoordinates) {
-              // switch latitude and longitude
-              ring[i].reverse();
-            }
+            // switch latitude and longitude
+            ring[i].reverse();
           }
         }
       }
       if (record.geometry.coordinates.length === 2) {
-        // add 360 to the second polygon if necessary to exceed srs bounds and allow polygon union
+        // add 360 to the second polygon if necessary to exceed srs bounds and allow polygon union to remove connection line on dateline
         const outerRingL = record.geometry.coordinates[1][0];
         const outerRingLLongitudes = Array.from(outerRingL, x => x[0]);
         const outerRingR = record.geometry.coordinates[0][0];
@@ -77,13 +75,23 @@ export function prepareRecords(records, switchMultiPolygonCoordinates) {
             outerRingR[i][0] += 360;
           }
         }
+        const polygonL = turfPolygon(record.geometry.coordinates[0]);
+        const polygonR = turfPolygon(record.geometry.coordinates[1]);
+        // union to a single polygon
+        const unioned = turfUnion(polygonL, polygonR);
+        if (unioned.geometry.coordinates.length === 1) {
+          // single polygon result out of union -> subtract 360 degrees to go around
+          // OL not rendering very large polygons on higher zooms, where dateline is not currently visible
+          const rings = unioned.geometry.coordinates;
+          for (let i = 0; i < rings.length; ++i) {
+            for (let j = 0; j < rings[i].length; ++j) {
+              rings[i][j][0] -= 360;
+            }
+          }
+        }
+        // eslint-disable-next-line no-param-reassign
+        record.geometry = unioned.geometry;
       }
-      const polygonL = turfPolygon(record.geometry.coordinates[0]);
-      const polygonR = turfPolygon(record.geometry.coordinates[1]);
-      // union to a single polygon
-      const unioned = turfUnion(polygonL, polygonR);
-      // eslint-disable-next-line no-param-reassign
-      record.geometry = unioned.geometry;
     }
       // (re-)calculate the bounding box when not available or when the geometry
       // was adjusted in the step before

@@ -141,9 +141,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
           this.addVisibleLayers();
         }
       });
+    } else {
+      this.addVisibleLayers();
     }
-
-    this.addVisibleLayers();
 
     this.listenTo(this.mapModel, 'change:time', this.onModelSelectionChanged);
     this.listenTo(this.mapModel, 'change:extendedTime', () => {

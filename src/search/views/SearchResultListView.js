@@ -5,6 +5,7 @@ import 'jquery-lazyload';
 import template from './SearchResultListView.hbs';
 import './SearchResultListView.css';
 import SearchResultItemView from './SearchResultItemView';
+import { setSlice } from '../utils';
 
 // eslint-disable-next-line max-len
 const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/views/layers.SearchResultListView# */{
@@ -59,13 +60,9 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
     this.highlightModel = options.highlightModel;
     this.downloadSelectionCollection = options.downloadSelectionCollection;
     this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
-    this.finished = false;
-    this.previousCollapsed = false;
-    this.prevUpper = 0;
-    this.availableSpace = options.availableSpace;
-
     this.isClosed = false;
 
+    this.setSlice = setSlice;
     this.referenceCollection = options.referenceCollection;
 
     this.listenTo(this.model, 'change', this.render, this);
@@ -101,93 +98,6 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
 
   onItemHoverEnd(childView) {
     this.highlightModel.unHighlight(childView.model.attributes);
-  },
-
-  /*
-                    /----------\        -
-    headerHeight    |  title   |        |
-                    |          |        |- scrollTop
-                    |          |        |
-                  /----------------\    - -
-                  | |          |   |    | |
-                  | |          | = |    | |- offset
-                  | |          | = |    | |
-                  | \----------/ = |    | -
-                  | /----------\ = |    |
-                  | |  title   | = |    |- sliceHeight
-                  | \----------/ = |    |
-                  | /----------\   |    |
-                  | |  title   |   |    |
-                  | |          |   |    |
-                  \----------------/    -
-                    |          |
-                    |          |
-                    \----------/
-
-
-                    /----------\        -
-    headerHeight    |  title   |        |
-                    |          |        |- scrollTop
-                    |          |        |
-                  /----------------\    - -
-                  | |          |   |    | |
-                  | |          | = |    | |- offset + titleHeight
-                  | |          | = |    | |
-                  | \----------/ = |    | |
-                  | /----------\ = |    | |
-                  | |  title   | = |    | |
-                  | |          |   |    | -
-                  | |          |   |    |
-                  | |          |   |    |
-                  | |          |   |    |
-                  | \----------/   |    |
-                  | /----------\   |    |
-                  | |  title   |   |    |
-                  | |          |   |    |
-                  \----------------/    -
-                    |          |
-                    |          |
-                    \----------/
-  */
-
-  setSlice(offset, sliceHeight) {
-    const size = this.calculateSize();
-    const headerHeight = 39 + 18;
-    const itemHeight = 153;
-    const numItems = this.referenceCollection.length;
-    let first = 0;
-    let last = 0;
-    if (offset + size < 0 // this view is completely above the current window
-        || offset > sliceHeight) { // this view is completely below the current window
-      first = last = numItems;
-    } else {
-      const firstOffset = offset + headerHeight;
-      if (firstOffset < -itemHeight) {
-        const firstRow = Math.floor(Math.abs(firstOffset) / itemHeight);
-        first = firstRow * 3;
-      }
-      const lastRow = Math.ceil(Math.abs(-firstOffset + sliceHeight) / itemHeight);
-      last = lastRow * 3;
-    }
-    this.collection.set(this.referenceCollection.slice(first, last));
-    this.$('.spacer-top').css('height', Math.ceil(first / 3) * itemHeight);
-    this.$('.spacer-bottom').css('height', Math.ceil((numItems - last) / 3) * itemHeight);
-  },
-
-  _calculateItemsSize(numItems) {
-    const itemHeight = 153;
-    return Math.ceil(numItems / 3) * itemHeight;
-  },
-
-  calculateSize() {
-    const headerHeight = 39 + 18;
-    const footerHeight = 0;
-    if (this.isClosed) {
-      return headerHeight;
-    }
-    // TODO: footer size
-    return this._calculateItemsSize(this.referenceCollection.length)
-      + headerHeight + footerHeight;
   },
 
   hasMore() {

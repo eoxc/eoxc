@@ -1,12 +1,11 @@
 import Marionette from 'backbone.marionette';
-import urlParse from 'url-parse';
+import _ from 'underscore';
 
 import template from './DownloadSelectionView.hbs';
 import './DownloadSelectionView.css';
 import SelectionListView from './SelectionListView';
 import { downloadCustom, getDownloadInfos } from '../../download/';
 import metalinkTemplate from '../Metalink.hbs';
-
 
 const DownloadView = Marionette.CompositeView.extend({
   template,
@@ -23,7 +22,7 @@ const DownloadView = Marionette.CompositeView.extend({
   buildChildView(child, ChildViewClass) {
     return new ChildViewClass({
       model: child,
-      collection: child.get('downloadSelection'),
+      referenceCollection: child.get('downloadSelection'),
       mapModel: this.mapModel,
       highlightModel: this.highlightModel,
       fallbackThumbnailUrl: this.fallbackThumbnailUrl,
@@ -37,6 +36,12 @@ const DownloadView = Marionette.CompositeView.extend({
     'click .select-files': 'onSelectFilesClicked',
     'click .deselect-all': 'onDeselectAllClicked',
     'change .terms-and-conditions': 'onTermsAndAndConditionsChange',
+  },
+
+  childEvents: {
+    'collapse:change': 'updateViews',
+    'before:render': 'onChildBeforeRender',
+    render: 'onChildRender',
   },
 
   initialize(options) {
@@ -54,6 +59,55 @@ const DownloadView = Marionette.CompositeView.extend({
     });
     this.onSelectFiles = options.onSelectFiles;
     this.onStartDownload = options.onStartDownload;
+  },
+
+  onChildBeforeRender() {
+    // save the scrolling position for later to get around bug in FF and other
+    // browsers. Prevent additional updates to scrolling position.
+    if (typeof this.savedScrollTop === 'undefined') {
+      this.savedScrollTop = this.$('.selection-lists')[0].scrollTop;
+    }
+  },
+
+  onChildRender() {
+    if (typeof this.savedScrollTop !== 'undefined') {
+      setTimeout(() => {
+        this.$('.selection-lists').scrollTop(this.savedScrollTop);
+        this.savedScrollTop = undefined;
+      });
+    }
+  },
+
+  onShown() {
+    this.updateViews();
+  },
+
+  updateViews() {
+    // handle showing of only those products, which are in current scroll area
+    // should be triggered when download list rendered, when scrolling and when download collection changes and basket tab is visible
+    const elem = this.$('.selection-lists')[0];
+    const scrollTop = elem.scrollTop;
+    const height = elem.clientHeight;
+    let sizeAccum = 0;
+    for (let i = 0; i < this.children.length; ++i) {
+      const view = this.children.findByIndex(i);
+      const headerSize = 70;
+      const footerSize = 0;
+      const itemHeight = 153;
+      view.setSlice(sizeAccum - scrollTop, height, view, headerSize, footerSize, itemHeight);
+      sizeAccum += view.$el.outerHeight(true);
+    }
+    elem.scrollTop = scrollTop;
+  },
+
+  onRender() {
+    this.$('.selection-lists').on('scroll resize', _.throttle((...args) => {
+      this.updateViews(...args);
+    }, 1000 / 60));
+  },
+
+  onBeforeRender() {
+    this.$('.selection-lists').off('scroll resize');
   },
 
   onAttach() {
@@ -102,6 +156,7 @@ const DownloadView = Marionette.CompositeView.extend({
 
   onDownloadSelectionChange() {
     this.checkButtons();
+    this.updateViews();
   },
 
   checkButtons() {
