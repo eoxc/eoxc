@@ -204,7 +204,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   layer.layerModel = layerModel;
   if (displayParams.noAntialiasing) {
     // TODO: when we migrate to OL6, this needs to be updated, see changelog
-    layer.on('precompose', (event) => {
+    layer.on('prerender', (event) => {
       event.context.imageSmoothingEnabled = false;
     });
   }
@@ -334,7 +334,8 @@ export function updateLayerParams(
     : layerModel.get('display');
 
   layer.setVisible(displayParams.visible);
-  layer.setOpacity(displayParams.opacity);
+  const opacity = typeof displayParams.opacity === 'number' ? displayParams.opacity : 1;
+  layer.setOpacity(opacity);
   const source = layer.getSource();
   let previousParams;
   if (source.getParams) {
