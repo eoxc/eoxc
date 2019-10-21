@@ -92,7 +92,7 @@ class SearchModel extends Backbone.Model {
   doSearch(layerModel, filtersModel, mapModel, reset = true, startIndex = 0, totalResults = undefined) {
     this.cancelSearch();
     const searchOptions = {
-      itemsPerPage: this.get('itemsPerPage') || this.get('defaultPageSize'),
+      itemsPerPage: this.get('defaultPageSize'),
       maxCount: (startIndex === 0) ? this.get('maxCount') : this.get('loadMore'),
       startIndex,
       totalResults,
