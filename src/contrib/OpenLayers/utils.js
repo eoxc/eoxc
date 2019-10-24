@@ -115,6 +115,13 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   }
 
   const layerId = displayParams.id ? displayParams.id : displayParams.ids.join(',');
+  const opacity = typeof displayParams.opacity === 'number' ? displayParams.opacity : 1;
+  const urls = (displayParams.url) ? [displayParams.url] : displayParams.urls;
+  if (urls.length === 0) {
+    // to avoid errors, empty string needs to be inserted if empty in ol6
+    urls.push('');
+  }
+
 
   if (displayParams.capabilitiesUrl) {
     layer = new TileLayer({
@@ -128,6 +135,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
         const options = optionsFromCapabilities(result, {
           layer: displayParams.id,
           matrixSet: displayParams.matrixSet,
+          transition: 0,
         });
         layer.setSource(new WMTSSource(options));
       });
@@ -136,12 +144,13 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
       case 'WMTS':
         layer = new TileLayer({
           visible: displayParams.visible,
+          opacity,
           source: new WMTSSource({
-            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            transition: 0,
+            urls,
             layer: displayParams.id,
             matrixSet: displayParams.matrixSet,
             format: displayParams.format,
-            cacheSize: 0,
             projection,
             tileGrid: new WMTSTileGrid({
               origin: extentGetTopLeft(projectionExtent),
@@ -161,9 +170,10 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
       case 'WMS':
         layer = new TileLayer({
           visible: displayParams.visible,
+          opacity,
           source: new WMSTileSource({
+            transition: 0,
             crossOrigin: 'anonymous',
-            cacheSize: 0,
             params: Object.assign({
               LAYERS: layerId,
               VERSION: displayParams.version || '1.1.0',
@@ -175,7 +185,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
               tileSize: tileSize || [256, 256],
               extent: projectionExtent
             }),
-            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            urls,
             wrapX: true,
             attributions: displayParams.attribution,
           }),
@@ -184,12 +194,13 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
       case 'XYZ':
         layer = new TileLayer({
           visible: displayParams.visible,
+          opacity,
           source: new XYZSource({
+            transition: 0,
             crossOrigin: 'anonymous',
-            cacheSize: 0,
             projection,
             tileSize: tileSize || [256, 256],
-            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            urls,
             attributions: displayParams.attribution,
             minZoom: displayParams.minZoom,
             maxZoom: displayParams.maxZoom,
@@ -202,9 +213,9 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   }
   layer.id = layerModel.get('id');
   layer.layerModel = layerModel;
-  if (displayParams.noAntialiasing) {
-    // TODO: when we migrate to OL6, this needs to be updated, see changelog
-    layer.on('precompose', (event) => {
+  if (displayParams.noAntialiasing === true) {
+    layer.on('prerender', (event) => {
+      // eslint-disable-next-line no-param-reassign
       event.context.imageSmoothingEnabled = false;
     });
   }
@@ -334,7 +345,8 @@ export function updateLayerParams(
     : layerModel.get('display');
 
   layer.setVisible(displayParams.visible);
-  layer.setOpacity(displayParams.opacity);
+  const opacity = typeof displayParams.opacity === 'number' ? displayParams.opacity : 1;
+  layer.setOpacity(opacity);
   const source = layer.getSource();
   let previousParams;
   if (source.getParams) {
