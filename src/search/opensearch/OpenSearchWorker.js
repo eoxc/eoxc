@@ -12,8 +12,8 @@ BluebirdPromise.config({
 });
 config({
   useXHR: true,
+  Promise: BluebirdPromise,
 });
-
 self.Promise = BluebirdPromise;
 self.DOMParser = DOMParser;
 
@@ -25,7 +25,7 @@ function getService(url, description) {
     if (description) {
       self.services[url] = BluebirdPromise.resolve(deserialize(description));
     } else {
-      self.services[url] = discover(url, { useXHR: true, PromiseClass: BluebirdPromise });
+      self.services[url] = discover(url);
     }
   }
   return self.services[url];
