@@ -116,6 +116,12 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
 
   const layerId = displayParams.id ? displayParams.id : displayParams.ids.join(',');
   const opacity = typeof displayParams.opacity === 'number' ? displayParams.opacity : 1;
+  const urls = (displayParams.url) ? [displayParams.url] : displayParams.urls;
+  if (urls.length === 0) {
+    // to avoid errors, empty string needs to be inserted if empty in ol6
+    urls.push('');
+  }
+
 
   if (displayParams.capabilitiesUrl) {
     layer = new TileLayer({
@@ -141,7 +147,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
           opacity,
           source: new WMTSSource({
             transition: 0,
-            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            urls,
             layer: displayParams.id,
             matrixSet: displayParams.matrixSet,
             format: displayParams.format,
@@ -179,7 +185,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
               tileSize: tileSize || [256, 256],
               extent: projectionExtent
             }),
-            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            urls,
             wrapX: true,
             attributions: displayParams.attribution,
           }),
@@ -194,7 +200,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
             crossOrigin: 'anonymous',
             projection,
             tileSize: tileSize || [256, 256],
-            urls: (displayParams.url) ? [displayParams.url] : displayParams.urls,
+            urls,
             attributions: displayParams.attribution,
             minZoom: displayParams.minZoom,
             maxZoom: displayParams.maxZoom,
@@ -209,6 +215,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   layer.layerModel = layerModel;
   if (displayParams.noAntialiasing === true) {
     layer.on('prerender', (event) => {
+      // eslint-disable-next-line no-param-reassign
       event.context.imageSmoothingEnabled = false;
     });
   }
