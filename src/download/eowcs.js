@@ -199,7 +199,7 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
 
 
   const time = mapModel.get('time');
-  if (time) {
+  if (time && !layerModel.get('fullResolution.disableTimeSubsetting')) {
     kvp = `${kvp}&subset=http://www.opengis.net/def/axis/OGC/0/time("${getISODateTimeString(time[0])}","${getISODateTimeString(time[1])}")`;
   }
 

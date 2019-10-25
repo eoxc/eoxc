@@ -15,7 +15,7 @@ export default Backbone.Model.extend({
       name: 'WGS-84',
       identifier: 'EPSG:4326',
     }, {
-      name: 'Web Mercaator',
+      name: 'Web Mercator',
       identifier: 'EPSG:3857',
     }],
     selectedProjection: null,

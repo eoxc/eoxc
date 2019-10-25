@@ -13,6 +13,9 @@
   <span class="input-group-addon">
     <i class="fa fa-sort"></i>
     <i class="fa fa-square" style="color: {{displayColor}}"></i>
+    {{#if display.extraDownloadIcon}}
+      <i class="fa fa-arrow-down layer-download-full-resolution"></i>
+    {{/if}}
     {{#if display.options}}
       {{#if display.legendUrl}}
         <i class="fa fa-paint-brush layer-show-options"></i>

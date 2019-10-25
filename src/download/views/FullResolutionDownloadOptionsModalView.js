@@ -1,6 +1,7 @@
 import turfBBox from '@turf/bbox';
 import i18next from 'i18next';
-
+import $ from 'jquery';
+import _ from 'underscore';
 import ModalView from '../../core/views/ModalView';
 
 import template from './FullResolutionDownloadOptionsModalView.hbs';
@@ -15,6 +16,8 @@ export default ModalView.extend({
       bbox: this.bbox.map(v => v.toFixed(4)),
       fields: this.layerModel.get('fullResolution.fields'),
       interpolations: this.layerModel.get('fullResolution.interpolations'),
+      availableProjections: this.model.get('availableProjections'),
+      availableDownloadFormats: this.model.get('availableDownloadFormats'),
     };
   },
 
@@ -68,6 +71,7 @@ export default ModalView.extend({
     this.checkSize();
     this.checkValidity();
     this.checkBands();
+    this.checkBbox();
   },
 
   events: {
@@ -82,6 +86,7 @@ export default ModalView.extend({
     'submit form': 'onFormSubmit',
     'click .start-download': 'onStartDownloadClicked',
     'click .btn-draw-bbox': 'onDrawBBoxClicked',
+    'change .show-bbox': 'onBBoxInputChange',
   },
 
   initialize(options) {
@@ -107,18 +112,19 @@ export default ModalView.extend({
       }
     });
     this.resolution = this.layerModel.get('fullResolution.maxSizeResolution');
+    this.defaultLabelsSet();
   },
 
   onProjectionChange() {
     const val = this.$('.select-projection').val();
-    this.model.set('projection', val !== '' ? val : null);
-    this.updatePreferences('preferredProjection', val !== '' ? val : null);
+    this.model.set('projection', (val !== '' && val !== '---') ? val : null);
+    this.updatePreferences('preferredProjection', (val !== '' && val !== '---') ? val : null);
   },
 
   onFormatChange() {
     const val = this.$('.select-format').val();
-    this.model.set('format', val !== '' ? val : null);
-    this.updatePreferences('preferredFormat', val !== '' ? val : null);
+    this.model.set('format', (val !== '' && val !== '---') ? val : null);
+    this.updatePreferences('preferredFormat', (val !== '' && val !== '---') ? val : null);
     this.checkBands();
   },
 
@@ -134,8 +140,8 @@ export default ModalView.extend({
 
   onInterpolationChange() {
     const val = this.$('select[name="interpolation"]').val();
-    this.model.set('interpolation', val !== '' ? val : null);
-    this.updatePreferences('preferredInterpolation', val !== '' ? val : null);
+    this.model.set('interpolation', (val !== '' && val !== '---') ? val : null);
+    this.updatePreferences('preferredInterpolation', (val !== '' && val !== '---') ? val : null);
   },
 
   onScaleMethodChange() {
@@ -266,12 +272,25 @@ export default ModalView.extend({
     });
   },
 
+  onBBoxInputChange() {
+    const bbox = this.$('.show-bbox')
+      .map((index, elem) => $(elem).val())
+      .get()
+      .map(parseFloat);
+
+    if (bbox.reduce((prev, current) => prev && !isNaN(current), true)) {
+      this.mapModel.set('drawnArea', null);
+      this.mapModel.set('area', bbox);
+    }
+    this.checkBbox();
+  },
+
 
   updatePreferences(key, value) {
     const preferences = this.getPreferences();
     preferences[key] = value;
     localStorage.setItem(
-      `full-resolution-download-options-view-preferences-${this.layerModel.get('layerId')}`,
+      `full-resolution-download-options-view-preferences-${this.layerModel.get('id')}`,
       JSON.stringify(preferences),
     );
   },
@@ -310,7 +329,7 @@ export default ModalView.extend({
       $sizeWarning.html(i18next.t('download_size_warning', { estimated_size: parseFloat(estimated_size).toFixed(0) }));
       $sizeWarning.fadeIn();
     } else if ($sizeWarning.is(':visible')) {
-      $sizeWarning.fadeOut();
+      $sizeWarning.hide();
     } else {
       $sizeWarning.hide();
     }
@@ -389,20 +408,70 @@ export default ModalView.extend({
         );
         $bandsWarning.fadeIn();
       } else {
-        setTimeout(() => $bandsWarning.stop(true, true).fadeOut());
+        setTimeout(() => $bandsWarning.stop(true, true).hide());
       }
     } else {
-      setTimeout(() => $bandsWarning.stop(true, true).fadeOut());
+      setTimeout(() => $bandsWarning.stop(true, true).hide());
+    }
+  },
+
+  checkBbox() {
+    const $bboxWarning = this.$('.bbox-warning');
+    const maxBboxSize = this.layerModel.get('fullResolution.maxBboxEdgeSize');
+    const axisNames = Array.isArray(this.layerModel.get('fullResolution.axisNames')) ? this.layerModel.get('fullResolution.axisNames') : ['long', 'lat'];
+    if (this.bbox[3] - this.bbox[1] >= maxBboxSize) {
+      $bboxWarning.html(i18next.t('max_bbox_warning', {
+        max_bbox_size: maxBboxSize,
+        max_bbox_axis: axisNames[1],
+        max_bbox_exceed: (this.bbox[3] - this.bbox[1] - maxBboxSize).toFixed(4),
+      }));
+      $bboxWarning.fadeIn();
+    } else if (this.bbox[2] - this.bbox[0] >= maxBboxSize) {
+      $bboxWarning.html(i18next.t('max_bbox_warning', {
+        max_bbox_size: maxBboxSize,
+        max_bbox_axis: axisNames[0],
+        max_bbox_exceed: (this.bbox[2] - this.bbox[0] - maxBboxSize).toFixed(4),
+      }));
+      $bboxWarning.fadeIn();
+    } else if ($bboxWarning.is(':visible')) {
+      $bboxWarning.hide();
+    } else {
+      $bboxWarning.hide();
     }
   },
 
   getPreferences() {
     try {
       return JSON.parse(localStorage.getItem(
-        `full-resolution-download-options-view-preferences-${this.layerModel.get('layerId')}`
+        `full-resolution-download-options-view-preferences-${this.layerModel.get('id')}`
       ) || '{}');
     } catch (error) {
       return {};
     }
-  }
+  },
+
+  defaultLabelsSet() {
+    _.each(this.model.get('availableDownloadFormats'), (format) => {
+      if (!format.get('name') && format.get('mimeType')) {
+        format.set('name', format.get('mimeType'));
+      }
+    });
+    _.each(this.model.get('availableProjections'), (proj) => {
+      if (!proj.get('name') && proj.get('identifier')) {
+        proj.set('name', proj.get('identifier'));
+      }
+    });
+    _.each(this.layerModel.get('fullResolution.fields'), (field) => {
+      if (typeof (field.name) === 'undefined' && typeof (field.identifier) !== 'undefined') {
+        // eslint-disable-next-line no-param-reassign
+        field.name = field.identifier;
+      }
+    });
+    _.each(this.layerModel.get('fullResolution.interpolations'), (interpolation) => {
+      if (typeof (interpolation.name) === 'undefined' && typeof (interpolation.identifier) !== 'undefined') {
+        // eslint-disable-next-line no-param-reassign
+        interpolation.name = interpolation.identifier;
+      }
+    });
+  },
 });
