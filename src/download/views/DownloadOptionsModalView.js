@@ -7,10 +7,7 @@ import './DownloadOptionsModalView.css';
 
 import FiltersModel from '../../core/models/FiltersModel';
 
-import { downloadRecord, getDownloadUrl } from '../../download';
-
-
-import $ from 'jquery';
+import { downloadRecord } from '../../download';
 
 export default ModalView.extend({
   template,
@@ -79,19 +76,6 @@ export default ModalView.extend({
     if (this.model.get('subsetByBounds')) {
       filtersModel.set('area', this.bbox);
     }
-
-    // const [recordModel, searchModel] = this.records[0];
-    // $.ajax({
-    //   type: "GET",
-    //   async: true,
-    //   url: getDownloadUrl(searchModel.get('layerModel'), null, recordModel),
-    // }).done(() => {
-    //   alert(arguments)
-    // })
-    // this.records.forEach(([recordModel, searchModel]) => downloadRecord(
-    //     searchModel.get('layerModel'), filtersModel, recordModel, options, this.$('#download-elements')
-    //   )
-    // );
 
     this.records.forEach(([recordModel, searchModel], i) => {
       setTimeout(() =>
