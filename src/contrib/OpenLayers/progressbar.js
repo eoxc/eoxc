@@ -32,7 +32,8 @@ export default class ProgressBar {
     this.el = el;
     if (this.el) {
       this.el.style.visibility = this.visible ? 'visible' : 'hidden';
-      const width = `${(this.loaded / this.loading * 100).toFixed(1)}%`;
+      // width stretched to interval 10-100% of total width to improve visibility
+      const width = `${10 + (this.loaded / this.loading * 90).toFixed(1)}%`;
       this.el.style.width = width;
     }
   }
@@ -75,7 +76,7 @@ export default class ProgressBar {
     if (!this.el) {
       return;
     }
-    const width = `${(this.loaded / this.loading * 100).toFixed(1)}%`;
+    const width = `${10 + (this.loaded / this.loading * 90).toFixed(1)}%`;
     this.el.style.width = width;
     if (this.loading === this.loaded) {
       this.loading = 0;
