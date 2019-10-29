@@ -54,12 +54,12 @@ export default ModalView.extend({
 
   onProjectionChange() {
     const val = this.$('.select-projection').val();
-    this.model.set('selectedProjection', val !== '' ? val : null);
+    this.model.set('selectedProjection', (val !== '' && val !== '---') ? val : null);
   },
 
   onFormatChange() {
     const val = this.$('.select-format').val();
-    this.model.set('selectedDownloadFormat', val !== '' ? val : null);
+    this.model.set('selectedDownloadFormat', (val !== '' && val !== '---') ? val : null);
   },
 
   onSubsetByBoundsChange() {

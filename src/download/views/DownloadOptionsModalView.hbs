@@ -4,7 +4,7 @@
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       <h4 class="modal-title">{{t 'start_download' records.length}}</h4>
     </div>
-    <div class="modal-body">
+    <div class="modal-body download-options">
       {{#if downloadOptions}}
         <form class="form-horizontal">
           {{#if availableProjections.length}}
@@ -34,7 +34,7 @@
           </div>
           {{/if}}
           <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
+            <div class="col-sm-10">
               <div class="checkbox">
                 <label>
                   <input type="checkbox" class="subset-by-bounds" {{#if subsetByBounds}}checked="checked"{{/if}}>{{t 'Use bounding box of current spatial filter to crop'}}
