@@ -80,8 +80,7 @@ export default ModalView.extend({
     this.records.forEach(([recordModel, searchModel], i) => {
       setTimeout(() =>
         downloadRecord(
-          searchModel.get('layerModel'), filtersModel, recordModel, options, this.$('#download-elements')
-        ), i * 0
+          searchModel.get('layerModel'), filtersModel, recordModel, options), i * 0
       );
     });
   }

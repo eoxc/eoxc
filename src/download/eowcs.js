@@ -149,15 +149,16 @@ export function download(layerModel, filtersModel, recordModel, options) {
   if (layerModel.get('download.method') === 'GET') {
     const kvp = getCoverageKVP(recordModel.get('id'), requestOptions);
     const url = `${layerModel.get('download.url')}?${kvp}`;
+    const rewrittenUrl = rewrite(url, layerModel.get('download.rewrite'));
 
     const a = document.createElement('a');
     if (typeof a.download !== 'undefined') {
-      a.setAttribute('href', url);
+      a.setAttribute('href', rewrittenUrl);
       a.setAttribute('download', 'true');
       a.click();
       return null;
     }
-    return $(`<iframe src="${url}"></iframe>`);
+    return $(`<iframe src="${rewrittenUrl}"></iframe>`);
   }
   const xml = getCoverageXML(recordModel.get('id'), requestOptions);
   const completeForm = `

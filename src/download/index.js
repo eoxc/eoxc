@@ -20,7 +20,7 @@ export function isRecordDownloadable(layerModel, recordModel) {
   return false;
 }
 
-export function downloadRecord(layerModel, filtersModel, recordModel, options, elementContainer) {
+export function downloadRecord(layerModel, filtersModel, recordModel, options) {
   let element = null;
   const rewriteRule = layerModel.get('download.rewrite');
 
