@@ -49,6 +49,12 @@ function getCoverageXML(coverageid, options = {}) {
   if (options.mask) {
     extension.push(`<wcsmask:polygonMask>${options.mask}</wcsmask:polygonMask>`);
   }
+
+  if (options.interpolation) {
+    // not sure if this is right
+    params.push(`<wcs:Interpolation><wcs:globalInterpolation>${options.interpolation}</wcs:globalInterpolation></wcs:Interpolation>`);
+  }
+
   if (options.multipart) {
     params.push('<wcs:mediaType>multipart/related</wcs:mediaType>');
   }
@@ -80,7 +86,10 @@ function getCoverageKVP(coverageid, options = {}) {
 
   let axisNames;
   if (!options.axisNames) {
-    axisNames = {};
+    axisNames = {
+      x: 'x',
+      y: 'y',
+    };
   } else if (Array.isArray(options.axisNames)) {
     axisNames = {
       x: options.axisNames[0],
@@ -144,6 +153,8 @@ export function download(layerModel, filtersModel, recordModel, options) {
     sizeX: options.sizeX,
     sizeY: options.sizeY,
     scale: options.scale,
+    interpolation: options.interpolation,
+    axisNames: layerModel.get('download.axisNames'),
   };
 
   if (layerModel.get('download.method') === 'GET') {
