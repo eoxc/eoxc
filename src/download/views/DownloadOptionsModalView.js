@@ -39,7 +39,7 @@ export default ModalView.extend({
       this.model.set('selectedDownloadFormat', preferredFormat);
     }
     if (preferredInterpolation) {
-      this.$('.select-interpolation"]').val(preferredInterpolation);
+      this.$('.select-interpolation').val(preferredInterpolation);
       this.model.set('selectedInterpolation', preferredInterpolation);
     }
     if (preferredProjection) {

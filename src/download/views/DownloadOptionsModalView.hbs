@@ -62,15 +62,15 @@
             </div>
           </div>
           {{/if}}
-          {{#if downloadInterpolations.length}}
+          {{#if availableInterpolations.length}}
           <div class="form-group">
             <div class="col-sm-2">
-              <label class="control-label">{{t 'Format'}}</label>
+              <label class="control-label">{{t 'Interpolation'}}</label>
             </div>
             <div class="col-sm-10">
-              <select class="form-control select-format">
+              <select class="form-control select-interpolation">
                 <option>---</option>
-                {{#each downloadInterpolations}}
+                {{#each availableInterpolations}}
                 <option value="{{this.identifier}}">{{this.name}}</option>
                 {{/each}}
               </select>
