@@ -26,11 +26,10 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options) {
 
   if (layerModel.get('download.protocol') === 'EO-WCS') {
     element = downloadEOWCS(layerModel, filtersModel, recordModel, options);
-    if (element.length > 0) {
+    if (element) {
       const form = element[0];
       document.body.appendChild(form);
       form.submit();
-      setTimeout(() => document.body.removeChild(form), 10000);
     }
   } else {
     const a = document.createElement('a');
