@@ -218,7 +218,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
                 : acc
               ), { time: [start, end] }
           ));
-          const emitter = searchAllRecords(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' });
+          // this should be taken from searchModel.get('defaultPageSize') to be correct, but currently set to null by default and would need some rewrites
+          const itemsPerPage = layerModel.get('search').pageSize;
+          const emitter = searchAllRecords(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml', itemsPerPage });
           emitter.on('progress', (result) => {
             callback(result.records.map((record) => {
               let time = null;
