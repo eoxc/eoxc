@@ -57,6 +57,21 @@ function getCoverageXML(coverageid, options = {}) {
     extension.push(`<wcscrs:outputCrs>${options.outputCRS}</wcscrs:outputCrs>`);
   }
 
+  if (options.sizeX && options.sizeY) {
+    extension.push(`
+      <scal:ScaleToSize>
+        <scal:TargetAxisSize>
+          <scal:axis>${axisNames.x}</scal:axis>
+          <scal:targetSize>${options.sizeX}</scal:targetSize>
+        </scal:TargetAxisSize>
+        <scal:TargetAxisSize>
+          <scal:axis>${axisNames.y}</scal:axis>
+          <scal:targetSize>${options.sizeY}</scal:targetSize>
+        </scal:TargetAxisSize>
+      </scal:ScaleToSize>
+    `);
+  }
+
   extension.push(`<wcscrs:subsettingCrs>${subsetCRS}</wcscrs:subsettingCrs>`);
 
   if (options.mask) {
@@ -159,6 +174,41 @@ function getCoverageKVP(coverageid, options = {}) {
     .join('&');
 }
 
+function getIntersectingBbox(r1, r2) {
+  // computes intersection bbox of two bboxes, returns false if no intersect
+  const noIntersect = r2[0] > r1[2] || r2[2] < r1[0] ||
+  r2[1] > r1[3] || r2[3] < r1[1];
+  return noIntersect ? false : [
+    Math.max(r1[0], r2[0]),
+    Math.max(r1[1], r2[1]),
+    Math.min(r1[2], r2[2]),
+    Math.min(r1[3], r2[3])
+  ];
+}
+
+function computeSizeFromResolution(recordModel, filterBbox, resolutionX, resolutionY) {
+  let sizeX = null;
+  let sizeY = null;
+  let computedBbox = null;
+  const recordBbox = recordModel.get('bbox');
+  if (!recordBbox && !filterBbox) {
+    // can not compute resolution
+    return [null, null];
+  } else if (!filterBbox) {
+    // use bounding box of record as is
+    computedBbox = recordBbox;
+  } else {
+    // get intersection of two bboxes
+    computedBbox = getIntersectingBbox(recordBbox, filterBbox);
+    if (!computedBbox) {
+      // no intersection
+      return [null, null];
+    }
+  }
+  sizeX = Math.round((computedBbox[2] - computedBbox[0]) / resolutionX);
+  sizeY = Math.round((computedBbox[3] - computedBbox[1]) / resolutionY);
+  return [sizeX, sizeY];
+}
 
 export function download(layerModel, filtersModel, recordModel, options) {
   const requestOptions = {
@@ -166,12 +216,20 @@ export function download(layerModel, filtersModel, recordModel, options) {
     outputCRS: options.outputCRS,
     subsetCRS: options.subsetCRS,
     format: options.format,
-    sizeX: options.sizeX,
-    sizeY: options.sizeY,
     scale: options.scale,
     interpolation: options.interpolation,
     axisNames: layerModel.get('download.axisNames'),
   };
+  if (options.resolutionX && options.resolutionY) {
+    // compute size based on specified resolution
+    const [sizeX, sizeY] = computeSizeFromResolution(recordModel, filtersModel.get('area'), options.resolutionX, options.resolutionY);
+    requestOptions.sizeX = sizeX;
+    requestOptions.sizeY = sizeY;
+  } else {
+    // use sizes directly
+    requestOptions.sizeX = options.sizeX;
+    requestOptions.sizeY = options.sizeY;
+  }
 
   if (layerModel.get('download.method') === 'GET') {
     const kvp = getCoverageKVP(recordModel.get('id'), requestOptions);
