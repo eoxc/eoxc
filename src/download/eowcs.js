@@ -13,10 +13,25 @@ function getCoverageXML(coverageid, options = {}) {
   }
   const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
   const params = [
-    `<wcs:GetCoverage service="WCS" version="2.0.0" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:wcscrs="http://www.opengis.net/wcs/crs/1.0" xmlns:wcsmask="http://www.opengis.net/wcs/mask/1.0">
+    `<wcs:GetCoverage service="WCS" version="2.0.1" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:wcscrs="http://www.opengis.net/wcs/crs/1.0" xmlns:wcsmask="http://www.opengis.net/wcs/mask/1.0" xmlns:int="http://www.opengis.net/wcs/interpolation/1.0" xmlns:scal="http://www.opengis.net/wcs/scaling/1.0">
      <wcs:CoverageId>${coverageid}</wcs:CoverageId>`,
   ];
   const extension = [];
+
+  let axisNames;
+  if (!options.axisNames) {
+    axisNames = {
+      x: 'x',
+      y: 'y',
+    };
+  } else if (Array.isArray(options.axisNames)) {
+    axisNames = {
+      x: options.axisNames[0],
+      y: options.axisNames[1],
+    };
+  } else {
+    axisNames = options.axisNames;
+  }
 
   if (options.format) {
     params.push(`<wcs:format>${options.format}</wcs:format>`);
@@ -26,33 +41,34 @@ function getCoverageXML(coverageid, options = {}) {
     subsetY = [options.bbox[1], options.bbox[3]];
   }
   if (subsetX) {
-    params.push(`<wcs:DimensionTrim><wcs:Dimension crs="${subsetCRS}">x</wcs:Dimension>
+    params.push(`<wcs:DimensionTrim><wcs:Dimension>${axisNames.x}</wcs:Dimension>
                    <wcs:TrimLow>${subsetX[0]}</wcs:TrimLow>
                    <wcs:TrimHigh>${subsetX[1]}</wcs:TrimHigh>
                  </wcs:DimensionTrim>`);
   }
   if (subsetY) {
-    params.push(`<wcs:DimensionTrim><wcs:Dimension crs="${subsetCRS}">y</wcs:Dimension>
+    params.push(`<wcs:DimensionTrim><wcs:Dimension>${axisNames.y}</wcs:Dimension>
                    <wcs:TrimLow>${subsetY[0]}</wcs:TrimLow>
                    <wcs:TrimHigh>${subsetY[1]}</wcs:TrimHigh>
                  </wcs:DimensionTrim>`);
   }
 
   if (options.outputCRS) {
-    params.push(`<wcscrs:outputCrs>${options.outputCRS}</wcscrs:outputCrs>`);
-    params.push(`<wcs:OutputCrs>${options.outputCRS}</wcs:OutputCrs>`);
+    extension.push(`<wcscrs:outputCrs>${options.outputCRS}</wcscrs:outputCrs>`);
   }
 
-  // raises an exception in MapServer
-  // extension.push("<wcscrs:subsettingCrs>" + subsetCRS + "</wcscrs:subsettingCrs>");
+  extension.push(`<wcscrs:subsettingCrs>${subsetCRS}</wcscrs:subsettingCrs>`);
 
   if (options.mask) {
     extension.push(`<wcsmask:polygonMask>${options.mask}</wcsmask:polygonMask>`);
   }
 
+  if (options.scale) {
+    extension.push(`<scal:ScaleByFactor><scal:scaleFactor>${options.scale}</scal:scaleFactor></scal:ScaleByFactor>`);
+  }
+
   if (options.interpolation) {
-    // not sure if this is right
-    params.push(`<wcs:Interpolation><wcs:globalInterpolation>${options.interpolation}</wcs:globalInterpolation></wcs:Interpolation>`);
+    extension.push(`<int:Interpolation><int:globalInterpolation>${options.interpolation}</int:globalInterpolation></int:Interpolation>`);
   }
 
   if (options.multipart) {

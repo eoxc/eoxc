@@ -255,7 +255,7 @@ export default ModalView.extend({
     const options = {
       format: this.model.get('selectedDownloadFormat'),
       outputCRS: this.model.get('selectedProjection'),
-      subsetCRS: 'EPSG:4326', // TODO make this the maps projection
+      subsetCRS: 'http://www.opengis.net/def/crs/EPSG/0/4326', // TODO make this the maps projection
       interpolation: this.model.get('selectedInterpolation'),
     };
     const filtersModel = new FiltersModel();
@@ -264,9 +264,11 @@ export default ModalView.extend({
       // min-max coordinates can not be the same for subsetting
       // do not modify the input forms & mapModel filter, only values for subset
       if (bboxSubset[0] === bboxSubset[2]) {
+        bboxSubset[0] -= 0.0001;
         bboxSubset[2] += 0.0001;
       }
       if (bboxSubset[1] === bboxSubset[3]) {
+        bboxSubset[1] -= 0.0001;
         bboxSubset[3] += 0.0001;
       }
       filtersModel.set('area', bboxSubset);
