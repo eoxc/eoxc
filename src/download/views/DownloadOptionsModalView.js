@@ -75,7 +75,7 @@ export default ModalView.extend({
   initialize(options) {
     this.mapModel = options.mapModel;
     this.filtersModel = options.filtersModel;
-    const filtersArea = this.filtersModel.get('area');
+    const filtersArea = options.mapModel.get('area');
     if (filtersArea) {
       if (Array.isArray(filtersArea)) {
         this.bbox = filtersArea;
@@ -260,7 +260,16 @@ export default ModalView.extend({
     };
     const filtersModel = new FiltersModel();
     if (this.model.get('subsetByBounds')) {
-      filtersModel.set('area', this.bbox);
+      const bboxSubset = this.bbox;
+      // min-max coordinates can not be the same for subsetting
+      // do not modify the input forms & mapModel filter, only values for subset
+      if (bboxSubset[0] === bboxSubset[2]) {
+        bboxSubset[2] += 0.0001;
+      }
+      if (bboxSubset[1] === bboxSubset[3]) {
+        bboxSubset[3] += 0.0001;
+      }
+      filtersModel.set('area', bboxSubset);
     }
 
     switch (this.model.get('scaleMethod') || 'resolution') {
