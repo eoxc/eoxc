@@ -26,6 +26,7 @@ export default ModalView.extend({
     const preferredInterpolation = preferences.preferredInterpolation;
     const preferredProjection = preferences.preferredProjection;
     const preferredScalingMethod = preferences.preferredScalingMethod;
+    const preferredSize = preferences.preferredSize;
     const preferredResolution = preferences.preferredResolution;
     const preferredScale = preferences.preferredScale;
     const subsetByBounds = preferences.subsetByBounds;
@@ -51,6 +52,9 @@ export default ModalView.extend({
       if (preferredScalingMethod === 'resolution' && !isNaN(preferredResolution[0]) && !isNaN(preferredResolution[1])) {
         this.$('[name="resolution-x"]').val(preferredResolution[0]);
         this.$('[name="resolution-y"]').val(preferredResolution[1]);
+      } else if (preferredScalingMethod === 'size' && !isNaN(preferredSize[0]) && !isNaN(preferredSize[1])) {
+        this.$('[name="size-x"]').val(preferredSize[0]);
+        this.$('[name="size-y"]').val(preferredSize[1]);
       } else if (preferredScalingMethod === 'scale') {
         this.$('[name="scalefactor"]').val(preferredScale * 100);
       }
@@ -68,6 +72,7 @@ export default ModalView.extend({
     'click .btn-draw-bbox': 'onDrawBBoxClicked',
     'change .show-bbox': 'onBBoxInputChange',
     'change [name="scale-method"]': 'onScaleMethodChange',
+    [`change [name^='size-']`]: 'onSizeOrResolutionChange',
     [`change [name^='resolution-']`]: 'onSizeOrResolutionChange',
     'change [name="scalefactor"]': 'onSizeOrResolutionChange',
   },
@@ -131,6 +136,7 @@ export default ModalView.extend({
     switch (this.$('input[name="scale-method"]:checked').val()) {
       case 'full':
         this.$(`input[name^='resolution']`).prop('disabled', true);
+        this.$(`input[name^='size']`).prop('disabled', true);
         this.$('input[name="scalefactor"]').prop('disabled', true);
         this.model.set({
           scaleMethod: 'none',
@@ -138,6 +144,7 @@ export default ModalView.extend({
         break;
       case 'resolution': {
         this.$(`input[name^='resolution']`).prop('disabled', false);
+        this.$(`input[name^='size']`).prop('disabled', true);
         this.$('input[name="scalefactor"]').prop('disabled', true);
 
         this.model.set({
@@ -147,8 +154,21 @@ export default ModalView.extend({
         });
         break;
       }
+      case 'size': {
+        this.$(`input[name^='resolution']`).prop('disabled', true);
+        this.$(`input[name^='size']`).prop('disabled', false);
+        this.$('input[name="scalefactor"]').prop('disabled', true);
+
+        this.model.set({
+          scaleMethod: 'size',
+          sizeX: parseInt(this.$('input[name="size-x"]').val(), 10),
+          sizeY: parseInt(this.$('input[name="size-y"]').val(), 10),
+        });
+        break;
+      }
       case 'scale': {
         this.$(`input[name^='resolution']`).prop('disabled', true);
+        this.$(`input[name^='size']`).prop('disabled', true);
         this.$('input[name="scalefactor"]').prop('disabled', false);
 
         this.model.set({
@@ -171,14 +191,21 @@ export default ModalView.extend({
       parseFloat(this.$('input[name="resolution-x"]').val()),
       parseFloat(this.$('input[name="resolution-y"]').val()),
     ];
+    const size = [
+      parseInt(this.$('input[name="size-x"]').val(), 10),
+      parseInt(this.$('input[name="size-y"]').val(), 10),
+    ];
     const scale = parseFloat(this.$('input[name="scalefactor"]').val()) / 100;
 
     this.model.set({
       resolutionX: resolution[0],
       resolutionY: resolution[1],
+      sizeX: size[0],
+      sizeY: size[1],
       scale,
     });
     this.updatePreferences('preferredResolution', resolution);
+    this.updatePreferences('preferredSize', size);
     this.updatePreferences('preferredScale', scale);
   },
 
@@ -274,12 +301,17 @@ export default ModalView.extend({
       filtersModel.set('area', bboxSubset);
     }
 
-    switch (this.model.get('scaleMethod') || 'resolution') {
+    switch (this.model.get('scaleMethod')) {
       case 'resolution': {
-        options.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
-        options.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
+        // size will be computed later per-record
+        options.resolutionX = this.model.get('resolutionX');
+        options.resolutionY = this.model.get('resolutionY');
         break;
       }
+      case 'size':
+        options.sizeX = this.model.get('sizeX');
+        options.sizeY = this.model.get('sizeY');
+        break;
       case 'scale':
         options.scale = this.model.get('scale');
         break;
