@@ -462,13 +462,15 @@ export default ModalView.extend({
 
   defaultLabelsSet() {
     _.each(this.model.get('availableDownloadFormats'), (format) => {
-      if (!format.get('name') && format.get('mimeType')) {
-        format.set('name', format.get('mimeType'));
+      if (typeof format.name === 'undefined' && format.mimeType !== 'undefined') {
+        // eslint-disable-next-line no-param-reassign
+        format.name = format.mimeType;
       }
     });
     _.each(this.model.get('availableProjections'), (proj) => {
-      if (!proj.get('name') && proj.get('identifier')) {
-        proj.set('name', proj.get('identifier'));
+      if (typeof proj.name === 'undefined' && proj.identifier !== 'undefined') {
+        // eslint-disable-next-line no-param-reassign
+        proj.name = proj.identifier;
       }
     });
     _.each(this.layerModel.get('fullResolution.fields'), (field) => {
