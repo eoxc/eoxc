@@ -1,5 +1,6 @@
 import turfUnion from '@turf/union';
 import { polygon as turfPolygon } from '@turf/helpers';
+import turfBBox from '@turf/bbox';
 
 function prepareBox(bbox) {
   const b = [...bbox];
@@ -60,17 +61,16 @@ export function prepareRecords(records, switchMultiPolygonCoordinates) {
       }
       if (record.geometry.coordinates.length === 2) {
         // add 360 to the second polygon if necessary to exceed srs bounds and allow polygon union to remove connection line on dateline
+        adjustedGeometry = true;
         const outerRingL = record.geometry.coordinates[1][0];
         const outerRingLLongitudes = Array.from(outerRingL, x => x[0]);
         const outerRingR = record.geometry.coordinates[0][0];
         const outerRingRLongitudes = Array.from(outerRingR, x => x[0]);
         if (Math.abs(Math.min(...outerRingLLongitudes) + 180.0) < 1e-8 && Math.abs(Math.max(...outerRingRLongitudes) - 180.0) < 1e-8) {
-          adjustedGeometry = true;
           for (let i = 0; i < outerRingL.length; ++i) {
             outerRingL[i][0] += 360;
           }
         } else if (Math.abs(Math.min(...outerRingRLongitudes) + 180.0) < 1e-8 && Math.abs(Math.max(...outerRingLLongitudes) - 180.0) < 1e-8) {
-          adjustedGeometry = true;
           for (let i = 0; i < outerRingR.length; ++i) {
             outerRingR[i][0] += 360;
           }
@@ -96,20 +96,8 @@ export function prepareRecords(records, switchMultiPolygonCoordinates) {
       // (re-)calculate the bounding box when not available or when the geometry
       // was adjusted in the step before
     if (!record.bbox || adjustedGeometry) {
-      const outer = record.geometry.coordinates[0];
-      let minx = outer[0][0];
-      let miny = outer[0][1];
-      let maxx = outer[0][0];
-      let maxy = outer[0][1];
-
-      for (let i = 1; i < outer.length; ++i) {
-        minx = Math.min(minx, outer[i][0]);
-        miny = Math.min(miny, outer[i][1]);
-        maxx = Math.max(maxx, outer[i][0]);
-        maxy = Math.max(maxy, outer[i][1]);
-      }
       // eslint-disable-next-line no-param-reassign
-      record.bbox = [minx, miny, maxx, maxy];
+      record.bbox = turfBBox(record.geometry);
     }
     return record;
   });
