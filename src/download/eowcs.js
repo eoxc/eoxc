@@ -11,7 +11,7 @@ function getCoverageXML(coverageid, options = {}) {
   if (!coverageid) {
     throw new Error('Parameters "coverageid" is mandatory.');
   }
-  const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
+  const subsetCRS = options.subsetCRS || 'EPSG:4326';
   const params = [
     `<wcs:GetCoverage service="WCS" version="2.0.1" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:wcscrs="http://www.opengis.net/wcs/crs/1.0" xmlns:wcsmask="http://www.opengis.net/wcs/mask/1.0" xmlns:int="http://www.opengis.net/wcs/interpolation/1.0" xmlns:scal="http://www.opengis.net/wcs/scaling/1.0">
      <wcs:CoverageId>${coverageid}</wcs:CoverageId>`,
@@ -176,6 +176,7 @@ function getCoverageKVP(coverageid, options = {}) {
 
 function getIntersectingBbox(r1, r2) {
   // computes intersection bbox of two bboxes, returns false if no intersect
+  // does not find intersection if any bbox crosses dateline and non-over 180 coordinates are used
   const noIntersect = r2[0] > r1[2] || r2[2] < r1[0] ||
   r2[1] > r1[3] || r2[3] < r1[1];
   return noIntersect ? false : [

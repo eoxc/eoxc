@@ -1,6 +1,7 @@
 import turfBBox from '@turf/bbox';
 import $ from 'jquery';
 import _ from 'underscore';
+import { transformExtent } from 'ol/proj';
 import ModalView from '../../core/views/ModalView';
 
 import template from './DownloadOptionsModalView.hbs';
@@ -17,6 +18,7 @@ export default ModalView.extend({
       records: this.records,
       downloadOptions: this.showDownloadOptions,
       bbox: this.bbox.map(v => v.toFixed(4)),
+      projection_4326: this.mapProjection === 'EPSG:4326',
     };
   },
 
@@ -79,6 +81,7 @@ export default ModalView.extend({
 
   initialize(options) {
     this.mapModel = options.mapModel;
+    this.mapProjection = this.mapModel.get('projection') || 'EPSG:4326';
     this.filtersModel = options.filtersModel;
     const filtersArea = options.mapModel.get('area');
     if (filtersArea) {
@@ -90,11 +93,12 @@ export default ModalView.extend({
     } else {
       this.bbox = options.mapModel.get('bbox');
     }
+    this.bbox = transformExtent(this.bbox, 'EPSG:4326', this.mapProjection);
 
     this.listenTo(this.mapModel, 'change:area', () => {
       const bbox = this.mapModel.get('area');
       if (Array.isArray(bbox)) {
-        this.bbox = bbox;
+        this.bbox = transformExtent(bbox, 'EPSG:4326', this.mapProjection);
         this.render();
       }
     });
@@ -272,7 +276,7 @@ export default ModalView.extend({
 
     if (bbox.reduce((prev, current) => prev && !isNaN(current), true)) {
       this.mapModel.set('drawnArea', null);
-      this.mapModel.set('area', bbox);
+      this.mapModel.set('area', transformExtent(bbox, this.mapProjection, 'EPSG:4326'));
     }
   },
 
@@ -282,7 +286,7 @@ export default ModalView.extend({
     const options = {
       format: this.model.get('selectedDownloadFormat'),
       outputCRS: this.model.get('selectedProjection'),
-      subsetCRS: 'http://www.opengis.net/def/crs/EPSG/0/4326', // TODO make this the maps projection
+      subsetCRS: this.mapModel.get('projection'),
       interpolation: this.model.get('selectedInterpolation'),
     };
     const filtersModel = new FiltersModel();
@@ -291,12 +295,12 @@ export default ModalView.extend({
       // min-max coordinates can not be the same for subsetting
       // do not modify the input forms & mapModel filter, only values for subset
       if (bboxSubset[0] === bboxSubset[2]) {
-        bboxSubset[0] -= 0.0001;
-        bboxSubset[2] += 0.0001;
+        bboxSubset[0] -= 0.001;
+        bboxSubset[2] += 0.001;
       }
       if (bboxSubset[1] === bboxSubset[3]) {
-        bboxSubset[1] -= 0.0001;
-        bboxSubset[3] += 0.0001;
+        bboxSubset[1] -= 0.001;
+        bboxSubset[3] += 0.001;
       }
       filtersModel.set('area', bboxSubset);
     }
