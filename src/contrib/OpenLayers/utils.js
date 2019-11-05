@@ -434,7 +434,7 @@ export function sortLayers(collection, layers) {
 }
 
 
-function featureFromExtent(extentArray) {
+export function featureFromExtent(extentArray) {
   const [minx, miny, maxx, maxy] = extentArray;
   return {
     type: 'Feature',

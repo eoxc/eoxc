@@ -7,7 +7,6 @@ import WPSSource from 'D3.TimeSlider/src/sources/eoxserver-wps.coffee';
 import { searchAllRecords, getCount } from '../../search';
 import FiltersModel from '../models/FiltersModel';
 
-// require('D3.TimeSlider/build/d3.timeslider.plugins');
 require('D3.TimeSlider/src/d3.timeslider.less');
 require('./TimeSliderView.css');
 
@@ -366,8 +365,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   onRecordsClicked(event) {
     const detail = event.originalEvent.detail;
     const records = detail.bin || detail.records;
-    const combinedBbox = records.filter(record => record[2] && record[2].bbox)
-      .map(record => record[2].bbox)
+    // alternative behavior for shared bbox crossing antimeridian -> make bbox go over 180 if necessary
+    // naively calculate the bounding box on WGS84
+    const validBboxList = records.filter(record => record[2] && record[2].bbox)
+      .map(record => record[2].bbox);
+    const bboxNaiveCombined = validBboxList
       .reduce((lastBbox, thisBbox) => {
         if (!lastBbox) {
           return thisBbox;
@@ -379,8 +381,28 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
           Math.max(lastBbox[3], thisBbox[3]),
         ];
       }, null);
-    if (combinedBbox) {
-      this.mapModel.show({ bbox: combinedBbox });
+    // naively calculate the bounding box on a "modified" WGS84, where 360° has been added to all negative longitudes
+    const bboxModifiedCombined = validBboxList
+      .map(bbox => [bbox[0] < 0 ? bbox[0] + 360 : bbox[0], bbox[1], bbox[2] < 0 ? bbox[2] + 360 : bbox[2], bbox[3]])
+      .reduce((lastBbox, thisBbox) => {
+        if (!lastBbox) {
+          return thisBbox;
+        }
+        return [
+          Math.min(lastBbox[0], thisBbox[0]),
+          Math.min(lastBbox[1], thisBbox[1]),
+          Math.max(lastBbox[2], thisBbox[2]),
+          Math.max(lastBbox[3], thisBbox[3]),
+        ];
+      }, null);
+
+    if (bboxNaiveCombined) {
+      // take smaller one of both bboxes
+      if (bboxModifiedCombined[2] - bboxModifiedCombined[0] < bboxNaiveCombined[2] - bboxNaiveCombined[0]) {
+        this.mapModel.show({ bbox: bboxModifiedCombined });
+      } else {
+        this.mapModel.show({ bbox: bboxNaiveCombined });
+      }
     }
     if (this.maxMapInterval) {
       this.mapModel.set('extendedTime', [detail.start, detail.end]);
