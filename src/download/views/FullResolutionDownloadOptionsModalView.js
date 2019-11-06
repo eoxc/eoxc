@@ -8,7 +8,7 @@ import ModalView from '../../core/views/ModalView';
 import template from './FullResolutionDownloadOptionsModalView.hbs';
 import './DownloadOptionsModalView.css';
 
-import { downloadFullResolution } from '../../download/eowcs';
+import { downloadFullResolutionWCS } from '../../download';
 
 export default ModalView.extend({
   template,
@@ -269,7 +269,7 @@ export default ModalView.extend({
       default:
         break;
     }
-    downloadFullResolution(this.layerModel, this.mapModel, this.filtersModel, options);
+    downloadFullResolutionWCS(this.layerModel, this.mapModel, this.filtersModel, options);
   },
 
   onDrawBBoxClicked() {

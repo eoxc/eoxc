@@ -109,7 +109,7 @@ function getCoverageKVP(coverageid, options = {}) {
     ['coverageid', coverageid],
   ];
 
-  const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
+  const subsetCRS = options.subsetCRS || 'EPSG:4326';
 
   if (options.format) {
     params.push(['format', options.format]);
@@ -234,26 +234,9 @@ export function download(layerModel, filtersModel, recordModel, options) {
 
   if (layerModel.get('download.method') === 'GET') {
     const kvp = getCoverageKVP(recordModel.get('id'), requestOptions);
-    const url = `${layerModel.get('download.url')}?${kvp}`;
-    const rewrittenUrl = rewrite(url, layerModel.get('download.rewrite'));
-
-    const a = document.createElement('a');
-    if (typeof a.download !== 'undefined') {
-      a.setAttribute('href', rewrittenUrl);
-      a.setAttribute('download', 'true');
-      a.click();
-      return null;
-    }
-    return $(`<iframe src="${rewrittenUrl}"></iframe>`);
+    return `${layerModel.get('download.url')}?${kvp}`;
   }
-  const xml = getCoverageXML(recordModel.get('id'), requestOptions);
-  const completeForm = `
-    <form method="post" action="${layerModel.get('download.url')}" target="iframe-download-post" enctype="text/plain">
-      <input type="hidden" name='<?xml version' value='"1.0"?>${xml}'></input>
-    </form>
-  `;
-  const rewrittenForm = rewrite(completeForm, layerModel.get('download.rewrite'));
-  return $(rewrittenForm);
+  return getCoverageXML(recordModel.get('id'), requestOptions);
 }
 
 export function getDownloadInfos(layerModel, filtersModel, recordModel, options = {}) {
@@ -264,8 +247,9 @@ export function getDownloadInfos(layerModel, filtersModel, recordModel, options 
       format: options.format,
     }
   );
+  const urlRewritten = rewrite(`${layerModel.get('download.url')}?${kvp}`, layerModel.get('download.rewrite'));
   return Promise.resolve([{
-    href: `${layerModel.get('download.url')}?${kvp}`,
+    href: urlRewritten,
     name: recordModel.get('id'),
   }]);
 }
@@ -308,15 +292,5 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
   if (fullResolutionUrl.includes('?')) {
     char = (fullResolutionUrl.endsWith('?') || fullResolutionUrl.endsWith('&')) ? '' : '&';
   }
-
-  const url = `${fullResolutionUrl}${char}${kvp}`;
-
-  const a = document.createElement('a');
-  a.setAttribute('href', url);
-  a.setAttribute('target', '_blank');
-  a.setAttribute('style', 'display: none;');
-  document.body.appendChild(a);
-  a.click();
-
-  setTimeout(() => document.body.removeChild(a));
+  return `${fullResolutionUrl}${char}${kvp}`;
 }
