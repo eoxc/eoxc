@@ -61,14 +61,14 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options) {
         downloadUrl(rewrite(urlOrElement, rewriteRule));
       } else {
         const xmlRewritten = rewrite(urlOrElement, rewriteRule);
-        const form = $(`<form method="post" action="${rewrite(layerModel.get('download.url'), rewriteRule)}" enctype="text/plain">
+        const form = $(`<form method="post" action="${rewrite(layerModel.get('download.url'), rewriteRule)}" enctype="text/plain" target="_blank">
           <input type="hidden" name='<?xml version' value='"1.0"?>${xmlRewritten}'></input>
         </form>`);
         if (form) {
           const elem = form[0];
           document.body.appendChild(elem);
           elem.submit();
-          elem.remove();
+          setTimeout(() => elem.remove(), 10000);
         }
       }
     } else {

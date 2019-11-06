@@ -323,10 +323,12 @@ export default ModalView.extend({
         break;
     }
 
+    // if EO-WCS, use a timeout
+    const timeout = this.showDownloadOptions ? 500 : 0;
     this.records.forEach(([recordModel, searchModel], i) => {
       setTimeout(() =>
         downloadRecord(
-          searchModel.get('layerModel'), filtersModel, recordModel, options), i * 0
+          searchModel.get('layerModel'), filtersModel, recordModel, options), i * timeout
       );
     });
   }
