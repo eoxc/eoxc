@@ -20,6 +20,12 @@ export default Backbone.Model.extend({
     }],
     selectedProjection: null,
 
+    availableInterpolations: [{
+      name: 'Bilinear',
+      identifier: 'http://www.opengis.net/def/interpolation/OGC/1/bilinear',
+    }],
+    selectedInterpolation: null,
+
     subsetByBounds: false,
   }
 });
