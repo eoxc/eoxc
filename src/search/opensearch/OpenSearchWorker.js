@@ -47,7 +47,7 @@ function searchAll(url, method, filterParams, mapParams, options, format, descri
         dropEmptyParameters,
         parseOptions,
         totalResults,
-        serverItemsPerPage: itemsPerPage,
+        preferredItemsPerPage: itemsPerPage,
       });
       return paginator.searchFirstRecords(maxCount);
     });

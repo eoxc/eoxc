@@ -1,0 +1,41 @@
+.layer-legend-image {
+  max-height: 580px;
+  max-width: 290px;
+  height: auto;
+  width: auto;
+  margin-top: 5px;
+}
+
+input[type="radio"].visualization-selector {
+  border: 0;
+  clip: rect(0 0 0 0);
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+}
+input[type="radio"].visualization-selector + span {
+  cursor: pointer;
+}
+
+input[type="radio"].visualization-selector + span:before {
+  font-family: 'FontAwesome';
+  font-size: 20px;
+  display: inline-block;
+  content: "\f070"; /* eye-slash */
+  color: #b3b3b3;
+  cursor:pointer;
+  margin-right: 8px;
+}
+
+input[type="radio"].visualization-selector:checked + span:before {
+  content: "\f06e"; /* eye */
+  color: #555;
+}
+
+.option-row {
+  padding-left: 7px;
+  padding-right: 7px;
+}

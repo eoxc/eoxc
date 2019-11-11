@@ -50,8 +50,10 @@ const SearchResultListView = Marionette.CompositeView.extend(/** @lends search/v
   },
 
   constructor(options) {
+    const collection = new Backbone.Collection();
+    collection.searchModel = options.searchModel;
     Marionette.CompositeView.prototype.constructor.call(this, Object.assign({}, options, {
-      collection: new Backbone.Collection(),
+      collection
     }));
   },
 
