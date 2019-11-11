@@ -2,12 +2,13 @@ import turfBBox from '@turf/bbox';
 import i18next from 'i18next';
 import $ from 'jquery';
 import _ from 'underscore';
+import { transformExtent, transform } from 'ol/proj';
 import ModalView from '../../core/views/ModalView';
 
 import template from './FullResolutionDownloadOptionsModalView.hbs';
 import './DownloadOptionsModalView.css';
 
-import { downloadFullResolution } from '../../download/eowcs';
+import { downloadFullResolutionWCS } from '../../download';
 
 export default ModalView.extend({
   template,
@@ -18,6 +19,7 @@ export default ModalView.extend({
       interpolations: this.layerModel.get('fullResolution.interpolations'),
       availableProjections: this.model.get('availableProjections'),
       availableDownloadFormats: this.model.get('availableDownloadFormats'),
+      projection_4326: this.mapProjection === 'EPSG:4326',
     };
   },
 
@@ -92,6 +94,7 @@ export default ModalView.extend({
   initialize(options) {
     this.layerModel = options.layerModel;
     this.mapModel = options.mapModel;
+    this.mapProjection = this.mapModel.get('projection') || 'EPSG:4326';
     this.filtersModel = options.filtersModel;
     const filtersArea = options.mapModel.get('area');
     if (filtersArea) {
@@ -103,15 +106,20 @@ export default ModalView.extend({
     } else {
       this.bbox = options.mapModel.get('bbox');
     }
+    this.bbox = transformExtent(this.bbox, 'EPSG:4326', this.mapProjection);
 
     this.listenTo(this.mapModel, 'change:area', () => {
       const bbox = this.mapModel.get('area');
       if (Array.isArray(bbox)) {
-        this.bbox = bbox;
+        this.bbox = transformExtent(bbox, 'EPSG:4326', this.mapProjection);
         this.render();
       }
     });
-    this.resolution = this.layerModel.get('fullResolution.maxSizeResolution');
+    // if another projection used, adjust resolution for warnings
+    const maxSizeResolution = this.layerModel.get('fullResolution.maxSizeResolution');
+    if (maxSizeResolution) {
+      this.resolution = transform([maxSizeResolution, 0], 'EPSG:4326', this.mapProjection)[0];
+    }
     this.defaultLabelsSet();
   },
 
@@ -239,6 +247,7 @@ export default ModalView.extend({
     const options = {
       bbox: this.bbox,
       outputCRS: this.model.get('projection'),
+      subsetCRS: this.mapModel.get('projection'),
       fields: this.model.get('fields'),
       format: this.model.get('format'),
       interpolation: this.model.get('interpolation'),
@@ -260,7 +269,7 @@ export default ModalView.extend({
       default:
         break;
     }
-    downloadFullResolution(this.layerModel, this.mapModel, this.filtersModel, options);
+    downloadFullResolutionWCS(this.layerModel, this.mapModel, this.filtersModel, options);
   },
 
   onDrawBBoxClicked() {
@@ -280,7 +289,7 @@ export default ModalView.extend({
 
     if (bbox.reduce((prev, current) => prev && !isNaN(current), true)) {
       this.mapModel.set('drawnArea', null);
-      this.mapModel.set('area', bbox);
+      this.mapModel.set('area', transformExtent(bbox, this.mapProjection, 'EPSG:4326'));
     }
     this.checkBbox();
   },
@@ -416,20 +425,21 @@ export default ModalView.extend({
   },
 
   checkBbox() {
-    // TODO: make max_bbox_axis configurable
     const $bboxWarning = this.$('.bbox-warning');
-    const maxBboxSize = this.layerModel.get('fullResolution.maxBboxEdgeSize');
+    const maxBboxEdgeSize = this.layerModel.get('fullResolution.maxBboxEdgeSize');
+    const maxBboxSize = transform([maxBboxEdgeSize, 0], 'EPSG:4326', this.mapProjection)[0];
+    const axisNames = Array.isArray(this.layerModel.get('fullResolution.axisNames')) ? this.layerModel.get('fullResolution.axisNames') : ['long', 'lat'];
     if (this.bbox[3] - this.bbox[1] >= maxBboxSize) {
       $bboxWarning.html(i18next.t('max_bbox_warning', {
         max_bbox_size: maxBboxSize,
-        max_bbox_axis: 'lat',
+        max_bbox_axis: axisNames[1],
         max_bbox_exceed: (this.bbox[3] - this.bbox[1] - maxBboxSize).toFixed(4),
       }));
       $bboxWarning.fadeIn();
     } else if (this.bbox[2] - this.bbox[0] >= maxBboxSize) {
       $bboxWarning.html(i18next.t('max_bbox_warning', {
         max_bbox_size: maxBboxSize,
-        max_bbox_axis: 'lon',
+        max_bbox_axis: axisNames[0],
         max_bbox_exceed: (this.bbox[2] - this.bbox[0] - maxBboxSize).toFixed(4),
       }));
       $bboxWarning.fadeIn();
@@ -452,13 +462,15 @@ export default ModalView.extend({
 
   defaultLabelsSet() {
     _.each(this.model.get('availableDownloadFormats'), (format) => {
-      if (!format.get('name') && format.get('mimeType')) {
-        format.set('name', format.get('mimeType'));
+      if (typeof format.name === 'undefined' && format.mimeType !== 'undefined') {
+        // eslint-disable-next-line no-param-reassign
+        format.name = format.mimeType;
       }
     });
     _.each(this.model.get('availableProjections'), (proj) => {
-      if (!proj.get('name') && proj.get('identifier')) {
-        proj.set('name', proj.get('identifier'));
+      if (typeof proj.name === 'undefined' && proj.identifier !== 'undefined') {
+        // eslint-disable-next-line no-param-reassign
+        proj.name = proj.identifier;
       }
     });
     _.each(this.layerModel.get('fullResolution.fields'), (field) => {

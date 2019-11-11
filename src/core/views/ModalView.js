@@ -56,7 +56,9 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
   },
 
   onModalShown() {
-    this.showChildView('content', this.view);
+    if (this.view) {
+      this.showChildView('content', this.view);
+    }
   },
 
   /**

@@ -16,7 +16,7 @@ class SearchModel extends Backbone.Model {
   defaults() {
     return {
       automaticSearch: false,
-      defaultPageSize: 9,
+      defaultPageSize: null, // let the catalog decide if not specified in client
       maxCount: 150,
       loadMore: 150,
       totalResults: undefined,
