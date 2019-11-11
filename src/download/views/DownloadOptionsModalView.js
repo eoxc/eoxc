@@ -282,7 +282,7 @@ export default ModalView.extend({
 
   onStartDownloadClicked() {
     this.onSizeOrResolutionChange();
-
+    // TODO: conjure the URL of subsetCRS, as full url to www.opengis.net definition should be used
     const options = {
       format: this.model.get('selectedDownloadFormat'),
       outputCRS: this.model.get('selectedProjection'),
