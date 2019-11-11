@@ -315,9 +315,12 @@ export default ModalView.extend({
       case 'size':
         options.sizeX = this.model.get('sizeX');
         options.sizeY = this.model.get('sizeY');
+        options.sizeX = options.sizeX < 1 ? 1 : options.sizeX;
+        options.sizeY = options.sizeY < 1 ? 1 : options.sizeY;
         break;
       case 'scale':
         options.scale = this.model.get('scale');
+        options.scale = options.scale < 0 ? 1 : options.scale;
         break;
       default:
         break;

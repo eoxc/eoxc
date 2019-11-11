@@ -208,6 +208,8 @@ function computeSizeFromResolution(recordModel, filterBbox, resolutionX, resolut
   }
   sizeX = Math.round((computedBbox[2] - computedBbox[0]) / resolutionX);
   sizeY = Math.round((computedBbox[3] - computedBbox[1]) / resolutionY);
+  sizeX = sizeX < 1 ? 1 : sizeX;
+  sizeY = sizeY < 1 ? 1 : sizeY;
   return [sizeX, sizeY];
 }
 

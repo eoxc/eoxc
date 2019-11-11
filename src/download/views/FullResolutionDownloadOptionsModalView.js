@@ -257,14 +257,19 @@ export default ModalView.extend({
       case 'resolution': {
         options.sizeX = Math.round((this.bbox[2] - this.bbox[0]) / this.model.get('resolutionX'));
         options.sizeY = Math.round((this.bbox[3] - this.bbox[1]) / this.model.get('resolutionY'));
+        options.sizeX = options.sizeX < 1 ? 1 : options.sizeX;
+        options.sizeY = options.sizeY < 1 ? 1 : options.sizeY;
         break;
       }
       case 'size':
         options.sizeX = this.model.get('sizeX');
         options.sizeY = this.model.get('sizeY');
+        options.sizeX = options.sizeX < 1 ? 1 : options.sizeX;
+        options.sizeY = options.sizeY < 1 ? 1 : options.sizeY;
         break;
       case 'scale':
         options.scale = this.model.get('scale');
+        options.scale = options.scale < 0 ? 1 : options.scale;
         break;
       default:
         break;
