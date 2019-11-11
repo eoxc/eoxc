@@ -172,6 +172,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
           visible: displayParams.visible,
           opacity,
           source: new WMSTileSource({
+            projection,
             transition: 0,
             crossOrigin: 'anonymous',
             params: Object.assign({
@@ -434,7 +435,7 @@ export function sortLayers(collection, layers) {
 }
 
 
-function featureFromExtent(extentArray) {
+export function featureFromExtent(extentArray) {
   const [minx, miny, maxx, maxy] = extentArray;
   return {
     type: 'Feature',

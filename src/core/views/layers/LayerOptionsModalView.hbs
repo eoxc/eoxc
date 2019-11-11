@@ -1,53 +1,9 @@
-<div class="modal-dialog modal-lg" role="document">
+<div class="modal-dialog modal-sm" role="document">
   <div class="modal-content">
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
       <h4 class="modal-title" style="display:inline">{{displayName}}</h4>
     </div>
-    <div class="modal-body">
-      <form class="form-horizontal">
-        <!--
-        <div class="form-group">
-          <label class="col-sm-2 control-label">{{t 'Visible'}}</label>
-          <div class="col-sm-10">
-            <input type="checkbox" name="layer-visible" {{#if display.visible}}checked="checked"{{/if}}>
-          </div>
-        </div>
-        -->
-        <div class="form-group">
-          <label class="col-sm-2 control-label">{{t 'Opacity'}}</label>
-          <div class="col-sm-10">
-            <input class="form-control opacity-slider">
-          </div>
-        </div>
-        {{#each options}}
-          <div class="form-group">
-            <label class="col-sm-2 control-label">{{t this.name}}</label>
-            <div class="col-sm-10">
-              {{#if this.values}}
-                <select class="form-control layer-option" name="{{this.target}}">
-                  {{#each this.values}}
-                    <option value="{{this.value}}" {{#if this.isCurrent}} selected="selected"{{/if}}>{{this.label}}</option>
-                  {{/each}}
-                </select>
-              {{else if this.min includeZero=true}}
-                <input type="text" data-target-low="{{this.targetLow}}" data-target-high="{{this.targetHigh}}" value="" data-slider-min="{{this.min}}" data-slider-max="{{this.max}}" data-slider-step="1" data-slider-value="[{{this.low}},{{this.high}}]"/>
-              {{/if}}
-            </div>
-          </div>
-        {{/each}}
-        {{#if legendUrl}}
-          <div class="form-group">
-            <label class="col-sm-2 control-label">{{t 'Legend'}}</label>
-            <div class="col-sm-12">
-              <img class="layer-legend-image" src="{{legendUrl}}" alt="Legend" />
-            </div>
-          </div>
-        {{/if}}
-      </form>
-    </div>
-    <div class="modal-footer">
-      <button type="button" class="btn btn-default" data-dismiss="modal">{{t 'Close' }}</button>
-    </div>
+    <div class="modal-body"></div>
   </div>
 </div>
