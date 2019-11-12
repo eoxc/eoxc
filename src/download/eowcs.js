@@ -249,9 +249,9 @@ export function getDownloadInfos(layerModel, filtersModel, recordModel, options 
       format: options.format,
     }
   );
-  const urlRewritten = rewrite(`${layerModel.get('download.url')}?${kvp}`, layerModel.get('download.rewrite'));
+  const url = `${layerModel.get('download.url')}?${kvp}`;
   return Promise.resolve([{
-    href: urlRewritten,
+    href: url,
     name: recordModel.get('id'),
   }]);
 }
