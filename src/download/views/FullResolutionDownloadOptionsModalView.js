@@ -243,11 +243,16 @@ export default ModalView.extend({
   onStartDownloadClicked() {
     // refresh values from form
     this.onSizeOrResolutionChange();
-
+    let subsetProj = this.mapModel.get('projection');
+    // get numeric code and parse it into opengis def url
+    if (subsetProj) {
+      subsetProj = subsetProj.slice(subsetProj.lastIndexOf(':') + 1);
+      subsetProj = `http://www.opengis.net/def/crs/EPSG/0/${subsetProj}`;
+    }
     const options = {
       bbox: this.bbox,
       outputCRS: this.model.get('projection'),
-      subsetCRS: this.mapModel.get('projection'),
+      subsetCRS: subsetProj,
       fields: this.model.get('fields'),
       format: this.model.get('format'),
       interpolation: this.model.get('interpolation'),
