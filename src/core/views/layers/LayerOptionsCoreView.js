@@ -75,7 +75,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   },
 
   onRender() {
-    let opacity = this.displayOptions.opacity;
+    let opacity = this.model.get(this.displayOption).opacity;
     opacity = typeof opacity === 'undefined' ? 1 : opacity;
     this.$slider = this.$('.opacity-slider').slider({
       min: 0,

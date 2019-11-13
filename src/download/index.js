@@ -58,10 +58,11 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options) {
     const urlOrElement = downloadEOWCS(layerModel, filtersModel, recordModel, options);
     if (urlOrElement) {
       if (layerModel.get('download.method') === 'GET') {
-        downloadUrl(rewrite(urlOrElement, rewriteRule));
+        downloadUrl(rewrite(urlOrElement, rewriteRule, recordModel));
       } else {
-        const xmlRewritten = rewrite(urlOrElement, rewriteRule);
-        const form = $(`<form method="post" action="${rewrite(layerModel.get('download.url'), rewriteRule)}" enctype="text/plain" target="_blank">
+        const xmlRewritten = rewrite(urlOrElement, rewriteRule, recordModel);
+        const urlRewritten = rewrite(layerModel.get('download.url'), rewriteRule, recordModel);
+        const form = $(`<form method="post" action="${urlRewritten}" enctype="text/plain" target="_blank">
           <input type="hidden" name='<?xml version' value='"1.0"?>${xmlRewritten}'></input>
         </form>`);
         if (form) {
@@ -71,11 +72,11 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options) {
           setTimeout(() => elem.remove(), 10000);
         }
       }
-    } else {
-      getDownloadInfosUrl(recordModel).then(infos => infos.forEach((info) => {
-        downloadUrl(rewrite(info.href, rewriteRule));
-      }));
     }
+  } else {
+    getDownloadInfosUrl(recordModel).then(infos => infos.forEach((info) => {
+      downloadUrl(rewrite(info.href, rewriteRule, recordModel));
+    }));
   }
 }
 
@@ -99,6 +100,6 @@ export function getDownloadInfos(layerModel, filtersModel, recordModel, options)
   }
 
   return downloadInfos.then(infos => infos.map(item => Object.assign({}, item, {
-    href: rewrite(item.href, layerModel.get('download.rewrite'))
+    href: rewrite(item.href, layerModel.get('download.rewrite'), recordModel)
   })));
 }
