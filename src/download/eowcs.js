@@ -1,6 +1,3 @@
-import $ from 'jquery';
-import rewrite from './rewrite';
-
 import { filtersToCQL, getISODateTimeString } from '../core/util';
 import FiltersModel from '../core/models/FiltersModel';
 
