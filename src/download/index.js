@@ -72,11 +72,11 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options) {
           setTimeout(() => elem.remove(), 10000);
         }
       }
-    } else {
-      getDownloadInfosUrl(recordModel).then(infos => infos.forEach((info) => {
-        downloadUrl(rewrite(info.href, rewriteRule, recordModel));
-      }));
     }
+  } else {
+    getDownloadInfosUrl(recordModel).then(infos => infos.forEach((info) => {
+      downloadUrl(rewrite(info.href, rewriteRule, recordModel));
+    }));
   }
 }
 
