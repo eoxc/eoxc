@@ -74,6 +74,7 @@ export default ModalView.extend({
     this.checkValidity();
     this.checkBands();
     this.checkBbox();
+    this.checkResolution();
   },
 
   events: {
@@ -207,6 +208,7 @@ export default ModalView.extend({
     );
 
     this.checkSize();
+    this.checkResolution();
     this.checkValidity();
   },
 
@@ -237,6 +239,7 @@ export default ModalView.extend({
     this.updatePreferences('preferredScale', scale);
 
     this.checkSize();
+    this.checkResolution();
     this.checkValidity();
   },
 
@@ -453,10 +456,22 @@ export default ModalView.extend({
         max_bbox_exceed: (this.bbox[2] - this.bbox[0] - maxBboxSize).toFixed(4),
       }));
       $bboxWarning.fadeIn();
-    } else if ($bboxWarning.is(':visible')) {
-      $bboxWarning.hide();
     } else {
       $bboxWarning.hide();
+    }
+  },
+
+  checkResolution() {
+    const $resoWarning = this.$('.resolution-warning');
+    const maxResolution = this.layerModel.get('fullResolution.maxAllowedResolution');
+    const maxResolutionTrans = transform([maxResolution, 0], 'EPSG:4326', this.mapProjection)[0];
+    if (this.model.get('resolutionX') >= maxResolutionTrans || this.model.get('resolutionY') >= maxResolutionTrans) {
+      $resoWarning.html(i18next.t('max_resolution_warning', {
+        max_resolution: maxResolutionTrans,
+      }));
+      $resoWarning.fadeIn();
+    } else {
+      $resoWarning.hide();
     }
   },
 
