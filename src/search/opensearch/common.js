@@ -1,5 +1,6 @@
 import turfUnion from '@turf/union';
 import { polygon as turfPolygon } from '@turf/helpers';
+import turfBBox from '@turf/bbox';
 
 function prepareBox(bbox) {
   const b = [...bbox];
@@ -60,56 +61,47 @@ export function prepareRecords(records, switchMultiPolygonCoordinates) {
       }
       if (record.geometry.coordinates.length === 2) {
         // add 360 to the second polygon if necessary to exceed srs bounds and allow polygon union to remove connection line on dateline
+        adjustedGeometry = true;
         const outerRingL = record.geometry.coordinates[1][0];
-        const outerRingLLongitudes = Array.from(outerRingL, x => x[0]);
         const outerRingR = record.geometry.coordinates[0][0];
-        const outerRingRLongitudes = Array.from(outerRingR, x => x[0]);
-        if (Math.abs(Math.min(...outerRingLLongitudes) + 180.0) < 1e-8 && Math.abs(Math.max(...outerRingRLongitudes) - 180.0) < 1e-8) {
+        const outerRingLLatitudes = Array.from(outerRingL, x => x[1]);
+        const outerRingRLatitudes = Array.from(outerRingR, x => x[1]);
+
+        // union to a single polygon only for non-S5P wierd multipolygons
+        // eslint-disable-next-line max-len
+        const notPerformUnion = Math.abs(Math.min(...outerRingLLatitudes) + 85.05115) < 1e-8 || Math.abs(Math.min(...outerRingRLatitudes) + 85.05115) < 1e-8 || Math.abs(Math.max(...outerRingLLatitudes) - 85.05115) < 1e-8 ||
+        Math.abs(Math.max(...outerRingRLatitudes) - 85.05115) < 1e-8;
+
+        if (!notPerformUnion) {
           adjustedGeometry = true;
-          for (let i = 0; i < outerRingL.length; ++i) {
-            outerRingL[i][0] += 360;
-          }
-        } else if (Math.abs(Math.min(...outerRingRLongitudes) + 180.0) < 1e-8 && Math.abs(Math.max(...outerRingLLongitudes) - 180.0) < 1e-8) {
-          adjustedGeometry = true;
-          for (let i = 0; i < outerRingR.length; ++i) {
-            outerRingR[i][0] += 360;
-          }
-        }
-        const polygonL = turfPolygon(record.geometry.coordinates[0]);
-        const polygonR = turfPolygon(record.geometry.coordinates[1]);
-        // union to a single polygon
-        const unioned = turfUnion(polygonL, polygonR);
-        if (unioned.geometry.coordinates.length === 1) {
-          // single polygon result out of union -> subtract 360 degrees to go around
-          // OL not rendering very large polygons on higher zooms, where dateline is not currently visible
-          const rings = unioned.geometry.coordinates;
-          for (let i = 0; i < rings.length; ++i) {
-            for (let j = 0; j < rings[i].length; ++j) {
-              rings[i][j][0] -= 360;
+          const outerRingLLongitudes = Array.from(outerRingL, x => x[0]);
+          const outerRingRLongitudes = Array.from(outerRingR, x => x[0]);
+
+          if (Math.abs(Math.min(...outerRingLLongitudes) + 180.0) < 1e-8 && Math.abs(Math.max(...outerRingRLongitudes) - 180.0) < 1e-8) {
+            for (let i = 0; i < outerRingL.length; ++i) {
+              outerRingL[i][0] += 360;
+            }
+          } else if (Math.abs(Math.min(...outerRingRLongitudes) + 180.0) < 1e-8 && Math.abs(Math.max(...outerRingLLongitudes) - 180.0) < 1e-8) {
+            for (let i = 0; i < outerRingR.length; ++i) {
+              outerRingR[i][0] += 360;
             }
           }
+
+          const polygonL = turfPolygon(record.geometry.coordinates[0]);
+          const polygonR = turfPolygon(record.geometry.coordinates[1]);
+          // union to a single polygon
+          const unioned = turfUnion(polygonL, polygonR);
+
+          // eslint-disable-next-line no-param-reassign
+          record.geometry = unioned.geometry;
         }
-        // eslint-disable-next-line no-param-reassign
-        record.geometry = unioned.geometry;
       }
     }
       // (re-)calculate the bounding box when not available or when the geometry
       // was adjusted in the step before
     if (!record.bbox || adjustedGeometry) {
-      const outer = record.geometry.coordinates[0];
-      let minx = outer[0][0];
-      let miny = outer[0][1];
-      let maxx = outer[0][0];
-      let maxy = outer[0][1];
-
-      for (let i = 1; i < outer.length; ++i) {
-        minx = Math.min(minx, outer[i][0]);
-        miny = Math.min(miny, outer[i][1]);
-        maxx = Math.max(maxx, outer[i][0]);
-        maxy = Math.max(maxy, outer[i][1]);
-      }
       // eslint-disable-next-line no-param-reassign
-      record.bbox = [minx, miny, maxx, maxy];
+      record.bbox = turfBBox(record.geometry);
     }
     return record;
   });

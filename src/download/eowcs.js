@@ -10,10 +10,25 @@ function getCoverageXML(coverageid, options = {}) {
   }
   const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
   const params = [
-    `<wcs:GetCoverage service="WCS" version="2.0.0" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:wcscrs="http://www.opengis.net/wcs/crs/1.0" xmlns:wcsmask="http://www.opengis.net/wcs/mask/1.0">
+    `<wcs:GetCoverage service="WCS" version="2.0.1" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:wcscrs="http://www.opengis.net/wcs/crs/1.0" xmlns:wcsmask="http://www.opengis.net/wcs/mask/1.0" xmlns:int="http://www.opengis.net/wcs/interpolation/1.0" xmlns:scal="http://www.opengis.net/wcs/scaling/1.0">
      <wcs:CoverageId>${coverageid}</wcs:CoverageId>`,
   ];
   const extension = [];
+
+  let axisNames;
+  if (!options.axisNames) {
+    axisNames = {
+      x: 'x',
+      y: 'y',
+    };
+  } else if (Array.isArray(options.axisNames)) {
+    axisNames = {
+      x: options.axisNames[0],
+      y: options.axisNames[1],
+    };
+  } else {
+    axisNames = options.axisNames;
+  }
 
   if (options.format) {
     params.push(`<wcs:format>${options.format}</wcs:format>`);
@@ -23,29 +38,51 @@ function getCoverageXML(coverageid, options = {}) {
     subsetY = [options.bbox[1], options.bbox[3]];
   }
   if (subsetX) {
-    params.push(`<wcs:DimensionTrim><wcs:Dimension crs="${subsetCRS}">x</wcs:Dimension>
+    params.push(`<wcs:DimensionTrim><wcs:Dimension>${axisNames.x}</wcs:Dimension>
                    <wcs:TrimLow>${subsetX[0]}</wcs:TrimLow>
                    <wcs:TrimHigh>${subsetX[1]}</wcs:TrimHigh>
                  </wcs:DimensionTrim>`);
   }
   if (subsetY) {
-    params.push(`<wcs:DimensionTrim><wcs:Dimension crs="${subsetCRS}">y</wcs:Dimension>
+    params.push(`<wcs:DimensionTrim><wcs:Dimension>${axisNames.y}</wcs:Dimension>
                    <wcs:TrimLow>${subsetY[0]}</wcs:TrimLow>
                    <wcs:TrimHigh>${subsetY[1]}</wcs:TrimHigh>
                  </wcs:DimensionTrim>`);
   }
 
   if (options.outputCRS) {
-    params.push(`<wcscrs:outputCrs>${options.outputCRS}</wcscrs:outputCrs>`);
-    params.push(`<wcs:OutputCrs>${options.outputCRS}</wcs:OutputCrs>`);
+    extension.push(`<wcscrs:outputCrs>${options.outputCRS}</wcscrs:outputCrs>`);
   }
 
-  // raises an exception in MapServer
-  // extension.push("<wcscrs:subsettingCrs>" + subsetCRS + "</wcscrs:subsettingCrs>");
+  if (options.sizeX && options.sizeY) {
+    extension.push(`
+      <scal:ScaleToSize>
+        <scal:TargetAxisSize>
+          <scal:axis>${axisNames.x}</scal:axis>
+          <scal:targetSize>${options.sizeX}</scal:targetSize>
+        </scal:TargetAxisSize>
+        <scal:TargetAxisSize>
+          <scal:axis>${axisNames.y}</scal:axis>
+          <scal:targetSize>${options.sizeY}</scal:targetSize>
+        </scal:TargetAxisSize>
+      </scal:ScaleToSize>
+    `);
+  }
+
+  extension.push(`<wcscrs:subsettingCrs>${subsetCRS}</wcscrs:subsettingCrs>`);
 
   if (options.mask) {
     extension.push(`<wcsmask:polygonMask>${options.mask}</wcsmask:polygonMask>`);
   }
+
+  if (options.scale) {
+    extension.push(`<scal:ScaleByFactor><scal:scaleFactor>${options.scale}</scal:scaleFactor></scal:ScaleByFactor>`);
+  }
+
+  if (options.interpolation) {
+    extension.push(`<int:Interpolation><int:globalInterpolation>${options.interpolation}</int:globalInterpolation></int:Interpolation>`);
+  }
+
   if (options.multipart) {
     params.push('<wcs:mediaType>multipart/related</wcs:mediaType>');
   }
@@ -77,7 +114,10 @@ function getCoverageKVP(coverageid, options = {}) {
 
   let axisNames;
   if (!options.axisNames) {
-    axisNames = {};
+    axisNames = {
+      x: 'x',
+      y: 'y',
+    };
   } else if (Array.isArray(options.axisNames)) {
     axisNames = {
       x: options.axisNames[0],
@@ -131,6 +171,44 @@ function getCoverageKVP(coverageid, options = {}) {
     .join('&');
 }
 
+function getIntersectingBbox(r1, r2) {
+  // computes intersection bbox of two bboxes, returns false if no intersect
+  // does not find intersection if any bbox crosses dateline and non-over 180 coordinates are used
+  const noIntersect = r2[0] > r1[2] || r2[2] < r1[0] ||
+  r2[1] > r1[3] || r2[3] < r1[1];
+  return noIntersect ? false : [
+    Math.max(r1[0], r2[0]),
+    Math.max(r1[1], r2[1]),
+    Math.min(r1[2], r2[2]),
+    Math.min(r1[3], r2[3])
+  ];
+}
+
+function computeSizeFromResolution(recordModel, filterBbox, resolutionX, resolutionY) {
+  let sizeX = null;
+  let sizeY = null;
+  let computedBbox = null;
+  const recordBbox = recordModel.get('bbox');
+  if (!recordBbox && !filterBbox) {
+    // can not compute resolution
+    return [null, null];
+  } else if (!filterBbox) {
+    // use bounding box of record as is
+    computedBbox = recordBbox;
+  } else {
+    // get intersection of two bboxes
+    computedBbox = getIntersectingBbox(recordBbox, filterBbox);
+    if (!computedBbox) {
+      // no intersection
+      return [null, null];
+    }
+  }
+  sizeX = Math.round((computedBbox[2] - computedBbox[0]) / resolutionX);
+  sizeY = Math.round((computedBbox[3] - computedBbox[1]) / resolutionY);
+  sizeX = sizeX < 1 ? 1 : sizeX;
+  sizeY = sizeY < 1 ? 1 : sizeY;
+  return [sizeX, sizeY];
+}
 
 export function download(layerModel, filtersModel, recordModel, options) {
   const requestOptions = {
@@ -138,31 +216,26 @@ export function download(layerModel, filtersModel, recordModel, options) {
     outputCRS: options.outputCRS,
     subsetCRS: options.subsetCRS,
     format: options.format,
-    sizeX: options.sizeX,
-    sizeY: options.sizeY,
     scale: options.scale,
+    interpolation: options.interpolation,
+    axisNames: layerModel.get('download.axisNames'),
   };
+  if (options.resolutionX && options.resolutionY) {
+    // compute size based on specified resolution
+    const [sizeX, sizeY] = computeSizeFromResolution(recordModel, filtersModel.get('area'), options.resolutionX, options.resolutionY);
+    requestOptions.sizeX = sizeX;
+    requestOptions.sizeY = sizeY;
+  } else {
+    // use sizes directly
+    requestOptions.sizeX = options.sizeX;
+    requestOptions.sizeY = options.sizeY;
+  }
 
   if (layerModel.get('download.method') === 'GET') {
     const kvp = getCoverageKVP(recordModel.get('id'), requestOptions);
-    const url = `${layerModel.get('download.url')}?${kvp}`;
-
-    const a = document.createElement('a');
-    if (typeof a.download !== 'undefined') {
-      a.setAttribute('href', url);
-      a.setAttribute('download', 'true');
-      a.click();
-      return null;
-    }
-    return $(`<iframe src="${url}"></iframe>`);
+    return `${layerModel.get('download.url')}?${kvp}`;
   }
-  const xml = getCoverageXML(recordModel.get('id'), requestOptions);
-
-  return $(`
-    <form method="post" action="${layerModel.get('download.url')}" target="iframe-download-post" enctype="text/plain">
-      <input type="hidden" name='<?xml version' value='"1.0"?>${xml}'></input>
-    </form>
-  `);
+  return getCoverageXML(recordModel.get('id'), requestOptions);
 }
 
 export function getDownloadInfos(layerModel, filtersModel, recordModel, options = {}) {
@@ -173,8 +246,9 @@ export function getDownloadInfos(layerModel, filtersModel, recordModel, options 
       format: options.format,
     }
   );
+  const url = `${layerModel.get('download.url')}?${kvp}`;
   return Promise.resolve([{
-    href: `${layerModel.get('download.url')}?${kvp}`,
+    href: url,
     name: recordModel.get('id'),
   }]);
 }
@@ -197,7 +271,7 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
 
 
   const time = mapModel.get('time');
-  if (time) {
+  if (time && !layerModel.get('fullResolution.disableTimeSubsetting')) {
     kvp = `${kvp}&subset=http://www.opengis.net/def/axis/OGC/0/time("${getISODateTimeString(time[0])}","${getISODateTimeString(time[1])}")`;
   }
 
@@ -217,15 +291,5 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
   if (fullResolutionUrl.includes('?')) {
     char = (fullResolutionUrl.endsWith('?') || fullResolutionUrl.endsWith('&')) ? '' : '&';
   }
-
-  const url = `${fullResolutionUrl}${char}${kvp}`;
-
-  const a = document.createElement('a');
-  a.setAttribute('href', url);
-  a.setAttribute('target', '_blank');
-  a.setAttribute('style', 'display: none;');
-  document.body.appendChild(a);
-  a.click();
-
-  setTimeout(() => document.body.removeChild(a));
+  return `${fullResolutionUrl}${char}${kvp}`;
 }

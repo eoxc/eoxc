@@ -18,6 +18,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     'click .layer-adjust-opacity': 'onLayerAdjustOpacityClick',
     'inserted.bs.popover': 'onPopoverInserted',
     'hidden.bs.popover': 'onPopoverHidden',
+    'click .layer-download-full-resolution': 'onLayerDownloadFullResolutionClick',
 
     // when using options
     'click .layer-show-options': 'onShowOptionsClick',
@@ -62,6 +63,10 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     if (!this.isPopoverShown) {
       this.$popoverButton.popover('show');
     }
+  },
+
+  onLayerDownloadFullResolutionClick() {
+    this.model.trigger('download-full-resolution', this.model);
   },
 
   onPopoverInserted() {

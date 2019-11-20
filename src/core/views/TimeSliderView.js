@@ -71,7 +71,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.maxTooltips = options.maxTooltips;
     this.timeSliderAlternativeBrush = options.timeSliderAlternativeBrush;
     this.enableDynamicHistogram = options.enableDynamicHistogram;
-    this.previousSearches = {};
+    this.searchRequests = [];
     this.maxMapInterval = this.mapModel.get('maxMapInterval');
     if (this.maxMapInterval) {
       // initial setup if shared time
@@ -174,6 +174,16 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   addVisibleLayers() {
+    // cancel ongoing timeslider requests
+    this.searchRequests.forEach((req) => {
+      if (typeof req.emit === 'function') {
+        // PagedSearchProgressEmitter
+        req.emit('cancel');
+      } else if (typeof req.cancel === 'function') {
+        // Bluebird Promise
+        req.cancel();
+      }
+    });
     const visibleLayers = this.layersCollection.filter(
       layerModel => layerModel.get('display.visible')
     );
@@ -206,37 +216,40 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
                 : acc
               ), { time: [start, end] }
           ));
-          searchAllRecords(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' })
-            .on('progress', (result) => {
-              callback(result.records.map((record) => {
-                let time = null;
-                const properties = record.properties;
-                if (record.time) {
-                  time = record.time;
-                  if (time instanceof Date) {
-                    time = [time, time];
-                  }
-                } else if (properties) {
-                  // TODO: other property names than begin_time/end_time
-                  if (properties.begin_time && properties.end_time) {
-                    time = [new Date(properties.begin_time), new Date(properties.end_time)];
-                  } else if (properties.time) {
-                    if (Array.isArray(properties.time)) {
-                      time = properties.time;
-                    } else {
-                      time = [properties.time];
-                    }
+          // this should be taken from searchModel.get('defaultPageSize') to be correct, but currently set to null by default and would need some rewrites
+          const itemsPerPage = layerModel.get('search').pageSize;
+          const emitter = searchAllRecords(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml', itemsPerPage });
+          emitter.on('progress', (result) => {
+            callback(result.records.map((record) => {
+              let time = null;
+              const properties = record.properties;
+              if (record.time) {
+                time = record.time;
+                if (time instanceof Date) {
+                  time = [time, time];
+                }
+              } else if (properties) {
+                // TODO: other property names than begin_time/end_time
+                if (properties.begin_time && properties.end_time) {
+                  time = [new Date(properties.begin_time), new Date(properties.end_time)];
+                } else if (properties.time) {
+                  if (Array.isArray(properties.time)) {
+                    time = properties.time;
+                  } else {
+                    time = [properties.time];
                   }
                 }
+              }
 
-                if (time === null) {
-                  return null;
-                }
+              if (time === null) {
+                return null;
+              }
 
-                return [...time, record];
-              }).filter(item => item !== null));
-            })
-            .on('error', () => callback([]));
+              return [...time, record];
+            }).filter(item => item !== null));
+          });
+          emitter.on('error', () => callback([]));
+          this.searchRequests.push(emitter);
         };
 
         bucketSource = (start, end, params, callback) => {
@@ -247,8 +260,9 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
                 : acc
               ), { time: [start, end] }
           ));
-          getCount(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' })
-            .then(count => callback(count));
+          const result = getCount(layerModel, filtersModel, mapModel, { mimeType: 'application/atom+xml' });
+          result.then(count => callback(count));
+          this.searchRequests.push(result);
         };
         break;
       case 'WMS':
@@ -350,8 +364,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   onRecordsClicked(event) {
     const detail = event.originalEvent.detail;
     const records = detail.bin || detail.records;
-    const combinedBbox = records.filter(record => record[2] && record[2].bbox)
-      .map(record => record[2].bbox)
+    // alternative behavior for shared bbox crossing antimeridian -> make bbox go over 180 if necessary
+    // naively calculate the bounding box on WGS84
+    const validBboxList = records.filter(record => record[2] && record[2].bbox)
+      .map(record => record[2].bbox);
+    const bboxNaiveCombined = validBboxList
       .reduce((lastBbox, thisBbox) => {
         if (!lastBbox) {
           return thisBbox;
@@ -363,8 +380,28 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
           Math.max(lastBbox[3], thisBbox[3]),
         ];
       }, null);
-    if (combinedBbox) {
-      this.mapModel.show({ bbox: combinedBbox });
+    // naively calculate the bounding box on a "modified" WGS84, where 360° has been added to all negative longitudes
+    const bboxModifiedCombined = validBboxList
+      .map(bbox => [bbox[0] < 0 ? bbox[0] + 360 : bbox[0], bbox[1], bbox[2] < 0 ? bbox[2] + 360 : bbox[2], bbox[3]])
+      .reduce((lastBbox, thisBbox) => {
+        if (!lastBbox) {
+          return thisBbox;
+        }
+        return [
+          Math.min(lastBbox[0], thisBbox[0]),
+          Math.min(lastBbox[1], thisBbox[1]),
+          Math.max(lastBbox[2], thisBbox[2]),
+          Math.max(lastBbox[3], thisBbox[3]),
+        ];
+      }, null);
+
+    if (bboxNaiveCombined) {
+      // take smaller one of both bboxes
+      if (bboxModifiedCombined[2] - bboxModifiedCombined[0] < bboxNaiveCombined[2] - bboxNaiveCombined[0]) {
+        this.mapModel.show({ bbox: bboxModifiedCombined });
+      } else {
+        this.mapModel.show({ bbox: bboxNaiveCombined });
+      }
     }
     if (this.maxMapInterval) {
       this.mapModel.set('extendedTime', [detail.start, detail.end]);

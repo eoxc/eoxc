@@ -1,0 +1,60 @@
+<form class="form-horizontal">
+  <div class="form-group">
+    <label class="col-sm-2 control-label">{{t 'Opacity'}}</label>
+    <div class="col-sm-10">
+      <input class="form-control opacity-slider">
+    </div>
+  </div>
+  {{#each options}}
+    <div class="form-group">
+      {{#if this.values}}
+        <label for="visualization-selector_{{this.counter}}" class="col-sm-2 control-label">
+          <input type="radio" id="visualization-selector_{{this.counter}}" name="visualization-selector" class="visualization-selector" {{#if this.isChosen}} checked{{/if}}><span>{{t this.name}}</span>
+          </input>
+        </label>
+        {{#if this.selectThree}}
+          <div class="col-sm-4 option-row">
+            <select class="form-control layer-option" name="{{this.target}}">
+              {{#each this.values}}
+                <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="col-sm-4 option-row">
+            <select class="form-control layer-option" name="{{this.target}}">
+              {{#each this.values}}
+                <option value="{{this.value}}" {{#if this.isCurrentB2}} selected="selected"{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <div class="col-sm-4 option-row">
+            <select class="form-control layer-option" name="{{this.target}}">
+              {{#each this.values}}
+                <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+        {{/if}}
+      {{#unless this.selectThree }}
+        <div class="col-sm-10 option-row">
+          <select class="form-control layer-option" name="{{this.target}}">
+            {{#each this.values}}
+              <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
+            {{/each}}
+          </select>
+        </div>
+      {{/unless}}
+    {{else if this.min includeZero=true}}
+      <input type="text" data-target-low="{{this.targetLow}}" data-target-high="{{this.targetHigh}}" value="" data-slider-min="{{this.min}}" data-slider-max="{{this.max}}" data-slider-step="1" data-slider-value="[{{this.low}},{{this.high}}]"/>
+    {{/if}}
+    </div>
+  {{/each}}
+  {{#if legendUrl}}
+    <div class="form-group">
+      <label class="col-sm-2 control-label">{{t 'Legend'}}</label>
+      <div class="col-sm-12">
+        <img class="layer-legend-image" src="{{legendUrl}}" alt="Legend" />
+      </div>
+    </div>
+  {{/if}}
+</form>
