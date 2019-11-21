@@ -21,7 +21,6 @@ input[type="radio"].visualization-selector + span {
 }
 
 input[type="radio"].visualization-selector + span:before {
-  font-family: 'FontAwesome';
   font-size: 20px;
   display: inline-block;
   content: "\f070"; /* eye-slash */
