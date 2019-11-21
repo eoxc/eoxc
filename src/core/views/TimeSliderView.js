@@ -127,11 +127,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
     // replace the markup for the timeslider controls
 
-    this.$('.control#pan-left .arrow-left').replaceWith('<i class="fa fa-caret-left" />');
-    this.$('.control#pan-right .arrow-right').replaceWith('<i class="fa fa-caret-right" />');
-    this.$('.control#zoom-out').html('<i class="fa fa-minus" />');
-    this.$('.control#zoom-in').html('<i class="fa fa-plus" />');
-    this.$('.control#reload .reload-arrow').replaceWith('<i class="fa fa-refresh fa-fw" />');
+    this.$('.control#pan-left .arrow-left').replaceWith('<i class="fas fa-caret-left" />');
+    this.$('.control#pan-right .arrow-right').replaceWith('<i class="fas fa-caret-right" />');
+    this.$('.control#zoom-out').html('<i class="fas fa-minus" />');
+    this.$('.control#zoom-in').html('<i class="fas fa-plus" />');
+    this.$('.control#reload .reload-arrow').replaceWith('<i class="fas fa-sync-alt" />');
 
     if (this.enableDynamicHistogram) {
       this.listenTo(this.mapModel, 'change:area', this.addVisibleLayers);
@@ -466,11 +466,11 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   onLoadStart() {
-    this.$('.control#reload i').addClass('fa-spin');
+    this.$('.control#reload i').addClass('fa-spinner');
   },
 
   onLoadEnd() {
-    this.$('.control#reload i').removeClass('fa-spin');
+    this.$('.control#reload i').removeClass('fa-spinner');
   },
 
   // collection events

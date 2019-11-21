@@ -24,7 +24,7 @@ const PanelView = Marionette.LayoutView.extend(/** @lends core/views.PanelView# 
     @param {Object} options
     @param {Object} options.view The subview encapsulated in the panel
     @param {string} options.title The title of the view
-    @param {string} [options.icon] The icon classname of the view. e.g.: "fa-globe"
+    @param {string} [options.icon] The icon classname of the view. e.g.: "fas fa-globe"
     @param {string} [options.left] Position from the left (CSS property)
     @param {string} [options.right] Position from the right (CSS property)
     @param {string} [options.top] Position from the top (CSS property)

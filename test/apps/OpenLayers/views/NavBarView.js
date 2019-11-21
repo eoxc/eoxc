@@ -17,8 +17,8 @@ export default Marionette.LayoutView.extend({
         <div class="navbar-collapse collapse navbar-right">
           <ul class="nav navbar-nav">
             <li class="divider-vertical"></li>
-            <li><a href="#" class="layers"><i class="fa fa-globe"></i> Layers</a></li>
-            <li><a href="#" class="tools"><i class="fa fa-wrench"></i> Tools</a></li>
+            <li><a href="#" class="layers"><i class="fas fa-globe"></i> Layers</a></li>
+            <li><a href="#" class="tools"><i class="fas fa-wrench"></i> Tools</a></li>
           </ul>
         </div>
       </div>

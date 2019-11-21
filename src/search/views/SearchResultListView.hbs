@@ -4,14 +4,13 @@
       <a role="button" data-toggle="collapse" href="#collapse-{{layerId}}" {{#unless isClosed}}aria-expanded="true"{{else}}class="collapsed"{{/unless}}>
         {{layerName}}
         {{#if isSearching}}
-          <!-- <i class="fa fa-circle-o-notch fa-spin"></i> -->
           <span class="search-progress"><span>.</span><span>.</span><span>.</span></span>
           {{#if totalResults}}
             ({{hasLoaded}}/{{totalResults}})
           {{/if}}
         {{else}}
           {{#if hasError}}
-            <i class="fa fa-exclamation text-danger"></i>
+            <i class="fas fa-exclamation text-danger"></i>
           {{else}}
             {{#if hasMore}}
               ({{hasLoaded}}/{{totalResults}})
@@ -21,7 +20,7 @@
           {{/if}}
         {{/if}}
         {{#unless isSearching}}<span class="caret"></span>{{/unless}}
-        {{#unless hasError}}<a target="_blank" href="{{searchRequest.url}}"><i class="fa fa-external-link"></i></a>{{/unless}}
+        {{#unless hasError}}<a target="_blank" href="{{searchRequest.url}}"><i class="fas fa-external-link-alt"></i></a>{{/unless}}
       </a>
     </h4>
   </div>

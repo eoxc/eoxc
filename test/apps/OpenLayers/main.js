@@ -55,7 +55,7 @@ app.on('start', () => {
 
   const layerControlLayoutView = new PanelView({
     title: 'Layers',
-    icon: 'fa-globe',
+    icon: 'fas fa-globe',
     width: '25em',
     top: '8em',
     left: '3em',
@@ -73,7 +73,7 @@ app.on('start', () => {
 
   const toolsView = new PanelView({
     title: 'Tools',
-    icon: 'fa-wrench',
+    icon: 'fas fa-wrench',
     width: '10em',
     top: '8em',
     right: '3em',
@@ -92,7 +92,7 @@ app.on('start', () => {
   layersCollection.on('show', (layerModel) => {
     const layerOptionsView = new PanelView({
       title: `${layerModel.get('displayName')} Options`,
-      icon: 'fa-sliders',
+      icon: 'fas fa-sliders',
       left: '45%',
       top: '8em',
       view: new LayerOptionsView({

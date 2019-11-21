@@ -6,7 +6,7 @@ export default Marionette.LayoutView.extend({
     <div class="btn-group-vertical" data-toggle="buttons" style="width: 100%">
       <label class="btn btn-default active">
         <input type="radio" name="tool" value="pan" autocomplete="off" checked>
-        <i class="fa fa-arrows"></i> Pan
+        <i class="fas fa-arrows"></i> Pan
       </label>
       <label class="btn btn-default">
         <input type="radio" name="tool" value="bbox" autocomplete="off">BBox

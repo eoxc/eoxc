@@ -176,9 +176,9 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
         .find('.search-status');
 
       if (searchModel.get('isSearching')) {
-        $status.html('<i class="fa fa-circle-o-notch fa-spin fa-fw"></i>');
+        $status.html('<i class="fas fa-circle-notch fa-spin"></i>');
       } else if (searchModel.get('hasError')) {
-        $status.html('<i class="fa fa-exclamation"></i>');
+        $status.html('<i class="fas fa-exclamation"></i>');
       } else if (searchModel.get('isCancelled')) {
         $status.html('');
       } else if (searchModel.get('isCountInitiallyDisabled')) {
@@ -196,9 +196,9 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
     const selectedSearchModels = this.collection.filter(model => model.get('automaticSearch'));
 
     if (hasError) {
-      $globalStatus.html('<i class="fa fa-exclamation"></i>');
+      $globalStatus.html('<i class="fas fa-exclamation"></i>');
     } else if (isSearching) {
-      $globalStatus.html('<i class="fa fa-circle-o-notch fa-spin fa-fw"></i>');
+      $globalStatus.html('<i class="fas fa-circle-notch fa-spin"></i>');
     } else if (selectedSearchModels.length) {
       const sumTotalResults = selectedSearchModels.reduce(
         (current, model) => (current + model.get('totalResults')), 0
@@ -218,9 +218,9 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
 
     // update the tab header
     if (hasError) {
-      this.triggerMethod('update:status', '<i class="fa fa-exclamation"></i>');
+      this.triggerMethod('update:status', '<i class="fas fa-exclamation"></i>');
     } else if (isSearching) {
-      this.triggerMethod('update:status', '<i class="fa fa-circle-o-notch fa-spin fa-fw"></i>');
+      this.triggerMethod('update:status', '<i class="fas fa-circle-notch fa-spin"></i>');
     } else {
       this.triggerMethod('update:status', '');
     }
