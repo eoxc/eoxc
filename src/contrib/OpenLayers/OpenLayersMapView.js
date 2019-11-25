@@ -15,6 +15,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 
 import Polygon, { fromExtent } from 'ol/geom/Polygon';
 import Point from 'ol/geom/Point';
+import { appendParams } from 'ol/uri';
 
 import { get as getProj, transform, transformExtent } from 'ol/proj';
 
@@ -414,6 +415,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.listenTo(this.mapModel, 'change:time', this.onTimeChange);
     this.listenTo(this.mapModel, 'change:tool', this.onToolChange);
+    this.listenTo(this.mapModel, 'export:wmsurl', this.exportWMSUrl);
 
     this.listenTo(this.mapModel, 'show', (feature) => {
       // assume EPSG:4326 object is received
@@ -861,6 +863,49 @@ class OpenLayersMapView extends Marionette.ItemView {
   onResize() {
     this.map.updateSize();
   }
+
+  exportWMSUrl(layerModel, useDetailsDisplay = false) {
+    const baseWmsParams = {
+      SERVICE: 'WMS',
+      REQUEST: 'GetMap',
+      TRANSPARENT: true,
+    };
+    const displayParams = useDetailsDisplay
+      ? layerModel.get('detailsDisplay') || layerModel.get('display')
+      : layerModel.get('display');
+    let url = displayParams.urls ? displayParams.urls[0] : displayParams.url;
+    if (!url.includes('http')) {
+      url = `http:${url}`;
+    }
+    const layerProjection = displayParams.projection || this.projection.getCode();
+    const format = displayParams.format || 'image/png';
+    const mapLayer = this.getLayerOfGroup(layerModel, this.groups.layers);
+    const source = mapLayer.getSource();
+    let previousParams;
+
+    if (source.getParams) {
+      // WMSTileSource
+      previousParams = source.getParams();
+    } else if (source.getDimensions) {
+      // WMTSSource
+      previousParams = source.getDimensions();
+    } else {
+      previousParams = {};
+    }
+    const params = Object.assign(
+      baseWmsParams, previousParams);
+    const mapSize = this.map.getSize();
+    let bbox = transformExtent(this.map.getView().calculateExtent(mapSize), this.projection, layerProjection);
+    bbox = wrapBox(bbox);
+    params.FORMAT = format;
+    params.SRS = layerProjection;
+    params.WIDTH = mapSize[0];
+    params.HEIGHT = mapSize[1];
+    params.BBOX = bbox.join(',');
+    const urlWithParams = appendParams(url, params);
+    return urlWithParams;
+  }
+
 }
 
 OpenLayersMapView.prototype.template = () => '';
