@@ -23,6 +23,7 @@ import { uniqueBy } from '../../core/util';
 import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
+import ExportWMSLayerListView from './ExportWMSLayerListView';
 import ProgressBar from './progressbar';
 import './ol.css';
 import template from './OpenLayersMapView.hbs';
@@ -134,6 +135,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (this.map) {
       this.map.setTarget(this.el);
       this.progressBar.setElement(this.$('.progress-bar')[0]);
+      new ExportWMSLayerListView({ el: this.$('.export-tools')[0], collection: this.layersCollection, useDetailsDisplay: this.useDetailsDisplay, mapModel: this.mapModel, usedView: this }).render();
       $(window).resize(() => this.onResize());
     }
   }
@@ -415,7 +417,6 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.listenTo(this.mapModel, 'change:time', this.onTimeChange);
     this.listenTo(this.mapModel, 'change:tool', this.onToolChange);
-    this.listenTo(this.mapModel, 'export:wmsurl', this.exportWMSUrl);
 
     this.listenTo(this.mapModel, 'show', (feature) => {
       // assume EPSG:4326 object is received
@@ -864,7 +865,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.map.updateSize();
   }
 
-  exportWMSUrl(layerModel, useDetailsDisplay = false) {
+  onExportWmsurl(layerModel, useDetailsDisplay = false) {
+    // if able, for a given layer returns current map view as a single WMS link with same url
     const baseWmsParams = {
       SERVICE: 'WMS',
       REQUEST: 'GetMap',
@@ -877,8 +879,10 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (!url.includes('http')) {
       url = `http:${url}`;
     }
+    // use layer projection or map projection if not set
     const layerProjection = displayParams.projection || this.projection.getCode();
     const format = displayParams.format || 'image/png';
+    // get map layer corresponding to layerModel
     const mapLayer = this.getLayerOfGroup(layerModel, this.groups.layers);
     const source = mapLayer.getSource();
     let previousParams;
@@ -894,13 +898,13 @@ class OpenLayersMapView extends Marionette.ItemView {
     }
     const params = Object.assign(
       baseWmsParams, previousParams);
-    const mapSize = this.map.getSize();
-    let bbox = transformExtent(this.map.getView().calculateExtent(mapSize), this.projection, layerProjection);
+    const mapSizePx = this.map.getSize();
+    let bbox = transformExtent(this.map.getView().calculateExtent(mapSizePx), this.projection, layerProjection);
     bbox = wrapBox(bbox);
     params.FORMAT = format;
     params.SRS = layerProjection;
-    params.WIDTH = mapSize[0];
-    params.HEIGHT = mapSize[1];
+    params.WIDTH = mapSizePx[0];
+    params.HEIGHT = mapSizePx[1];
     params.BBOX = bbox.join(',');
     const urlWithParams = appendParams(url, params);
     return urlWithParams;
