@@ -875,10 +875,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     const displayParams = useDetailsDisplay
       ? layerModel.get('detailsDisplay') || layerModel.get('display')
       : layerModel.get('display');
-    let url = displayParams.urls ? displayParams.urls[0] : displayParams.url;
-    if (!url.includes('http')) {
-      url = `http:${url}`;
-    }
+    const url = displayParams.urls ? displayParams.urls[0] : displayParams.url;
     // use layer projection or map projection if not set
     const layerProjection = displayParams.projection || this.projection.getCode();
     const format = displayParams.format || 'image/png';
