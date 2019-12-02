@@ -3,18 +3,15 @@ import 'core-js/fn/object/assign';
 
 import { discover, config, deserialize } from 'opensearch-browser';
 import { DOMParser } from 'xmldom';
-import BluebirdPromise from 'bluebird';
 
 import { convertFilters, prepareRecords } from './common';
 
-BluebirdPromise.config({
+Promise.config({
   cancellation: true,
 });
 config({
   useXHR: true,
-  Promise: BluebirdPromise,
 });
-self.Promise = BluebirdPromise;
 self.DOMParser = DOMParser;
 
 self.services = {};
@@ -23,7 +20,7 @@ self.promises = {};
 function getService(url, description) {
   if (!self.services[url]) {
     if (description) {
-      self.services[url] = BluebirdPromise.resolve(deserialize(description));
+      self.services[url] = Promise.resolve(deserialize(description));
     } else {
       self.services[url] = discover(url);
     }
