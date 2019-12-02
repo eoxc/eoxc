@@ -1,18 +1,16 @@
 import { discover, config as configureOpenSearch } from 'opensearch-browser';
 import { PagedSearchProgressEmitter } from 'opensearch-browser/paginator';
-import BluebirdPromise from 'bluebird';
 
 // eslint-disable-next-line
 import OpenSearchWorker from 'worker-loader!./OpenSearchWorker';
 import { convertFilters, prepareRecords } from './common';
 
-BluebirdPromise.config({
+Promise.config({
   cancellation: true,
 });
 
 configureOpenSearch({
   useXHR: true,
-  Promise: BluebirdPromise,
 });
 
 // cached services
