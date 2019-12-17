@@ -1,4 +1,5 @@
 import Marionette from 'backbone.marionette';
+import Backbone from 'backbone';
 
 import $ from 'jquery';
 import _ from 'underscore';
@@ -135,7 +136,25 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (this.map) {
       this.map.setTarget(this.el);
       this.progressBar.setElement(this.$('.progress-bar')[0]);
-      new ExportWMSLayerListView({ el: this.$('.export-tools')[0], collection: this.layersCollection, useDetailsDisplay: this.useDetailsDisplay, mapModel: this.mapModel, usedView: this }).render();
+
+      const WMScollections = new Backbone.Collection(this.layersCollection.filter((layer) => {
+        const display = this.useDetailsDisplay && layer.get('detailsDisplay')
+          ? layer.get('detailsDisplay')
+          : layer.get('display');
+        return display.protocol === 'WMS';
+      }));
+      if (WMScollections.length > 0) {
+        new ExportWMSLayerListView(
+          {
+            el: this.$('.export-tools')[0],
+            collection: WMScollections,
+            useDetailsDisplay: this.useDetailsDisplay,
+            mapModel: this.mapModel,
+            usedView: this
+          }
+        ).render();
+      }
+
       $(window).resize(() => this.onResize());
     }
   }
