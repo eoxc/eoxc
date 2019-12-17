@@ -118,11 +118,6 @@ class SearchModel extends Backbone.Model {
       errorMessage: null,
     });
 
-    if (reset) {
-      getSearchRequest(layerModel, filtersModel, mapModel, searchOptions)
-        .then(searchRequest => this.set('searchRequest', searchRequest));
-    }
-
     // return this.prevRequest.then((result) => {
     //   this.set({
     //     totalResults: result.totalResults,
@@ -153,9 +148,17 @@ class SearchModel extends Backbone.Model {
           hasLoaded: hasLoaded + page.records.length,
         });
         // when load more used, serverItemsPerPage needs to be known to adjust pageSize in eoxc, because OpenSearch worker needs to know for sure the lower value in advance, as he is not checking anymore - fullasync
-        // serverItemsPerPage is cleared before each fresh sync search to go around corner case that initial area/time combination does  fetch less totalRecords than serverItemsPerPage
+        // serverItemsPerPage is cleared before each fresh sync search to go around corner case that initial area/time combination fetches less totalRecords than max serverItemsPerPage
         if (!this.get('serverItemsPerPage')) {
           this.set('serverItemsPerPage', page.itemsPerPage);
+          // to update search request url based on first server response
+          getSearchRequest(layerModel, filtersModel, mapModel, {
+            itemsPerPage: page.itemsPerPage,
+            maxCount: this.get('maxCount'),
+            startIndex: page.startIndex,
+            totalResults,
+          })
+            .then(searchRequest => this.set('searchRequest', searchRequest));
         }
       })
       .on('success', (result) => {
