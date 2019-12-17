@@ -53,6 +53,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   */
   initialize(options) {
     this.layersCollection = options.layersCollection;
+    this.baseLayersCollection = options.baseLayersCollection;
+    this.overlayLayersCollection = options.overlayLayersCollection;
 
     this.mapModel = options.mapModel;
     this.highlightModel = options.highlightModel;
@@ -167,6 +169,8 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.listenTo(this.layersCollection, 'remove', this.onLayerRemoved);
     this.listenTo(this.layersCollection, 'sort', this.onLayersSorted);
     this.listenTo(this.layersCollection, 'change:display.visible', this.onLayerVisibleChanged);
+    this.listenTo(this.baseLayersCollection, 'change:display.visible', this.onSynchronizedLayerVisibleChanged);
+    this.listenTo(this.overlayLayersCollection, 'change:display.visible', this.onSynchronizedLayerVisibleChanged);
 
     this.listenTo(this.mapModel, 'change:bbox', (mapModel) => {
       this.timeSlider.setRecordFilter(this.createRecordFilter(mapModel.get('bbox')));
@@ -303,7 +307,10 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   checkVisible(fade = true) {
     const visibleLayers = this.layersCollection
       .filter(m => m.get('display.visible'));
-    if (visibleLayers.length) {
+    const visibleSynchronizedBaselayers = this.baseLayersCollection.filter(m => m.get('display.visible') && m.get('display.synchronizeTime'));
+    const visibleSynchronizedOverlays = this.overlayLayersCollection.filter(m => m.get('display.visible') && m.get('display.synchronizeTime'));
+    const displayTimeSlider = visibleLayers.length + visibleSynchronizedBaselayers.length + visibleSynchronizedOverlays.length;
+    if (displayTimeSlider) {
       if (fade) {
         this.$el.fadeIn();
       } else {
@@ -499,6 +506,10 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
         this.removeLayer(layerModel);
       }
     }
+    this.checkVisible();
+  },
+
+  onSynchronizedLayerVisibleChanged() {
     this.checkVisible();
   },
 
