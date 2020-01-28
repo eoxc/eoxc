@@ -239,3 +239,13 @@
 .ol-overviewmap-box {
   border: 2px dotted rgba(0,60,136,0.7);
 }
+.export-wms-list{
+  padding: 0;
+  margin-bottom: 10px;
+  width: 200px;
+  left: -100px;
+}
+.export-wms-link{
+  padding: 3px 5px;
+  white-space: normal;
+}

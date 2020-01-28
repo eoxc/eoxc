@@ -292,7 +292,7 @@ function getLayerParams(mapModel, displayParams, filtersModel) {
     isoTime = `${beginISO}/${endISO}`;
   }
 
-  if (isoTime !== null) {
+  if (displayParams.synchronizeTime !== false && isoTime !== null) {
     params.time = isoTime;
   } else {
     delete params.time;

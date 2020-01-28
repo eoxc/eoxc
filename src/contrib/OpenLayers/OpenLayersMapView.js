@@ -1,4 +1,5 @@
 import Marionette from 'backbone.marionette';
+import Backbone from 'backbone';
 
 import $ from 'jquery';
 import _ from 'underscore';
@@ -15,6 +16,7 @@ import GeoJSON from 'ol/format/GeoJSON';
 
 import Polygon, { fromExtent } from 'ol/geom/Polygon';
 import Point from 'ol/geom/Point';
+import { appendParams } from 'ol/uri';
 
 import { get as getProj, transform, transformExtent } from 'ol/proj';
 
@@ -22,6 +24,7 @@ import { uniqueBy } from '../../core/util';
 import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
+import ExportWMSLayerListView from './ExportWMSLayerListView';
 import ProgressBar from './progressbar';
 import './ol.css';
 import template from './OpenLayersMapView.hbs';
@@ -133,6 +136,25 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (this.map) {
       this.map.setTarget(this.el);
       this.progressBar.setElement(this.$('.progress-bar')[0]);
+
+      const WMScollections = new Backbone.Collection(this.layersCollection.filter((layer) => {
+        const display = this.useDetailsDisplay && layer.get('detailsDisplay')
+          ? layer.get('detailsDisplay')
+          : layer.get('display');
+        return display.protocol === 'WMS';
+      }));
+      if (WMScollections.length > 0) {
+        new ExportWMSLayerListView(
+          {
+            el: this.$('.export-tools')[0],
+            collection: WMScollections,
+            useDetailsDisplay: this.useDetailsDisplay,
+            mapModel: this.mapModel,
+            usedView: this
+          }
+        ).render();
+      }
+
       $(window).resize(() => this.onResize());
     }
   }
@@ -861,6 +883,49 @@ class OpenLayersMapView extends Marionette.ItemView {
   onResize() {
     this.map.updateSize();
   }
+
+  onExportWmsurl(layerModel, useDetailsDisplay = false) {
+    // if able, for a given layer returns current map view as a single WMS link with same url
+    const baseWmsParams = {
+      SERVICE: 'WMS',
+      REQUEST: 'GetMap',
+      TRANSPARENT: true,
+    };
+    const displayParams = useDetailsDisplay
+      ? layerModel.get('detailsDisplay') || layerModel.get('display')
+      : layerModel.get('display');
+    const url = displayParams.urls ? displayParams.urls[0] : displayParams.url;
+    // use layer projection or map projection if not set
+    const layerProjection = displayParams.projection || this.projection.getCode();
+    const format = displayParams.format || 'image/png';
+    // get map layer corresponding to layerModel
+    const mapLayer = this.getLayerOfGroup(layerModel, this.groups.layers);
+    const source = mapLayer.getSource();
+    let previousParams;
+
+    if (source.getParams) {
+      // WMSTileSource
+      previousParams = source.getParams();
+    } else if (source.getDimensions) {
+      // WMTSSource
+      previousParams = source.getDimensions();
+    } else {
+      previousParams = {};
+    }
+    const params = Object.assign(
+      baseWmsParams, previousParams);
+    const mapSizePx = this.map.getSize();
+    let bbox = transformExtent(this.map.getView().calculateExtent(mapSizePx), this.projection, layerProjection);
+    bbox = wrapBox(bbox);
+    params.FORMAT = format;
+    params.SRS = layerProjection;
+    params.WIDTH = mapSizePx[0];
+    params.HEIGHT = mapSizePx[1];
+    params.BBOX = bbox.join(',');
+    const urlWithParams = appendParams(url, params);
+    return urlWithParams;
+  }
+
 }
 
 OpenLayersMapView.prototype.template = () => '';
