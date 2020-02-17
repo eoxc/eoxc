@@ -122,6 +122,7 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     this.onFeatureClicked = options.onFeatureClicked;
     this.constrainOutCoords = options.constrainOutCoords;
+    this.singleLayerModeUsed = options.singleLayerModeUsed;
 
     this.template = template;
   }
@@ -637,11 +638,11 @@ class OpenLayersMapView extends Marionette.ItemView {
     }
 
     if (searchLayer && searchModel) {
-      searchLayer.setVisible(display.visible && searchModel.get('automaticSearch'));
+      searchLayer.setVisible((display.visible || this.singleLayerModeUsed) && searchModel.get('automaticSearch'));
     }
     const searchFillLayer = this.searchLayersFillGroup.getLayerById(layerModel.get('id'));
     if (searchFillLayer && searchModel) {
-      searchFillLayer.setVisible(display.visible && searchModel.get('automaticSearch'));
+      searchFillLayer.setVisible((display.visible || this.singleLayerModeUsed) && searchModel.get('automaticSearch'));
     }
   }
 
