@@ -1,7 +1,7 @@
 language: node_js
 
 node_js:
-  - "5"
+  - "10"
 
 cache:
   directories:
@@ -12,3 +12,6 @@ install:
 
 notifications:
   email: false
+
+script:
+  - "test": "true"
