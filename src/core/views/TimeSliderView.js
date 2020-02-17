@@ -67,6 +67,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
     this.domain = options.domain;
     this.display = options.display;
+    this.singleLayerModeUsed = options.singleLayerModeUsed;
     this.constrainTimeDomain = options.constrainTimeDomain;
     this.timeSliderControls = options.timeSliderControls;
     this.displayInterval = options.displayInterval;
@@ -190,7 +191,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
       }
     });
     const visibleLayers = this.layersCollection.filter(
-      layerModel => layerModel.get('display.visible')
+      layerModel => layerModel.get('display.visible') || this.singleLayerModeUsed
     );
     visibleLayers.forEach((layerModel) => {
       this.removeLayer(layerModel);
@@ -310,7 +311,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     const visibleSynchronizedBaselayers = this.baseLayersCollection.filter(m => m.get('display.visible') && m.get('display.synchronizeTime'));
     const visibleSynchronizedOverlays = this.overlayLayersCollection.filter(m => m.get('display.visible') && m.get('display.synchronizeTime'));
     const displayTimeSlider = visibleLayers.length + visibleSynchronizedBaselayers.length + visibleSynchronizedOverlays.length;
-    if (displayTimeSlider) {
+    if (displayTimeSlider || this.singleLayerModeUsed) {
       if (fade) {
         this.$el.fadeIn();
       } else {
@@ -499,7 +500,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
   },
 
   onLayerVisibleChanged(layerModel) {
-    if (layerModel.hasChanged('display')) {
+    if (layerModel.hasChanged('display') && !this.singleLayerModeUsed) {
       if (layerModel.get('display.visible') && !this.timeSlider.hasDataset(layerModel.get('id'))) {
         this.addLayer(layerModel);
       } else {
