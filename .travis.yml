@@ -14,4 +14,4 @@ notifications:
   email: false
 
 script:
-  - "test": "true"
+  - "npm build"
