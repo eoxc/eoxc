@@ -142,7 +142,8 @@ class OpenLayersMapView extends Marionette.ItemView {
         const display = this.useDetailsDisplay && layer.get('detailsDisplay')
           ? layer.get('detailsDisplay')
           : layer.get('display');
-        return display.protocol === 'WMS';
+        const isValidDisplay = typeof display.urls !== 'undefined' ? display.urls[0] !== '' : display.url !== '';
+        return display.protocol === 'WMS' && isValidDisplay;
       }));
       if (WMScollections.length > 0) {
         new ExportWMSLayerListView(
@@ -895,7 +896,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     const displayParams = useDetailsDisplay
       ? layerModel.get('detailsDisplay') || layerModel.get('display')
       : layerModel.get('display');
-    const url = displayParams.urls ? displayParams.urls[0] : displayParams.url;
+    const url = typeof displayParams.urls !== 'undefined' ? displayParams.urls[0] : displayParams.url;
     // use layer projection or map projection if not set
     const layerProjection = displayParams.projection || this.projection.getCode();
     const format = displayParams.format || 'image/png';

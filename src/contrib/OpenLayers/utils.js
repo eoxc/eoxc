@@ -116,7 +116,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
 
   const layerId = displayParams.id ? displayParams.id : displayParams.ids.join(',');
   const opacity = typeof displayParams.opacity === 'number' ? displayParams.opacity : 1;
-  const urls = (displayParams.url) ? [displayParams.url] : displayParams.urls;
+  const urls = typeof displayParams.url !== 'undefined' ? [displayParams.url] : displayParams.urls;
   if (urls.length === 0) {
     // to avoid errors, empty string needs to be inserted if empty in ol6
     urls.push('');
@@ -292,7 +292,7 @@ function getLayerParams(mapModel, displayParams, filtersModel) {
     isoTime = `${beginISO}/${endISO}`;
   }
 
-  if (displayParams.synchronizeTime !== false && isoTime !== null) {
+  if (isoTime !== null) {
     params.time = isoTime;
   } else {
     delete params.time;
