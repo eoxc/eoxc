@@ -101,5 +101,8 @@ export function getDownloadInfos(layerModel, filtersModel, recordModel, options)
 
   return downloadInfos.then(infos => infos.map(item => Object.assign({}, item, {
     href: rewrite(item.href, layerModel.get('download.rewrite'), recordModel)
-  })));
+  })).map(item => Object.assign({}, item, {
+    href: item.href.startsWith('//') ? location.protocol + item.href : item.href
+  }))
+  );
 }
