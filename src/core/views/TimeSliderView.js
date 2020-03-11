@@ -3,6 +3,7 @@ import Marionette from 'backbone.marionette';
 import TimeSlider from 'D3.TimeSlider/src/d3.timeslider.coffee';
 import WMSSource from 'D3.TimeSlider/src/sources/wms.coffee';
 import WPSSource from 'D3.TimeSlider/src/sources/eoxserver-wps.coffee';
+import i18next from 'i18next';
 
 import { searchAllRecords, getCount } from '../../search';
 import FiltersModel from '../models/FiltersModel';
@@ -137,17 +138,12 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.$('.control#zoom-in').html('<i class="fa fa-plus" />');
     this.$('.control#reload .reload-arrow').replaceWith('<i class="fa fa-refresh fa-fw" />');
 
-    if (this.enableDynamicHistogram) {
-      this.listenTo(this.mapModel, 'change:area', this.addVisibleLayers);
-      this.listenTo(this.mapModel, 'change:bbox', () => {
-        if (this.mapModel.get('area') === null) {
-          // only trigger refresh of timeslider when no area is selected through filter
-          this.addVisibleLayers();
-        }
-      });
-    } else {
-      this.addVisibleLayers();
-    }
+    this.$el.append(
+        `<div id="dynamic-histogram" class="control ${this.enableDynamicHistogram === true ? 'active' : ''}" title="${i18next.t('dynamic-histogram-title')}"><i class="fa fa-map-marker" aria-hidden="true"></i></div>`
+    );
+    this.$('#dynamic-histogram').click(this.toggleDynamicHistogram.bind(this));
+
+    this.configureDynamicHistogram();
 
     this.listenTo(this.mapModel, 'change:time', this.onModelSelectionChanged);
     this.listenTo(this.mapModel, 'change:extendedTime', () => {
@@ -303,6 +299,28 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
 
   removeLayer(layerModel) {
     this.timeSlider.removeDataset(layerModel.get('id'));
+  },
+
+  configureDynamicHistogram() {
+    if (this.enableDynamicHistogram) {
+      this.listenTo(this.mapModel, 'change:area', this.addVisibleLayers);
+      this.listenTo(this.mapModel, 'change:bbox', () => {
+        if (this.mapModel.get('area') === null) {
+          // only trigger refresh of timeslider when no area is selected through filter
+          this.addVisibleLayers();
+        }
+      });
+    } else {
+      this.stopListening(this.mapModel, 'change:area');
+      this.stopListening(this.mapModel, 'change:bbox');
+      this.addVisibleLayers();
+    }
+  },
+
+  toggleDynamicHistogram() {
+    this.$('#dynamic-histogram').toggleClass('active');
+    this.enableDynamicHistogram = !this.enableDynamicHistogram;
+    this.configureDynamicHistogram();
   },
 
   checkVisible(fade = true) {
