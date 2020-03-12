@@ -4,6 +4,8 @@ import TimeSlider from 'D3.TimeSlider/src/d3.timeslider.coffee';
 import WMSSource from 'D3.TimeSlider/src/sources/wms.coffee';
 import WPSSource from 'D3.TimeSlider/src/sources/eoxserver-wps.coffee';
 import i18next from 'i18next';
+import histogramButtonTemplate from './TimeSliderHistogramButton.hbs';
+import './TimeSliderHistogramButton.css';
 
 import { searchAllRecords, getCount } from '../../search';
 import FiltersModel from '../models/FiltersModel';
@@ -77,6 +79,7 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.timeSliderAlternativeBrush = options.timeSliderAlternativeBrush;
     this.enableDynamicHistogram = options.enableDynamicHistogram;
     this.searchRequests = [];
+    this.firstConfigureHistogram = true;
     this.maxMapInterval = this.mapModel.get('maxMapInterval');
     if (this.maxMapInterval) {
       // initial setup if shared time
@@ -139,9 +142,12 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
     this.$('.control#reload .reload-arrow').replaceWith('<i class="fa fa-refresh fa-fw" />');
 
     this.$el.append(
-        `<div id="dynamic-histogram" class="control ${this.enableDynamicHistogram === true ? 'active' : ''}" title="${i18next.t('dynamic-histogram-title')}"><i class="fa fa-map-marker" aria-hidden="true"></i></div>`
+      histogramButtonTemplate({
+        'dynamic-histogram-title': i18next.t('dynamic-histogram-title'),
+        enableDynamicHistogram: this.enableDynamicHistogram,
+      })
     );
-    this.$('#dynamic-histogram').click(this.toggleDynamicHistogram.bind(this));
+    this.$('#dynamic-histogram input[type=checkbox]').change(this.toggleDynamicHistogram.bind(this));
 
     this.configureDynamicHistogram();
 
@@ -310,10 +316,17 @@ const TimeSliderView = Marionette.ItemView.extend(/** @lends core/views.TimeSlid
           this.addVisibleLayers();
         }
       });
+      if (this.firstConfigureHistogram === false) {
+        // to trigger refresh on toggleDynamicHistogram, but on first app load, map position changes after timeslider is initialized, so it would fetch twice
+        this.addVisibleLayers();
+      }
     } else {
       this.stopListening(this.mapModel, 'change:area');
       this.stopListening(this.mapModel, 'change:bbox');
       this.addVisibleLayers();
+    }
+    if (this.firstConfigureHistogram === true) {
+      this.firstConfigureHistogram = false;
     }
   },
 

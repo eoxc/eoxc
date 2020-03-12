@@ -1,0 +1,41 @@
+.histogram-switch label {
+  display: inline-block;
+  position: relative;
+  padding-left: 0;
+}
+
+.histogram-switch label input {
+  display: none;
+}
+
+.histogram-switch label span {
+  width: 38px;
+  border-radius: 14px;
+  height: 16px;
+  background-color: #ccc;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.histogram-switch label span:before {
+  top: -6px;
+  position: relative;
+  font-family: 'FontAwesome';
+  content: "\f041";
+  font-size: 26px;
+}
+
+.histogram-switch label > input:checked + span:before {
+  left: 26px;
+}
+
+.histogram-switch label > input:checked + span {
+  background-color: #87b9d2;
+}
+
+#dynamic-histogram {
+  margin-top: -43px;
+  float: right;
+  bottom: 38px;
+  position: relative;
+}
