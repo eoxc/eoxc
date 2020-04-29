@@ -20,7 +20,7 @@ import { appendParams } from 'ol/uri';
 
 import { get as getProj, transform, transformExtent } from 'ol/proj';
 
-import { uniqueBy } from '../../core/util';
+import { uniqueBy, getISODateTimeString, setSearchParam } from '../../core/util';
 import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
@@ -378,6 +378,33 @@ class OpenLayersMapView extends Marionette.ItemView {
       }
     });
     return foundLayer;
+  }
+
+  // Set up all events to change url search parameters
+  setupSearchParamsEvents() {
+    this.listenTo(this.mapModel, 'change:center', () => {
+      this.setSearchParamCenter();
+    });
+    this.listenTo(this.mapModel, 'change:zoom', () => {
+      this.setSearchParamZoom();
+    });
+    this.listenTo(this.mapModel, 'change:time', () => {
+      this.setSearchParamTime();
+    });
+  }
+
+  setSearchParamCenter() {
+    setSearchParam('x', (transform(this.mapModel.get('center'), 'EPSG:4326', this.projection)[0]).toFixed(6));
+    setSearchParam('y', (transform(this.mapModel.get('center'), 'EPSG:4326', this.projection)[1]).toFixed(6));
+  }
+
+  setSearchParamZoom() {
+    setSearchParam('z', this.mapModel.get('zoom').toFixed(0));
+  }
+
+  setSearchParamTime() {
+    setSearchParam('timestart', getISODateTimeString(this.mapModel.get('time')[0], false));
+    setSearchParam('timeend', getISODateTimeString(this.mapModel.get('time')[1], false));
   }
 
   /**

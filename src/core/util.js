@@ -138,3 +138,19 @@ export function filtersToCQL(filtersModel, mapping = null) {
     })
     .join(' AND ');
 }
+
+export function setSearchParam(key, value) {
+  if (!window.history.pushState || !key) {
+    return;
+  }
+  const url = new URL(window.location.href);
+  const params = new window.URLSearchParams(window.location.search);
+  if (value === undefined || value === null) {
+    params.delete(key);
+  } else {
+    params.set(key, value);
+  }
+  url.search = params;
+  const urlStr = url.toString();
+  window.history.replaceState({ url: urlStr }, null, urlStr);
+}
