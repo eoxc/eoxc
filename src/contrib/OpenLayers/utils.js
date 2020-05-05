@@ -250,9 +250,9 @@ export function validateTimeInterval(mapModel, time) {
   if ((result[1] - result[0]) > maxIntervalSeconds * 1000) {
     result = [new Date(time[1] - (maxIntervalSeconds * 1000)), time[1]];
     // communicating with time filter tool
-    mapModel.trigger('exceed:maxMapInterval', result);
+    mapModel.set('exceedMaxMapInterval', result);
   } else {
-    mapModel.trigger('exceed:maxMapInterval', null);
+    mapModel.set('exceedMaxMapInterval', false);
   }
   return result;
 }

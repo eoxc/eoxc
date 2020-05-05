@@ -42,6 +42,7 @@ MapModel.prototype.defaults = {
   time: [null, null],
   extendedTime: null,
   maxMapInterval: null,
+  exceedMaxMapInterval: false,
 
   tool: null,
 
