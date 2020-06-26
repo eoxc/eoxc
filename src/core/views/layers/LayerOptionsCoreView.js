@@ -120,8 +120,16 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
     // perform replacing of parameters in underyling model if it was configured
     const replaceList = option.replace;
     _.each(replaceList, (config) => {
-      if (typeof config.target !== 'undefined' && typeof config.value !== 'undefined') {
-        this.model.set(config.target, config.value);
+      if (typeof config.target === 'string' && typeof config.value !== 'undefined') {
+        if (config.value.template) {
+          // interpolate template
+          const evaluated = _.template(config.value.template, {
+            interpolate: /\{\{(.+?)\}\}/g
+          })(this.model.toJSON());
+          this.model.set(config.target, evaluated);
+        } else {
+          this.model.set(config.target, config.value);
+        }
       }
     });
   },
