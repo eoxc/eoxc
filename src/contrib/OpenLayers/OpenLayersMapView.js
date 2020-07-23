@@ -935,9 +935,6 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (source.getParams) {
       // WMSTileSource
       previousParams = source.getParams();
-    } else if (source.getDimensions) {
-      // WMTSSource
-      previousParams = source.getDimensions();
     } else {
       previousParams = {};
     }

@@ -163,6 +163,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
             dimensions: {
               time: '',
             },
+            version: displayParams.version,
             requestEncoding: displayParams.requestEncoding,
           }),
         });
@@ -368,12 +369,35 @@ export function updateLayerParams(
       params.STYLES = displayParams.style;
       source.params_ = {}; // eslint-disable-line no-underscore-dangle
       source.updateParams(params);
+      // Workaround to make sure tiles are reloaded when parameters change
+      source.setTileLoadFunction(source.getTileLoadFunction());
     } else if (source instanceof WMTSSource) {
-      // TODO: only use time as dimension and ignore any other params
-      source.updateDimensions({ time: params.time });
+      const newDimensions = { time: params.time };
+      source.updateDimensions(newDimensions);
+      const newLayer = params.layer ? params.layer : params.LAYERS;
+      const newStyle = params.style ? params.style : params.STYLES;
+      if (newLayer || newStyle) {
+        // in case layer or style needs to be changed for WMTS, a source needs to be recreated
+        const newSource = new WMTSSource({
+          style: newStyle || source.getStyle(),
+          layer: newLayer || source.getLayer(),
+          transition: 0,
+          urls: source.getUrls(),
+          matrixSet: source.getMatrixSet(),
+          format: source.getFormat(),
+          projection: source.getProjection(),
+          tileGrid: source.getTileGrid(),
+          attributions: displayParams.attribution,
+          wrapX: true,
+          dimensions: source.getDimensions(),
+          version: source.getVersion(),
+          requestEncoding: source.getRequestEncoding(),
+        });
+        layer.setSource(newSource);
+      } else {
+        source.setTileLoadFunction(source.getTileLoadFunction());
+      }
     }
-    // Workaround to make sure tiles are reloaded when parameters change
-    source.setTileLoadFunction(source.getTileLoadFunction());
   }
 }
 
