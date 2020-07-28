@@ -140,11 +140,15 @@ export function filtersToCQL(filtersModel, mapping = null) {
 }
 
 export function setSearchParam(key, value) {
-  if (!window.history.pushState || !key) {
+  let actualWindowObject = window;
+  if (window.self !== window.top) { // checking if it is an iframe
+    actualWindowObject = window.parent;
+  }
+  if (!actualWindowObject.history.pushState || !key) {
     return;
   }
-  const url = new URL(window.location.href);
-  const params = new window.URLSearchParams(window.location.search);
+  const url = new URL(actualWindowObject.location.href);
+  const params = new actualWindowObject.URLSearchParams(actualWindowObject.location.search);
   if (value === undefined || value === null) {
     params.delete(key);
   } else {
@@ -152,5 +156,5 @@ export function setSearchParam(key, value) {
   }
   url.search = params;
   const urlStr = url.toString();
-  window.history.replaceState({ url: urlStr }, null, urlStr);
+  actualWindowObject.history.replaceState({ url: urlStr }, null, urlStr);
 }
