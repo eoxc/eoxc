@@ -19,6 +19,7 @@ import Point from 'ol/geom/Point';
 import { appendParams } from 'ol/uri';
 
 import { get as getProj, transform, transformExtent } from 'ol/proj';
+import { Wkt } from 'wicket';
 
 import { uniqueBy, getISODateTimeString, setSearchParam } from '../../core/util';
 import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds } from './utils';
@@ -29,6 +30,8 @@ import ProgressBar from './progressbar';
 import './ol.css';
 import template from './OpenLayersMapView.hbs';
 import { isRecordDownloadable } from '../../download';
+
+const wkt = new Wkt();
 
 class GroupById extends Group {
   constructor(options = {}) {
@@ -391,6 +394,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.listenTo(this.mapModel, 'change:time', () => {
       this.setSearchParamTime();
     });
+    this.selectionSource.on('change', () => {
+      this.setSearchParamArea();
+    });
   }
 
   setSearchParamCenter() {
@@ -405,6 +411,25 @@ class OpenLayersMapView extends Marionette.ItemView {
   setSearchParamTime() {
     setSearchParam('timestart', getISODateTimeString(this.mapModel.get('time')[0], false));
     setSearchParam('timeend', getISODateTimeString(this.mapModel.get('time')[1], false));
+  }
+
+  setSearchParamArea() {
+    const vectorFeatures = this.selectionSource.getFeatures();
+    if (vectorFeatures.length !== 2) {
+      setSearchParam('area', null);
+    } else {
+      const writerOptions = {
+        decimals: 6,
+        dataProjection: 'ESPG:4326',
+        featureProjection: this.projection,
+      };
+      // convert feature to geojson format in map projection
+      const geomJson = this.geoJSONFormat.writeGeometryObject(vectorFeatures[1].getGeometry(), writerOptions);
+      // write as JSON string and save read it with wkt
+      wkt.read(JSON.stringify(geomJson));
+      // write as WKT string and set it as search param
+      setSearchParam('area', wkt.write());
+    }
   }
 
   /**
@@ -610,6 +635,14 @@ class OpenLayersMapView extends Marionette.ItemView {
     if (feature !== null) {
       this.onDrawFinished({ feature });
     }
+  }
+
+  filterFromSearchParams(area) {
+    wkt.read(area);
+    const geometryJson = wkt.toJson();
+    const geometry = this.geoJSONFormat.readGeometry(geometryJson);
+    const feature = new Feature({ geometry });
+    this.onDrawFinished({ feature });
   }
 
   onDrawFinished(event) {
