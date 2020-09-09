@@ -142,9 +142,9 @@ export function filtersToCQL(filtersModel, mapping = null) {
 export function setSearchParam(key, value) {
   let actualWindowObject = window;
   if (window.self !== window.top) { // checking if it is an iframe
-    actualWindowObject = window.parent;
+    actualWindowObject = window.top;
   }
-  if (!actualWindowObject.history.pushState || !key) {
+  if (!actualWindowObject.history.replaceState || !key) {
     return;
   }
   const url = new URL(actualWindowObject.location.href);
