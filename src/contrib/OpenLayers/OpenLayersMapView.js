@@ -126,6 +126,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.onFeatureClicked = options.onFeatureClicked;
     this.constrainOutCoords = options.constrainOutCoords;
     this.singleLayerModeUsed = options.singleLayerModeUsed;
+    this.areaFilterLayerExtent = options.areaFilterLayerExtent;
 
     this.template = template;
   }
@@ -747,7 +748,17 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (inner) {
         inner.getGeometry().transform('EPSG:4326', this.projection);
         this.selectionSource.addFeature(inner);
+        if (this.areaFilterLayerExtent) {
+          // set extent of all layers to be same as area
+          this.groups.layers.getLayers().forEach((l) => {
+            l.setExtent(inner.getGeometry().getExtent());
+          });
+        }
       }
+    } else if (this.areaFilterLayerExtent) {
+      this.groups.layers.getLayers().forEach((l) => {
+        l.setExtent(undefined);
+      });
     }
   }
 
