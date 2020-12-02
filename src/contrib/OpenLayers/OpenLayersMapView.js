@@ -409,8 +409,8 @@ class OpenLayersMapView extends Marionette.ItemView {
   }
 
   setSearchParamTime() {
-    setSearchParam('timestart', getISODateTimeString(this.mapModel.get('time')[0], false));
-    setSearchParam('timeend', getISODateTimeString(this.mapModel.get('time')[1], false));
+    setSearchParam('start', getISODateTimeString(this.mapModel.get('time')[0], false));
+    setSearchParam('end', getISODateTimeString(this.mapModel.get('time')[1], false));
   }
 
   setSearchParamArea() {
