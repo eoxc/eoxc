@@ -19,6 +19,8 @@ import Point from 'ol/geom/Point';
 import { appendParams } from 'ol/uri';
 
 import { get as getProj, transform, transformExtent } from 'ol/proj';
+import proj4 from 'proj4';
+import {register} from 'ol/proj/proj4';
 import { Wkt } from 'wicket';
 
 import { uniqueBy, getISODateTimeString, setSearchParam } from '../../core/util';
@@ -183,7 +185,18 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     // for internal conversions
-    this.projection = getProj(this.mapModel.get('projection') || 'EPSG:4326');
+    const createProjection = (name, def, extent) => {
+      proj4.defs(name, def)
+      register(proj4)
+      this.projection = getProj(name)
+      this.projection.setExtent(extent)
+      return this.projection
+    }
+    this.projectionDef = getProj(this.mapModel.get('projection'))
+    this.projection = this.projectionDef
+      ? createProjection(this.projectionDef.name, this.projectionDef.def, this.projectionDef.extent)
+      : getProj('EPSG:4326');
+
     this.geoJSONFormat = new GeoJSON();
     this.readerOptions = {
       featureProjection: this.projection,
