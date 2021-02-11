@@ -4,6 +4,7 @@ import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
 import turfRewind from '@turf/rewind';
 import $ from 'jquery';
+import 'elm-pep';
 
 import Map from 'ol/Map';
 import View from 'ol/View';
