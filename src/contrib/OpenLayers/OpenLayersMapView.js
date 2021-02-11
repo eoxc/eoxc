@@ -27,6 +27,7 @@ import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import ExportWMSLayerListView from './ExportWMSLayerListView';
 import ProgressBar from './progressbar';
+import './ol-source.css';
 import './ol.css';
 import template from './OpenLayersMapView.hbs';
 import { isRecordDownloadable } from '../../download';
