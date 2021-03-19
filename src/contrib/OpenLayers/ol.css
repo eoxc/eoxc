@@ -8,3 +8,9 @@
   padding: 3px 5px;
   white-space: normal;
 }
+.eoxc-area-exceed-label{
+  position: fixed;
+  left: 50%;
+  bottom: 4px;
+  transform: translate(-50%,-50%);
+}
