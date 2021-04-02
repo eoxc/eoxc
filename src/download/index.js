@@ -7,7 +7,7 @@ import { getDownloadInfos as getDownloadInfosS3 } from './s3';
 import rewrite from './rewrite';
 
 export function isRecordDownloadable(layerModel, recordModel) {
-  if (layerModel.get('download.protocol') === 'EO-WCS') {
+  if (['EO-WCS', 'QUOTE'].includes(layerModel.get('download.protocol'))) {
     return true;
   }
   const properties = recordModel.get('properties');
