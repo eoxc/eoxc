@@ -1,0 +1,9 @@
+10c10
+< (function(root, factory) {
+---
+> (function(root={}, factory) {
+26,27c26
+< }(this, function(root, Backbone, _) {
+<   'use strict';
+---
+> }(this, function(root={}, Backbone, _) {
