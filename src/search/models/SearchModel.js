@@ -96,11 +96,13 @@ class SearchModel extends Backbone.Model {
         serverItemsPerPage: 0,
       });
     }
+    const searchParams = this.get('layerModel').get('search.parameters') || [];
     const searchOptions = {
       itemsPerPage: this.get('serverItemsPerPage') || this.get('defaultPageSize'),
       maxCount: (startIndex === 0) ? this.get('maxCount') : this.get('loadMore'),
       startIndex,
       totalResults,
+      privilegedParams: searchParams.filter(item => item.privileged),
     };
     const request = searchAllRecords(layerModel, filtersModel, mapModel, searchOptions);
     this.prevRequest = request;

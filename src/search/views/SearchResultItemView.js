@@ -18,6 +18,9 @@ const SearchResultItemView = RecordItemView.extend(/** @lends search/views/layer
     }));
     const downloadSelectionCollection = searchModel.get('downloadSelection');
     this.listenTo(downloadSelectionCollection, 'reset update', this.onSelectedForDownloadChange);
+    if (!isRecordDownloadable(this.layerModel, this.model)) {
+      this.$el.addClass('record-item-not-downloadable');
+    }
   },
 
   onRender() {

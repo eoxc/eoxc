@@ -158,3 +158,7 @@ export function setSearchParam(key, value) {
   const urlStr = url.toString();
   actualWindowObject.history.replaceState({ url: urlStr }, null, urlStr);
 }
+
+export function numberThousandSep(x, sep) {
+  return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, sep);
+}

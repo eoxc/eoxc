@@ -169,5 +169,21 @@ export function convertFilters(filterParams, mapParams, options, format, service
     }
   });
 
+  // if any of "privileged" filter parameters - like productID are currently set
+  // leave only privileged parameters set, discard the rest
+  if (options.hasOwnProperty('privilegedParams')) {
+    const paramTypes = options.privilegedParams.map(item => item.type);
+    const anyPrivilegedContained = paramTypes.some((item) => Object.keys(parameters).includes(item));
+    if (anyPrivilegedContained) {
+      const filtered = Object.keys(parameters)
+        .filter(key => paramTypes.includes(key))
+        .reduce((obj, key) => {
+          obj[key] = parameters[key];
+          return obj;
+        }, {});
+      return filtered;
+    }
+  }
+
   return parameters;
 }
