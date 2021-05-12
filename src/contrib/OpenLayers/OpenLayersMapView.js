@@ -118,6 +118,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.footprintStrokeColor = options.footprintStrokeColor;
     this.selectedFootprintFillColor = options.selectedFootprintFillColor;
     this.selectedFootprintStrokeColor = options.selectedFootprintStrokeColor;
+    this.labelStyle = options.labelStyle;
 
     this.staticHighlight = options.staticHighlight;
     this.useDetailsDisplay = options.useDetailsDisplay;
@@ -263,7 +264,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.searchLayersGroup = new GroupById({
       layers: searchCollection.map((searchModel) => {
         const searchLayer = createVectorLayer({
-          strokeColor: this.footprintStrokeColor
+          strokeColor: this.footprintStrokeColor,
+          labelStyle: this.labelStyle,
         },
         new CollectionSource({
           collection: searchModel.get('results'),
