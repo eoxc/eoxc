@@ -453,9 +453,9 @@ function createLabelContent(feature, textStyle) {
     const match = text.match(regexp);
     // little bit of trickery here...
     // if regex is not global and there were capturing groups specified (), assume that we want just those groups combined, not the full match
-    // otherwise just concatenate all matches
+    // otherwise concatenate all matches
     if (match !== null) {
-      if (regexp.flags.indexOf('g') === -1 && regexp.toLocaleString().indexOf('(') !== -1) {
+      if (regexp.flags.indexOf('g') === -1 && regexp.toLocaleString().indexOf('(') !== -1 && regexp.toLocaleString().indexOf(')') !== -1) {
         text = match.slice(1).join('');
       } else {
         text = match.join('');
@@ -538,8 +538,8 @@ export function createVectorLayer(styleDefinition = {}, source = null) {
         }),
       });
     }
-    if (styleDefinition.labelStyle) {
-      definition.text = createTextStyle(feature, resolution, styleDefinition.labelStyle);
+    if (styleDefinition.footprintLabel) {
+      definition.text = createTextStyle(feature, resolution, styleDefinition.footprintLabel);
     }
     return [new Style(definition)];
   };
