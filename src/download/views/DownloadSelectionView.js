@@ -1,5 +1,6 @@
 import Marionette from 'backbone.marionette';
 import _ from 'underscore';
+import i18next from 'i18next';
 
 import template from './DownloadSelectionView.hbs';
 import './DownloadSelectionView.css';
@@ -181,11 +182,32 @@ const DownloadView = Marionette.CompositeView.extend({
     this.$('.start-download')
       .prop('disabled', !fullDownloadEnabled);
 
+    if (!fullDownloadEnabled) {
+      this.$('.start-download')
+        .prop('title', `${i18next.t('no_item_downloadable')} ${i18next.t('no_item_downloadable_hint')}`);
+    } else {
+      this.$('.start-download').removeProp('title');
+    }
+
     this.$('.dropdown-toggle')
       .prop('disabled', !textDownloadEnabled);
 
+    if (!textDownloadEnabled) {
+      this.$('.dropdown-toggle')
+        .prop('title', `${i18next.t('no_item_downloadable')} ${i18next.t('no_item_downloadable_hint')}`);
+    } else {
+      this.$('.dropdown-toggle').removeProp('title');
+    }
+
     this.$('.select-files')
       .prop('disabled', !textDownloadEnabled);
+
+    if (!textDownloadEnabled) {
+      this.$('.select-files')
+        .prop('title', `${i18next.t('no_item_downloadable')} ${i18next.t('no_item_downloadable_hint')}`);
+    } else {
+      this.$('.select-files').removeProp('title');
+    }
 
     this.$('.deselect-all')
       .prop('disabled', totalCount === 0);

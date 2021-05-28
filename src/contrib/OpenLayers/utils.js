@@ -4,6 +4,7 @@ import turfBBox from '@turf/bbox';
 import turfIntersect from '@turf/intersect';
 import turfRewind from '@turf/rewind';
 import $ from 'jquery';
+import 'elm-pep';
 
 import Map from 'ol/Map';
 import View from 'ol/View';
@@ -31,6 +32,7 @@ import Style from 'ol/style/Style';
 import Fill from 'ol/style/Fill';
 import Stroke from 'ol/style/Stroke';
 import Circle from 'ol/style/Circle';
+import Text from 'ol/style/Text';
 
 import GeoJSON from 'ol/format/GeoJSON';
 
@@ -401,32 +403,149 @@ export function updateLayerParams(
   }
 }
 
-function createStyle({ fillColor, strokeColor, strokeWidth = 1, circleRadius = 0 } = { }) {
-  const definition = {
-    fill: new Fill({
-      color: fillColor || 'rgba(0, 0, 0, 0)',
-    }),
-    stroke: new Stroke({
-      color: strokeColor || 'rgba(0, 0, 0, 0)',
-      width: strokeWidth,
-    }),
-  };
-
-  if (circleRadius) {
-    definition.image = new Circle({
-      radius: circleRadius,
-      fill: new Fill({
-        color: fillColor || 'rgba(0, 0, 0, 0)',
-      }),
-    });
+// http://stackoverflow.com/questions/14484787/wrap-text-in-javascript
+function stringDivider(str, width, spaceReplacer) {
+  if (str.length > width) {
+    let p = width;
+    while (p > 0 && str[p] !== ' ' && str[p] !== '-') {
+      p--;
+    }
+    if (p > 0) {
+      let left;
+      if (str.substring(p, p + 1) === '-') {
+        left = str.substring(0, p + 1);
+      } else {
+        left = str.substring(0, p);
+      }
+      const right = str.substring(p + 1);
+      return left + spaceReplacer + stringDivider(right, width, spaceReplacer);
+    }
   }
-  return new Style(definition);
+  return str;
+}
+
+function stringToRegex(s) {
+  // from https://stackoverflow.com/a/66769811
+  const m = s.match(/^([/~@;%#'])(.*?)\1([gimsuy]*)$/);
+  return m ? new RegExp(m[2], m[3]) : new RegExp(s);
+}
+
+function createLabelContent(feature, textStyle) {
+  // returns label content from feature properties based on configuration
+  // default - id of a product
+  let text = `${feature.model.get('id')}`;
+  if (typeof textStyle.labelTemplate !== 'undefined') {
+    // if configured, interpolate a template
+    text = _.template(textStyle.labelTemplate, {
+      interpolate: /\{\{(.+?)\}\}/g
+    })(feature.model.toJSON());
+  }
+  let regexp = null;
+  if (typeof textStyle.labelRegex !== 'undefined') {
+    if (typeof textStyle.labelRegex === 'string') {
+      // convert string regex to regexp object
+      regexp = stringToRegex(textStyle.labelRegex);
+    } else {
+      // use regexp directly
+      regexp = textStyle.labelRegex;
+    }
+    // find matches for a regex
+    const match = text.match(regexp);
+    // little bit of trickery here...
+    // if regex is not global and there were capturing groups specified (), assume that we want just those groups combined, not the full match
+    // otherwise concatenate all matches
+    if (match !== null) {
+      if (regexp.flags.indexOf('g') === -1 && regexp.toLocaleString().indexOf('(') !== -1 && regexp.toLocaleString().indexOf(')') !== -1) {
+        text = match.slice(1).join('');
+      } else {
+        text = match.join('');
+      }
+    }
+  }
+  return text;
+}
+
+function getText(feature, resolution, textStyle) {
+  const type = textStyle.text;
+  const maxResolution = textStyle.maxResolution;
+  let text = createLabelContent(feature, textStyle);
+  if (resolution > maxResolution) {
+    text = '';
+  } else if (type === 'hide') {
+    text = '';
+  } else if (type === 'shorten') {
+    text = text.trunc(12);
+  } else if (
+    type === 'wrap' &&
+    (!textStyle.placement || textStyle.placement !== 'line')
+  ) {
+    text = stringDivider(text, 16, '\n');
+  }
+  return text;
+}
+
+function createTextStyle(feature, resolution, textStyle) {
+  // slightly modified https://openlayers.org/en/latest/examples/vector-labels.html
+  const align = textStyle.align;
+  const baseline = textStyle.baseline;
+  const size = textStyle.size || '12px';
+  const height = typeof textStyle.height !== 'undefined' ? textStyle.height : 1;
+  const offsetX = textStyle.offsetX;
+  const offsetY = textStyle.offsetY;
+  const weight = textStyle.weight || 'normal';
+  const placement = textStyle.placement || 'Point';
+  const rotation = textStyle.rotation;
+  const font = `${weight} ${size}/${height} ${textStyle.font}`;
+  const fillColor = textStyle.color;
+  const outlineColor = textStyle.outline || 'rgba(0, 0, 0, 0)';
+  const outlineWidth = textStyle.outlineWidth || 0;
+  const maxAngle = textStyle.maxangle ? textStyle.maxangle : undefined;
+  const overflow = textStyle.overflow ? textStyle.overflow === 'true' : undefined;
+
+  return new Text({
+    textAlign: align === '' ? undefined : align,
+    textBaseline: baseline,
+    font,
+    text: getText(feature, resolution, textStyle),
+    fill: new Fill({ color: fillColor }),
+    stroke: new Stroke({ color: outlineColor, width: outlineWidth }),
+    offsetX,
+    offsetY,
+    placement,
+    maxAngle,
+    overflow,
+    rotation,
+  });
 }
 
 export function createVectorLayer(styleDefinition = {}, source = null) {
+  const createVectorFeatureStyle = (feature, resolution) => {
+    const definition = {
+      fill: new Fill({
+        color: styleDefinition.fillColor || 'rgba(0, 0, 0, 0)',
+      }),
+      stroke: new Stroke({
+        color: styleDefinition.strokeColor || 'rgba(0, 0, 0, 0)',
+        width: styleDefinition.strokeWidth,
+      }),
+    };
+
+    if (styleDefinition.circleRadius) {
+      definition.image = new Circle({
+        radius: styleDefinition.circleRadius,
+        fill: new Fill({
+          color: styleDefinition.fillColor || 'rgba(0, 0, 0, 0)',
+        }),
+      });
+    }
+    if (styleDefinition.footprintLabel) {
+      definition.text = createTextStyle(feature, resolution, styleDefinition.footprintLabel);
+    }
+    return [new Style(definition)];
+  };
   return new VectorLayer({
     source: source || new VectorSource(),
-    style: createStyle(styleDefinition),
+    style: createVectorFeatureStyle,
     wrapX: true,
   });
 }

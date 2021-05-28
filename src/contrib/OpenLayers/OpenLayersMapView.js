@@ -1,5 +1,6 @@
 import Marionette from 'backbone.marionette';
 import Backbone from 'backbone';
+import i18next from 'i18next';
 
 import $ from 'jquery';
 import _ from 'underscore';
@@ -9,6 +10,7 @@ import Collection from 'ol/Collection';
 import Overlay from 'ol/Overlay';
 
 import Draw, { createBox } from 'ol/interaction/Draw';
+import Control from 'ol/control/Control';
 
 import Group from 'ol/layer/Group';
 
@@ -20,15 +22,18 @@ import { appendParams } from 'ol/uri';
 
 import { get as getProj, transform, transformExtent } from 'ol/proj';
 import proj4 from 'proj4';
-import {register} from 'ol/proj/proj4';
+import { register } from 'ol/proj/proj4';
+import { getArea } from 'ol/sphere';
+
 import { Wkt } from 'wicket';
 
-import { uniqueBy, getISODateTimeString, setSearchParam } from '../../core/util';
+import { uniqueBy, getISODateTimeString, setSearchParam, numberThousandSep } from '../../core/util';
 import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import ExportWMSLayerListView from './ExportWMSLayerListView';
 import ProgressBar from './progressbar';
+import './ol-source.css';
 import './ol.css';
 import template from './OpenLayersMapView.hbs';
 import { isRecordDownloadable } from '../../download';
@@ -116,6 +121,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.footprintStrokeColor = options.footprintStrokeColor;
     this.selectedFootprintFillColor = options.selectedFootprintFillColor;
     this.selectedFootprintStrokeColor = options.selectedFootprintStrokeColor;
+    this.footprintLabel = options.footprintLabel;
 
     this.staticHighlight = options.staticHighlight;
     this.useDetailsDisplay = options.useDetailsDisplay;
@@ -129,6 +135,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.constrainOutCoords = options.constrainOutCoords;
     this.singleLayerModeUsed = options.singleLayerModeUsed;
     this.areaFilterLayerExtent = options.areaFilterLayerExtent;
+    this.maxAreaFilter = options.maxAreaFilter;
 
     this.template = template;
   }
@@ -271,7 +278,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.searchLayersGroup = new GroupById({
       layers: searchCollection.map((searchModel) => {
         const searchLayer = createVectorLayer({
-          strokeColor: this.footprintStrokeColor
+          strokeColor: this.footprintStrokeColor,
+          footprintLabel: this.footprintLabel,
         },
         new CollectionSource({
           collection: searchModel.get('results'),
@@ -491,11 +499,13 @@ class OpenLayersMapView extends Marionette.ItemView {
       if (!this.isPanning) {
         this.map.getView().setCenter(transform(mapModel.get('center'), 'EPSG:4326', this.projection));
       }
+      this.checkMaxAreaFilter();
     });
     this.listenTo(this.mapModel, 'change:zoom', (mapModel) => {
       if (!this.isZooming) {
         this.map.getView().setZoom(mapModel.get('zoom'));
       }
+      this.checkMaxAreaFilter();
     });
 
     this.listenTo(this.mapModel, 'change:roll', (mapModel) => {
@@ -622,6 +632,17 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.hideOverlay();
       this.onFeatureClicked(this.marker.infoRecords);
     });
+
+    if (this.maxAreaFilter) {
+      
+      this.maxAreaExceedLabel = new Control({
+        element: $(`
+        <div class="eoxc-area-exceed-label">
+             <div class="eoxc-area-exceed-content"></div>
+        </div>`)[0],
+      });
+      this.map.addControl(this.maxAreaExceedLabel);
+    }
   }
 
   filterFromConfig(type, coordinates) {
@@ -773,6 +794,7 @@ class OpenLayersMapView extends Marionette.ItemView {
         l.setExtent(undefined);
       });
     }
+    this.checkMaxAreaFilter();
   }
 
   onToolChange(mapModel) {
@@ -950,7 +972,8 @@ class OpenLayersMapView extends Marionette.ItemView {
       const cidA = parseInt(a.model.cid.slice(1, a.model.cid.length), 10);
       const cidB = parseInt(b.model.cid.slice(1, b.model.cid.length), 10);
       return cidA - cidB;
-    } else return a - b;
+    }
+    return a - b;
   }
 
   hideOverlay() {
@@ -960,6 +983,40 @@ class OpenLayersMapView extends Marionette.ItemView {
 
   isOverlayShown() {
     return this.marker.visible;
+  }
+
+  checkMaxAreaFilter() {
+    // compares area filter or map bbox size on sphere with max allowed and either shows or hide label
+    if (this.maxAreaFilter) {
+      let geometry = null;
+      const area = this.mapModel.get('drawnArea') || this.mapModel.get('area');
+      if (area && Array.isArray(area)) {
+        geometry = fromExtent(area);
+      } else if (area) {
+        geometry = this.geoJSONFormat.readGeometry(area.geometry, this.readerOptions);
+      } else {
+        geometry = fromExtent(this.mapModel.get('bbox'));
+      }
+      const areaSize = getArea(geometry, {
+        projection: 'EPSG:4326',
+      }) / 1000000; // in km2
+      if (areaSize > this.maxAreaFilter) {
+        this.setMaxAreaWarning(areaSize);
+      } else {
+        $(this.maxAreaExceedLabel.element).hide();
+      }
+    }
+  }
+
+  setMaxAreaWarning(current) {
+    const el = $(this.maxAreaExceedLabel.element);
+    const inner = el.find('.eoxc-area-exceed-content');
+    inner.html(i18next.t('max_area_filter_exceed', {
+      maxArea: numberThousandSep(this.maxAreaFilter, ' '),
+      userArea: numberThousandSep(Math.floor(current), ' '),
+      ratio: Math.round((current / this.maxAreaFilter) * 100) / 100,
+    }));
+    el.show();
   }
 
   onDestroy() {

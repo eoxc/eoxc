@@ -1,6 +1,7 @@
 import Marionette from 'backbone.marionette';
 import _ from 'underscore';
 import $ from 'jquery';
+import i18next from 'i18next';
 
 import { isRecordDownloadable } from '../../download';
 
@@ -124,6 +125,12 @@ const SearchResultView = Marionette.CompositeView.extend(/** @lends search/views
       ), 0);
 
     this.$('.select-all').prop('disabled', downloadableCount === 0);
+    if (downloadableCount === 0) {
+      this.$('.select-all')
+        .prop('title', `${i18next.t('no_item_downloadable')} ${i18next.t('no_item_downloadable_hint')}`);
+    } else {
+      this.$('.select-all').removeProp('title');
+    }
   },
 
   updateViews() {
