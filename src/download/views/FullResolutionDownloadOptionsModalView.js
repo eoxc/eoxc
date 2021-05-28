@@ -9,6 +9,7 @@ import template from './FullResolutionDownloadOptionsModalView.hbs';
 import './DownloadOptionsModalView.css';
 
 import { downloadFullResolutionWCS } from '../../download';
+import { getProjectionOl } from '../../contrib/OpenLayers/utils';
 
 export default ModalView.extend({
   template,
@@ -19,7 +20,7 @@ export default ModalView.extend({
       interpolations: this.layerModel.get('fullResolution.interpolations'),
       availableProjections: this.model.get('availableProjections'),
       availableDownloadFormats: this.model.get('availableDownloadFormats'),
-      projection_4326: this.mapProjection === 'EPSG:4326',
+      projection_4326: this.mapProjection.getCode() === 'EPSG:4326',
     };
   },
 
@@ -95,7 +96,7 @@ export default ModalView.extend({
   initialize(options) {
     this.layerModel = options.layerModel;
     this.mapModel = options.mapModel;
-    this.mapProjection = this.mapModel.get('projection') || 'EPSG:4326';
+    this.mapProjection = getProjectionOl(this.mapModel.get('projection'));
     this.filtersModel = options.filtersModel;
     const filtersArea = options.mapModel.get('area');
     if (filtersArea) {
@@ -246,7 +247,7 @@ export default ModalView.extend({
   onStartDownloadClicked() {
     // refresh values from form
     this.onSizeOrResolutionChange();
-    let subsetProj = this.mapModel.get('projection');
+    let subsetProj = this.mapProjection.getCode();
     // get numeric code and parse it into opengis def url
     if (subsetProj) {
       subsetProj = subsetProj.slice(subsetProj.lastIndexOf(':') + 1);

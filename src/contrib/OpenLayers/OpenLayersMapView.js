@@ -22,10 +22,11 @@ import { appendParams } from 'ol/uri';
 
 import { get as getProj, transform, transformExtent } from 'ol/proj';
 import { getArea } from 'ol/sphere';
+
 import { Wkt } from 'wicket';
 
 import { uniqueBy, getISODateTimeString, setSearchParam, numberThousandSep } from '../../core/util';
-import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds } from './utils';
+import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds, getProjectionOl } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import ExportWMSLayerListView from './ExportWMSLayerListView';
@@ -188,8 +189,8 @@ class OpenLayersMapView extends Marionette.ItemView {
       height: '100%',
     });
 
-    // for internal conversions
-    this.projection = getProj(this.mapModel.get('projection') || 'EPSG:4326');
+    this.projection = getProjectionOl(this.mapModel.get('projection'));
+
     this.geoJSONFormat = new GeoJSON();
     this.readerOptions = {
       featureProjection: this.projection,

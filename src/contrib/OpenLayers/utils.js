@@ -10,6 +10,9 @@ import Map from 'ol/Map';
 import View from 'ol/View';
 import { get as getProj } from 'ol/proj';
 import { getWidth as extentGetWidth, getTopLeft as extentGetTopLeft } from 'ol/extent';
+
+import proj4 from 'proj4';
+import { register } from 'ol/proj/proj4';
 // import Attribution from 'ol/attribution';
 
 import AttributionControl from 'ol/control/Attribution';
@@ -852,4 +855,25 @@ export function createCutOut(geometry, format, fillColor, outerColor, strokeColo
   }
 
   return [outerFeature, innerFeature];
+}
+
+function createProjection(name, def, extent) {
+  proj4.defs(name, def);
+  register(proj4);
+  const projection = getProj(name);
+  projection.setExtent(extent);
+  return projection;
+}
+
+export function getProjectionOl(projectionLike) {
+  // for internal conversions
+  if (typeof projectionLike === 'string') {
+    // expecting EPSG:4326 or EPSG:3857 or something OL supports out of box
+    return getProj(projectionLike);
+  } else if (projectionLike) {
+    // expecting an object with name, def, extent for proj4 to register custom projection
+    return createProjection(projectionLike.name, projectionLike.def, projectionLike.extent);
+  }
+  // default: EPSG:4326 when not set
+  return getProj('EPSG:4326');
 }
