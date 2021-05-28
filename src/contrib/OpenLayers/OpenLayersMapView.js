@@ -21,14 +21,12 @@ import Point from 'ol/geom/Point';
 import { appendParams } from 'ol/uri';
 
 import { get as getProj, transform, transformExtent } from 'ol/proj';
-import proj4 from 'proj4';
-import { register } from 'ol/proj/proj4';
 import { getArea } from 'ol/sphere';
 
 import { Wkt } from 'wicket';
 
 import { uniqueBy, getISODateTimeString, setSearchParam, numberThousandSep } from '../../core/util';
-import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds } from './utils';
+import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds, getProjectionOl } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import ExportWMSLayerListView from './ExportWMSLayerListView';
@@ -191,18 +189,7 @@ class OpenLayersMapView extends Marionette.ItemView {
       height: '100%',
     });
 
-    // for internal conversions
-    const createProjection = (name, def, extent) => {
-      proj4.defs(name, def);
-      register(proj4);
-      this.projection = getProj(name);
-      this.projection.setExtent(extent);
-      return this.projection;
-    };
-    this.projectionDef = getProj(this.mapModel.get('projection'));
-    this.projection = this.projectionDef
-      ? createProjection(this.projectionDef.name, this.projectionDef.def, this.projectionDef.extent)
-      : getProj('EPSG:4326');
+    this.projection = getProjectionOl(this.mapModel.get('projection'));
 
     this.geoJSONFormat = new GeoJSON();
     this.readerOptions = {
