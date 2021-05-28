@@ -193,13 +193,13 @@ class OpenLayersMapView extends Marionette.ItemView {
 
     // for internal conversions
     const createProjection = (name, def, extent) => {
-      proj4.defs(name, def)
-      register(proj4)
-      this.projection = getProj(name)
-      this.projection.setExtent(extent)
-      return this.projection
-    }
-    this.projectionDef = getProj(this.mapModel.get('projection'))
+      proj4.defs(name, def);
+      register(proj4);
+      this.projection = getProj(name);
+      this.projection.setExtent(extent);
+      return this.projection;
+    };
+    this.projectionDef = getProj(this.mapModel.get('projection'));
     this.projection = this.projectionDef
       ? createProjection(this.projectionDef.name, this.projectionDef.def, this.projectionDef.extent)
       : getProj('EPSG:4326');
