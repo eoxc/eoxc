@@ -1,3 +1,6 @@
 .spacer {
   margin-top: 20px;
 }
+input.use-multiple-download {
+  margin-top: -2px;
+}

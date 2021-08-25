@@ -15,6 +15,7 @@ const DownloadView = Marionette.CompositeView.extend({
       termsAndConditionsUrl: this.termsAndConditionsUrl,
       downloadEnabled: this.downloadEnabled,
       selectFilesEnabled: typeof this.onSelectFiles !== 'undefined',
+      enableGetEOCoverageSet: this.enableGetEOCoverageSet,
     };
   },
   className: 'download-view',
@@ -52,6 +53,7 @@ const DownloadView = Marionette.CompositeView.extend({
     this.termsAndConditionsUrl = options.termsAndConditionsUrl;
     this.downloadEnabled = options.downloadEnabled;
     this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
+    this.enableGetEOCoverageSet = options.enableGetEOCoverageSet;
 
     this.collection.each((searchModel) => {
       this.listenTo(
@@ -60,6 +62,7 @@ const DownloadView = Marionette.CompositeView.extend({
     });
     this.onSelectFiles = options.onSelectFiles;
     this.onStartDownload = options.onStartDownload;
+    this.onMultiDownload = options.onMultiDownload;
   },
 
   onChildBeforeRender() {

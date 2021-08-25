@@ -9,6 +9,13 @@ export default Backbone.Model.extend({
       name: 'PNG',
       mimeType: 'image/png',
     }],
+    availableMultiDownloadFormats: [{
+      name: 'ZIP',
+      mimeType: 'application/zip',
+    }, {
+      name: 'TAR',
+      mimeType: 'application/tar',
+    }],
     selectedDownloadFormat: null,
 
     availableProjections: [{
@@ -27,5 +34,7 @@ export default Backbone.Model.extend({
     selectedInterpolation: null,
 
     subsetByBounds: false,
+
+    useMultipleDownload: false,
   }
 });

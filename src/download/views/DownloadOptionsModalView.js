@@ -9,7 +9,7 @@ import './DownloadOptionsModalView.css';
 
 import FiltersModel from '../../core/models/FiltersModel';
 
-import { downloadRecord } from '../../download';
+import { downloadMultipleRecords, downloadRecord } from '../../download';
 
 export default ModalView.extend({
   template,
@@ -25,6 +25,7 @@ export default ModalView.extend({
   onRender() {
     const preferences = this.getPreferences();
     const preferredFormat = preferences.preferredFormat;
+    const preferredPackage = preferences.preferredPackage;
     const preferredInterpolation = preferences.preferredInterpolation;
     const preferredProjection = preferences.preferredProjection;
     const preferredScalingMethod = preferences.preferredScalingMethod;
@@ -32,10 +33,19 @@ export default ModalView.extend({
     const preferredResolution = preferences.preferredResolution;
     const preferredScale = preferences.preferredScale;
     const subsetByBounds = preferences.subsetByBounds;
+    const useMultipleDownload = preferences.UseMultipleDownload
 
     if (subsetByBounds) {
       this.$('.subset-by-bounds').prop('checked', true);
       this.model.set('subsetByBounds', subsetByBounds);
+    }
+    if (useMultipleDownload) {
+      this.$('.use-multiple-download').prop('checked', true);
+      this.model.set('useMultipleDownload', useMultipleDownload);
+    }
+    if (preferredPackage) {
+      this.$('.select-package').val(preferredPackage);
+      this.model.set('selectedDownloadPackage', preferredPackage);
     }
     if (preferredFormat) {
       this.$('.select-format').val(preferredFormat);
@@ -68,8 +78,10 @@ export default ModalView.extend({
   events: {
     'change .select-projection': 'onProjectionChange',
     'change .select-format': 'onFormatChange',
+    'change .select-package': 'onPackageChange',
     'change .select-interpolation': 'onInterpolationChange',
     'change .subset-by-bounds': 'onSubsetByBoundsChange',
+    'change .use-multiple-download': 'onUseMultipleDownload',
     'click .start-download': 'onStartDownloadClicked',
     'click .btn-draw-bbox': 'onDrawBBoxClicked',
     'change .show-bbox': 'onBBoxInputChange',
@@ -128,6 +140,11 @@ export default ModalView.extend({
     const val = this.$('.select-format').val();
     this.model.set('selectedDownloadFormat', (val !== '' && val !== '---') ? val : null);
     this.updatePreferences('preferredFormat', (val !== '' && val !== '---') ? val : null);
+  },
+  onPackageChange() {
+    const val = this.$('.select-package').val();
+    this.model.set('selectedDownloadPackage', (val !== '' && val !== '---') ? val : null);
+    this.updatePreferences('preferredPackage', (val !== '' && val !== '---') ? val : null);
   },
 
   onInterpolationChange() {
@@ -228,6 +245,23 @@ export default ModalView.extend({
     this.updatePreferences('subsetByBounds', checked);
   },
 
+  onUseMultipleDownload() {
+    const checked = this.$('.use-multiple-download').is(':checked');
+    this.model.set('useMultipleDownload', checked);
+    this.updatePreferences('useMultipleDownload', checked);
+    this.$('.select-package').prop('disabled', !checked);
+    this.$('.select-format').prop('disabled', checked);
+    this.$('.select-interpolation').prop('disabled', checked);
+    this.$('.subset-by-bounds').prop('disabled', checked);
+    this.$('.scale-resolution').prop('disabled', checked);
+
+    if (checked){
+      this.$('.select-format').val('---');
+
+      this.$('.select-interpolation').val('---');
+    }
+
+  },
   getPreferences() {
     try {
       return JSON.parse(localStorage.getItem(
@@ -290,6 +324,7 @@ export default ModalView.extend({
     }
     const options = {
       format: this.model.get('selectedDownloadFormat'),
+      package: this.model.get('selectedDownloadPackage'),
       outputCRS: this.model.get('selectedProjection'),
       subsetCRS: subsetProj,
       interpolation: this.model.get('selectedInterpolation'),
@@ -332,6 +367,19 @@ export default ModalView.extend({
         break;
     }
 
+    let GetEOCoverageSet = this.model.get('useMultipleDownload')
+    if (GetEOCoverageSet){
+      let eoids= []
+      var url
+      this.records.forEach(([recordModel, searchModel], i) => {
+        if (i === 0){
+          url = searchModel.get('layerModel').get('download.url')
+        }
+        eoids.push(recordModel.id)
+      }
+      );
+      downloadMultipleRecords(eoids, url, options)
+    }else{
     // if EO-WCS, use a timeout
     const timeout = this.showDownloadOptions ? 500 : 0;
     this.records.forEach(([recordModel, searchModel], i) => {
@@ -340,5 +388,6 @@ export default ModalView.extend({
           searchModel.get('layerModel'), filtersModel, recordModel, options), i * timeout
       );
     });
+    }
   }
 });
