@@ -1,0 +1,15 @@
+#cesium_custom_attribution {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    color: #333;
+    background-color: #fff;
+    padding: 1px 5px 0 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px 0 0 0;
+    border-width: 1px 0 0 1px;
+    font-size: .69em;
+    line-height: 1.0em;
+    font-family: 'Lucida Grande', Verdana, Geneva, Lucida, Arial, Helvetica, sans-serif;
+    z-index: 100000;
+  }
