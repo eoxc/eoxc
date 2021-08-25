@@ -10,6 +10,7 @@ import './DownloadOptionsModalView.css';
 import FiltersModel from '../../core/models/FiltersModel';
 
 import { downloadMultipleRecords, downloadRecord } from '../../download';
+import { getProjectionOl } from '../../contrib/OpenLayers/utils';
 
 export default ModalView.extend({
   template,
@@ -18,7 +19,7 @@ export default ModalView.extend({
       records: this.records,
       downloadOptions: this.showDownloadOptions,
       bbox: this.bbox.map(v => v.toFixed(4)),
-      projection_4326: this.mapProjection === 'EPSG:4326',
+      projection_4326: this.mapProjection.getCode() === 'EPSG:4326',
     };
   },
 
@@ -93,7 +94,7 @@ export default ModalView.extend({
 
   initialize(options) {
     this.mapModel = options.mapModel;
-    this.mapProjection = this.mapModel.get('projection') || 'EPSG:4326';
+    this.mapProjection = getProjectionOl(this.mapModel.get('projection'));
     this.filtersModel = options.filtersModel;
     const filtersArea = options.mapModel.get('area');
     if (filtersArea) {
@@ -316,7 +317,7 @@ export default ModalView.extend({
 
   onStartDownloadClicked() {
     this.onSizeOrResolutionChange();
-    let subsetProj = this.mapModel.get('projection');
+    let subsetProj = this.mapProjection.getCode();
     // get numeric code and parse it into opengis def url
     if (subsetProj) {
       subsetProj = subsetProj.slice(subsetProj.lastIndexOf(':') + 1);

@@ -22,10 +22,11 @@ import { appendParams } from 'ol/uri';
 
 import { get as getProj, transform, transformExtent } from 'ol/proj';
 import { getArea } from 'ol/sphere';
+
 import { Wkt } from 'wicket';
 
 import { uniqueBy, getISODateTimeString, setSearchParam, numberThousandSep } from '../../core/util';
-import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds } from './utils';
+import { createMap, updateLayerParams, createRasterLayer, createVectorLayer, sortLayers, createCutOut, wrapToBounds, featureCoordsToBounds, getProjectionOl } from './utils';
 import CollectionSource from './CollectionSource';
 import ModelAttributeSource from './ModelAttributeSource';
 import ExportWMSLayerListView from './ExportWMSLayerListView';
@@ -118,6 +119,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.footprintStrokeColor = options.footprintStrokeColor;
     this.selectedFootprintFillColor = options.selectedFootprintFillColor;
     this.selectedFootprintStrokeColor = options.selectedFootprintStrokeColor;
+    this.footprintLabel = options.footprintLabel;
 
     this.staticHighlight = options.staticHighlight;
     this.useDetailsDisplay = options.useDetailsDisplay;
@@ -187,8 +189,8 @@ class OpenLayersMapView extends Marionette.ItemView {
       height: '100%',
     });
 
-    // for internal conversions
-    this.projection = getProj(this.mapModel.get('projection') || 'EPSG:4326');
+    this.projection = getProjectionOl(this.mapModel.get('projection'));
+
     this.geoJSONFormat = new GeoJSON();
     this.readerOptions = {
       featureProjection: this.projection,
@@ -263,7 +265,8 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.searchLayersGroup = new GroupById({
       layers: searchCollection.map((searchModel) => {
         const searchLayer = createVectorLayer({
-          strokeColor: this.footprintStrokeColor
+          strokeColor: this.footprintStrokeColor,
+          footprintLabel: this.footprintLabel,
         },
         new CollectionSource({
           collection: searchModel.get('results'),
