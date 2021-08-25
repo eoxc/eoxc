@@ -72,7 +72,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
       if (feature) {
         const id = this.model.get('id');
         if (Array.isArray(feature)) {
-          isHighlighted = !!feature.find(f => f.id === id);
+          isHighlighted = !!feature.find(f => f && f.id === id);
         } else {
           isHighlighted = (id === feature.id);
         }
