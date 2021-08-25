@@ -1,7 +1,7 @@
 import $ from 'jquery';
 import { saveAs } from 'file-saver';
 
-import { download as downloadEOWCS, getDownloadInfos as getDownloadInfosEOWCS, downloadFullResolution } from './eowcs';
+import { download as downloadEOWCS, multiDownload as dowloadEOSet, getDownloadInfos as getDownloadInfosEOWCS, downloadFullResolution } from './eowcs';
 import { getDownloadInfos as getDownloadInfosUrl } from './url';
 import { getDownloadInfos as getDownloadInfosS3 } from './s3';
 import rewrite from './rewrite';
@@ -78,6 +78,27 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options) {
       downloadUrl(rewrite(info.href, rewriteRule, recordModel));
     }));
   }
+}
+
+export function downloadMultipleRecords(layerModel, url, options) {
+
+
+
+  const urlOrElement = dowloadEOSet(layerModel, options);
+  downloadUrl(url + '?' + urlOrElement);
+  // if (urlOrElement) {
+
+  //   const form = $(`<form method="post" action="${url}" enctype="text/plain" target="_blank">
+  //     <input type="hidden" name='<?xml version' value='"1.0"?>${urlOrElement}'></input>
+  //   </form>`);
+  //   if (form) {
+  //     const elem = form[0];
+  //     document.body.appendChild(elem);
+  //     elem.submit();
+  //     setTimeout(() => elem.remove(), 10000);
+  //   }
+  // }
+
 }
 
 export function downloadFullResolutionWCS(layerModel, mapModel, filtersModel, options) {
