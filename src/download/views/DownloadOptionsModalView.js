@@ -114,6 +114,12 @@ export default ModalView.extend({
         this.bbox = transformExtent(bbox, 'EPSG:4326', this.mapProjection);
         this.render();
       }
+      else if ( bbox && typeof bbox =='object'){
+        this.bbox = turfBBox(bbox);
+        this.mapModel.set('area', null);
+        this.render();
+
+      }
     });
 
     if (options.records) {
@@ -251,10 +257,6 @@ export default ModalView.extend({
     this.model.set('useMultipleDownload', checked);
     this.updatePreferences('useMultipleDownload', checked);
     this.$('.select-package').prop('disabled', !checked);
-    this.$('.select-format').prop('disabled', checked);
-    this.$('.select-interpolation').prop('disabled', checked);
-    this.$('.subset-by-bounds').prop('disabled', checked);
-    this.$('.scale-resolution').prop('disabled', checked);
 
     if (checked){
       this.$('.select-format').val('---');
@@ -379,7 +381,7 @@ export default ModalView.extend({
         eoids.push(recordModel.id)
       }
       );
-      downloadMultipleRecords(eoids, url, options)
+      downloadMultipleRecords(eoids, url, filtersModel, options)
     }else{
     // if EO-WCS, use a timeout
     const timeout = this.showDownloadOptions ? 500 : 0;
