@@ -80,11 +80,11 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options) {
   }
 }
 
-export function downloadMultipleRecords(layerModel, url, options) {
+export function downloadMultipleRecords(layerModel, url, filterModel, options) {
 
 
 
-  const urlOrElement = dowloadEOSet(layerModel, options);
+  const urlOrElement = dowloadEOSet(layerModel, filterModel, options);
   downloadUrl(url + '?' + urlOrElement);
   // if (urlOrElement) {
 

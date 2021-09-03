@@ -133,9 +133,10 @@ function getEOCoverageSetXML(eoids, options = {}) {
   if (options.package) {
     params.push(`<wcs:format>${options.package}</wcs:format>`);
   }
-  // if (options.package) {
-  //   params.push(`<wcseo:packageFormat>${options.package}</wcseo:packageFormat>`);
-  // }
+
+  if (options.package) {
+    params.push(`<wcseo:packageFormat>${options.package}</wcseo:packageFormat>`);
+  }
   if (options.bbox && !options.subsetX && !options.subsetY) {
     subsetX = [options.bbox[0], options.bbox[2]];
     subsetY = [options.bbox[1], options.bbox[3]];
@@ -201,12 +202,12 @@ function getEOCoverageSetKVP(eoids, options = {}) {
 
   const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
 
-  // if (options.format) {
-  //   params.push(['format', options.format]);
-  // }
+  if (options.format) {
+    params.push(['format', options.format]);
+  }
 
   if (options.package) {
-    params.push(['format', options.package]);
+    params.push(['packageFormat', options.package]);
   }
 
 
@@ -408,9 +409,9 @@ export function download(layerModel, filtersModel, recordModel, options) {
   }
   return getCoverageXML(recordModel.get('id'), requestOptions);
 }
-export function multiDownload(layerModel, options) {
+export function multiDownload(layerModel, filtersModel, options) {
   const requestOptions = {
-    // bbox: filtersModel.get('area'),
+    bbox: filtersModel.get('area'),
     outputCRS: options.outputCRS,
     subsetCRS: options.subsetCRS,
     format: options.format,
