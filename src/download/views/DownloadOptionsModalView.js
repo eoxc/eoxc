@@ -34,7 +34,7 @@ export default ModalView.extend({
     const preferredResolution = preferences.preferredResolution;
     const preferredScale = preferences.preferredScale;
     const subsetByBounds = preferences.subsetByBounds;
-    const useMultipleDownload = preferences.UseMultipleDownload
+    const useMultipleDownload = preferences.useMultipleDownload;
 
     if (subsetByBounds) {
       this.$('.subset-by-bounds').prop('checked', true);
@@ -255,12 +255,11 @@ export default ModalView.extend({
     this.updatePreferences('useMultipleDownload', checked);
     this.$('.select-package').prop('disabled', !checked);
 
-    if (checked){
+    if (checked) {
       this.$('.select-format').val('---');
 
       this.$('.select-interpolation').val('---');
     }
-
   },
   getPreferences() {
     try {

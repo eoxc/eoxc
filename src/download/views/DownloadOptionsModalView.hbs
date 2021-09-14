@@ -14,7 +14,7 @@
             <div class="col-sm-10">
               <div class="checkbox">
             <label>
-              <input type="checkbox" class="use-multiple-download" {{#if useMultipleDownload}}checked="checked"{{/if}}>{{t 'Download multiple files vie GetEOCoverageSet'}}
+              <input type="checkbox" class="use-multiple-download" {{#if useMultipleDownload}}checked="checked"{{/if}}>{{t 'Download multiple files with GetEOCoverageSet'}}
             </label>
               </div>
             </div>
@@ -66,7 +66,6 @@
             </div>
             <div class="col-sm-10">
               <select class="form-control select-package" disabled="disabled">
-                <option>---</option>
                 {{#each availableMultiDownloadFormats}}
                 <option value="{{this.mimeType}}">{{this.name}}</option>
                 {{/each}}
