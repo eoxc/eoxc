@@ -113,12 +113,9 @@ export default ModalView.extend({
       if (Array.isArray(bbox)) {
         this.bbox = transformExtent(bbox, 'EPSG:4326', this.mapProjection);
         this.render();
-      }
-      else if ( bbox && typeof bbox =='object'){
-        this.bbox = turfBBox(bbox);
-        this.mapModel.set('area', null);
+      } else if (bbox && typeof bbox === 'object') {
+        this.bbox = transformExtent(turfBBox(bbox), 'EPSG:4326', this.mapProjection);
         this.render();
-
       }
     });
 
@@ -370,27 +367,26 @@ export default ModalView.extend({
         break;
     }
 
-    let GetEOCoverageSet = this.model.get('useMultipleDownload')
-    if (GetEOCoverageSet){
-      let eoids= []
-      var url
+    const GetEOCoverageSet = this.model.get('useMultipleDownload');
+    if (GetEOCoverageSet) {
+      const eoids = [];
+      let url;
       this.records.forEach(([recordModel, searchModel], i) => {
-        if (i === 0){
-          url = searchModel.get('layerModel').get('download.url')
+        if (i === 0) {
+          url = searchModel.get('layerModel').get('download.url');
         }
-        eoids.push(recordModel.id)
-      }
-      );
-      downloadMultipleRecords(eoids, url, filtersModel, options)
-    }else{
+        eoids.push(recordModel.id);
+      });
+      downloadMultipleRecords(eoids, url, filtersModel, options);
+    } else {
     // if EO-WCS, use a timeout
-    const timeout = this.showDownloadOptions ? 500 : 0;
-    this.records.forEach(([recordModel, searchModel], i) => {
-      setTimeout(() =>
-        downloadRecord(
-          searchModel.get('layerModel'), filtersModel, recordModel, options), i * timeout
-      );
-    });
+      const timeout = this.showDownloadOptions ? 500 : 0;
+      this.records.forEach(([recordModel, searchModel], i) => {
+        setTimeout(() =>
+          downloadRecord(
+            searchModel.get('layerModel'), filtersModel, recordModel, options), i * timeout
+        );
+      });
     }
   }
 });
