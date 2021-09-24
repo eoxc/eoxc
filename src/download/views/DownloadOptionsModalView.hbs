@@ -60,12 +60,12 @@
           </div>
           {{/if}}
           {{#if availableMultiDownloadFormats.length}}
-          <div class="form-group" disabled="disabled">
+          <div class="form-group downloadFormats">
             <div class="col-sm-2">
               <label class="control-label">{{t 'Package'}}</label>
             </div>
             <div class="col-sm-10">
-              <select class="form-control select-package" disabled="disabled">
+              <select class="form-control select-package">
                 <option>---</option>
                 {{#each availableMultiDownloadFormats}}
                 <option value="{{this.mimeType}}">{{this.name}}</option>

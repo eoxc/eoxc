@@ -42,7 +42,10 @@ export default ModalView.extend({
     }
     if (useMultipleDownload) {
       this.$('.use-multiple-download').prop('checked', true);
+      this.$('.downloadFormats').show();
       this.model.set('useMultipleDownload', useMultipleDownload);
+    } else {
+      this.$('.downloadFormats').hide();
     }
     if (preferredPackage) {
       this.$('.select-package').val(preferredPackage);
@@ -145,6 +148,7 @@ export default ModalView.extend({
     this.model.set('selectedDownloadFormat', (val !== '' && val !== '---') ? val : null);
     this.updatePreferences('preferredFormat', (val !== '' && val !== '---') ? val : null);
   },
+
   onPackageChange() {
     const val = this.$('.select-package').val();
     this.model.set('selectedDownloadPackage', (val !== '' && val !== '---') ? val : null);
@@ -253,12 +257,11 @@ export default ModalView.extend({
     const checked = this.$('.use-multiple-download').is(':checked');
     this.model.set('useMultipleDownload', checked);
     this.updatePreferences('useMultipleDownload', checked);
-    this.$('.select-package').prop('disabled', !checked);
 
     if (checked) {
-      this.$('.select-format').val('---');
-
-      this.$('.select-interpolation').val('---');
+      this.$('.downloadFormats').show();
+    } else {
+      this.$('.downloadFormats').hide();
     }
   },
   getPreferences() {
@@ -285,6 +288,12 @@ export default ModalView.extend({
       if (typeof format.name === 'undefined' && format.mimeType !== 'undefined') {
         // eslint-disable-next-line no-param-reassign
         format.name = format.mimeType;
+      }
+    });
+    _.each(this.model.get('availableMultiDownloadFormats'), (mFormat) => {
+      if (typeof mFormat.name === 'undefined' && mFormat.mimeType !== 'undefined') {
+        // eslint-disable-next-line no-param-reassign
+        mFormat.name = mFormat.mimeType;
       }
     });
     _.each(this.model.get('availableProjections'), (proj) => {
