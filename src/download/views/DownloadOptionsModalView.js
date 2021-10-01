@@ -20,6 +20,7 @@ export default ModalView.extend({
       downloadOptions: this.showDownloadOptions,
       bbox: this.bbox.map(v => v.toFixed(4)),
       projection_4326: this.mapProjection.getCode() === 'EPSG:4326',
+      enableGetEOCoverageSet: this.enableGetEOCoverageSet,
     };
   },
 
@@ -102,6 +103,7 @@ export default ModalView.extend({
     this.mapModel = options.mapModel;
     this.mapProjection = getProjectionOl(this.mapModel.get('projection'));
     this.filtersModel = options.filtersModel;
+    this.enableGetEOCoverageSet = options.enableGetEOCoverageSet;
     const filtersArea = options.mapModel.get('area');
     if (filtersArea) {
       if (Array.isArray(filtersArea)) {

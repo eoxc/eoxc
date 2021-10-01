@@ -7,18 +7,20 @@
     <div class="modal-body download-options">
       {{#if downloadOptions}}
         <form class="form-horizontal">
-          <div class="form-group">
-             <div class="col-sm-2">
-              <label class="control-label">{{t 'Download Method'}}</label>
-            </div>
-            <div class="col-sm-10">
-              <div class="checkbox">
-            <label>
-              <input type="checkbox" class="use-multiple-download" {{#if useMultipleDownload}}checked="checked"{{/if}}>{{t 'Download multiple files with GetEOCoverageSet'}}
-            </label>
+          {{#if enableGetEOCoverageSet}}
+            <div class="form-group">
+               <div class="col-sm-2">
+                <label class="control-label">{{t 'Download Method'}}</label>
+              </div>
+              <div class="col-sm-10">
+                <div class="checkbox">
+              <label>
+                <input type="checkbox" class="use-multiple-download" {{#if useMultipleDownload}}checked="checked"{{/if}}>{{t 'Download multiple files with GetEOCoverageSet'}}
+              </label>
+                </div>
               </div>
             </div>
-          </div>
+          {{/if}}
           <div class="form-group">
             <div class="col-sm-2">
               <label class="control-label">{{t 'Bounding Box'}}</label>
