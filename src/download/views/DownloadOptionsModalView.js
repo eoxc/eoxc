@@ -43,6 +43,9 @@ export default ModalView.extend({
     if (useMultipleDownload) {
       this.$('.use-multiple-download').prop('checked', true);
       this.$('.downloadFormats').show();
+      this.$('.download-confirm').hide();
+      this.records.length > 5 && this.$('.multi-download-confirm').show();
+      this.$('.spacer').show();
       this.model.set('useMultipleDownload', useMultipleDownload);
     } else {
       this.$('.downloadFormats').hide();
@@ -260,8 +263,8 @@ export default ModalView.extend({
 
     if (checked) {
       this.$('.downloadFormats').show();
-      this.records.length > 5 && this.$('.download-confirm').hide();
-      this.$('.multi-download-confirm').show();
+      this.$('.download-confirm').hide();
+      this.records.length > 5 && this.$('.multi-download-confirm').show();
       this.$('.spacer').show();
     } else {
       this.$('.downloadFormats').hide();
