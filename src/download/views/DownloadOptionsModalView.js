@@ -120,12 +120,6 @@ export default ModalView.extend({
         this.bbox = transformExtent(turfBBox(bbox), 'EPSG:4326', this.mapProjection);
         this.render();
       }
-      else if ( bbox && typeof bbox =='object'){
-        this.bbox = turfBBox(bbox);
-        this.mapModel.set('area', null);
-        this.render();
-
-      }
     });
 
     if (options.records) {
@@ -153,11 +147,6 @@ export default ModalView.extend({
     const val = this.$('.select-format').val();
     this.model.set('selectedDownloadFormat', (val !== '' && val !== '---') ? val : null);
     this.updatePreferences('preferredFormat', (val !== '' && val !== '---') ? val : null);
-  },
-  onPackageChange() {
-    const val = this.$('.select-package').val();
-    this.model.set('selectedDownloadPackage', (val !== '' && val !== '---') ? val : null);
-    this.updatePreferences('preferredPackage', (val !== '' && val !== '---') ? val : null);
   },
 
   onPackageChange() {
