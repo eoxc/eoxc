@@ -120,6 +120,12 @@ export default ModalView.extend({
         this.bbox = transformExtent(turfBBox(bbox), 'EPSG:4326', this.mapProjection);
         this.render();
       }
+      else if ( bbox && typeof bbox =='object'){
+        this.bbox = turfBBox(bbox);
+        this.mapModel.set('area', null);
+        this.render();
+
+      }
     });
 
     if (options.records) {
@@ -147,6 +153,11 @@ export default ModalView.extend({
     const val = this.$('.select-format').val();
     this.model.set('selectedDownloadFormat', (val !== '' && val !== '---') ? val : null);
     this.updatePreferences('preferredFormat', (val !== '' && val !== '---') ? val : null);
+  },
+  onPackageChange() {
+    const val = this.$('.select-package').val();
+    this.model.set('selectedDownloadPackage', (val !== '' && val !== '---') ? val : null);
+    this.updatePreferences('preferredPackage', (val !== '' && val !== '---') ? val : null);
   },
 
   onPackageChange() {
@@ -260,8 +271,13 @@ export default ModalView.extend({
 
     if (checked) {
       this.$('.downloadFormats').show();
+      this.records.length > 5 && this.$('.download-confirm').hide();
+      this.$('.multi-download-confirm').show();
+      this.$('.spacer').show();
     } else {
       this.$('.downloadFormats').hide();
+      this.$('.download-confirm').show();
+      this.$('.multi-download-confirm').hide();
     }
   },
   getPreferences() {
