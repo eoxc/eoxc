@@ -198,7 +198,7 @@ function getEOCoverageSetKVP(eoids, options = {}) {
     ['version', '2.0.1'],
     ['request', 'GetEOCoverageSet'],
     ['eoid', eoids],
-    ['count', eoids.length],
+    // ['count', eoids.length],
   ];
 
   const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';

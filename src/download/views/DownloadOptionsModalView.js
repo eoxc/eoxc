@@ -271,8 +271,16 @@ export default ModalView.extend({
 
     if (checked) {
       this.$('.downloadFormats').show();
+      this.records.length > 5 && this.$('.download-confirm').hide();
+      this.$('.multi-download-confirm').show();
+      this.$('.spacer').show();
+
+
+
     } else {
       this.$('.downloadFormats').hide();
+      this.$('.download-confirm').show();
+      this.$('.multi-download-confirm').hide();
     }
   },
   getPreferences() {
