@@ -149,18 +149,18 @@ class OpenLayersMapView extends Marionette.ItemView {
       this.map.setTarget(this.el);
       this.progressBar.setElement(this.$('.progress-bar')[0]);
 
-      const WMScollections = new Backbone.Collection(this.layersCollection.filter((layer) => {
+      const validCollections = new Backbone.Collection(this.layersCollection.filter((layer) => {
         const display = this.useDetailsDisplay && layer.get('detailsDisplay')
           ? layer.get('detailsDisplay')
           : layer.get('display');
         const isValidDisplay = typeof display.urls !== 'undefined' ? display.urls[0] !== '' : display.url !== '';
-        return display.protocol === 'WMS' && isValidDisplay;
+        return ['WMS', 'WMTS'].includes(display.protocol.toUpperCase()) && isValidDisplay;
       }));
-      if (WMScollections.length > 0) {
+      if (validCollections.length > 0) {
         new ExportWMSLayerListView(
           {
             el: this.$('.export-tools')[0],
-            collection: WMScollections,
+            collection: validCollections,
             useDetailsDisplay: this.useDetailsDisplay,
             mapModel: this.mapModel,
             usedView: this
@@ -1014,36 +1014,46 @@ class OpenLayersMapView extends Marionette.ItemView {
     this.map.updateSize();
   }
 
-  onExportWmsurl(layerModel, useDetailsDisplay = false) {
+  onExportWmsurl(layerModel, useDetailsDisplay = false, wmtsTrimString = '/wmts') {
     // if able, for a given layer returns current map view as a single WMS link with same url
     const baseWmsParams = {
       SERVICE: 'WMS',
       REQUEST: 'GetMap',
+      VERSION: '1.1.1',
       TRANSPARENT: true,
     };
     const displayParams = useDetailsDisplay
       ? layerModel.get('detailsDisplay') || layerModel.get('display')
       : layerModel.get('display');
-    const url = typeof displayParams.urls !== 'undefined' ? displayParams.urls[0] : displayParams.url;
+    let url = typeof displayParams.urls !== 'undefined' ? displayParams.urls[0] : displayParams.url;
     // use layer projection or map projection if not set
     const layerProjection = displayParams.projection || this.projection.getCode();
     const format = displayParams.format || 'image/png';
     // get map layer corresponding to layerModel
     const mapLayer = this.getLayerOfGroup(layerModel, this.groups.layers);
     const source = mapLayer.getSource();
-    let previousParams;
+
+    let previousParams = {};
+    let previousDimension = {};
 
     if (source.getParams) {
       // WMSTileSource
       previousParams = source.getParams();
-    } else {
-      previousParams = {};
     }
+    if (source.getDimensions) {
+      // WMTS Source time dimension
+      previousDimension = source.getDimensions();
+      previousParams.LAYERS = source.getLayer();
+      // trim part of path usually used by wmts interface
+      url = url.replace(wmtsTrimString, '');
+    }
+
     const params = Object.assign(
-      baseWmsParams, previousParams);
+      baseWmsParams, previousParams, previousDimension);
     const mapSizePx = this.map.getSize();
     let bbox = transformExtent(this.map.getView().calculateExtent(mapSizePx), this.projection, layerProjection);
     bbox = wrapBox(bbox);
+
     params.FORMAT = format;
     params.SRS = layerProjection;
     params.WIDTH = mapSizePx[0];
