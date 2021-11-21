@@ -660,7 +660,11 @@ class OpenLayersMapView extends Marionette.ItemView {
   }
 
   filterFromSearchParams(area) {
-    wkt.read(area);
+    try {
+      wkt.read(area);
+    } catch (e) {
+      return;
+    }
     const geometryJson = wkt.toJson();
     const geometry = this.geoJSONFormat.readGeometry(geometryJson);
     const feature = new Feature({ geometry });
