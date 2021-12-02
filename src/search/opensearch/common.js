@@ -169,6 +169,14 @@ export function convertFilters(filterParams, mapParams, options, format, service
     }
   });
 
+  // replace % sign in the value with URL encoded version (%25)
+  // to allow search for direct match on parameter containing percent sign without needing to encode it manually
+  for (const [key, value] of Object.entries(parameters)) {
+    if (typeof value === 'string') {
+      parameters[key] = value.replace(/\%/g, '%25');
+    }
+  }
+
   // if any of "privileged" filter parameters - like productID are currently set
   // leave only privileged parameters set, discard the rest
   if (options.hasOwnProperty('privilegedParams')) {
