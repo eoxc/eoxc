@@ -3,6 +3,7 @@ import $ from 'jquery';
 import _ from 'underscore';
 import { transformExtent } from 'ol/proj';
 import ModalView from '../../core/views/ModalView';
+import i18next from 'i18next';
 
 import template from './DownloadOptionsModalView.hbs';
 import './DownloadOptionsModalView.css';
@@ -21,6 +22,7 @@ export default ModalView.extend({
       bbox: this.bbox.map(v => v.toFixed(4)),
       projection_4326: this.mapProjection.getCode() === 'EPSG:4326',
       enableGetEOCoverageSet: this.enableGetEOCoverageSet,
+      downloadLimitCount: this.model.get('downloadLimitCount'),
     };
   },
 
@@ -41,11 +43,21 @@ export default ModalView.extend({
       this.$('.subset-by-bounds').prop('checked', true);
       this.model.set('subsetByBounds', subsetByBounds);
     }
+    this.$('.multi-download-confirm').text(
+      i18next.t('products_number_warning', {
+        downloadLimitCount: this.model.get('downloadLimitCount'),
+      })
+    );
     if (useMultipleDownload) {
       this.$('.use-multiple-download').prop('checked', true);
       this.$('.downloadFormats').show();
       this.$('.download-confirm').hide();
-      this.records.length > 5 && this.$('.multi-download-confirm').show();
+      if (!isNaN(this.model.get('downloadLimitCount')) && this.records.length > this.model.get('downloadLimitCount')) {
+        this.$('.multi-download-confirm').show();
+      }
+      if (!isNaN(this.model.get('downloadLimitCount')) && this.records.length > this.model.get('downloadLimitCount')) {
+        this.$('.multi-download-confirm').show();
+      }
       this.$('.spacer').show();
       this.model.set('useMultipleDownload', useMultipleDownload);
     } else {
@@ -266,7 +278,9 @@ export default ModalView.extend({
     if (checked) {
       this.$('.downloadFormats').show();
       this.$('.download-confirm').hide();
-      this.records.length > 5 && this.$('.multi-download-confirm').show();
+      if (!isNaN(this.model.get('downloadLimitCount')) && this.records.length > this.model.get('downloadLimitCount')) {
+        this.$('.multi-download-confirm').show();
+      }
       this.$('.spacer').show();
     } else {
       this.$('.downloadFormats').hide();
@@ -408,3 +422,4 @@ export default ModalView.extend({
     }
   }
 });
+

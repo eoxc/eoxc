@@ -198,7 +198,6 @@ function getEOCoverageSetKVP(eoids, options = {}) {
     ['version', '2.0.1'],
     ['request', 'GetEOCoverageSet'],
     ['eoid', eoids],
-    // ['count', eoids.length],
   ];
 
   const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
@@ -410,6 +409,7 @@ export function download(layerModel, filtersModel, recordModel, options) {
   }
   return getCoverageXML(recordModel.get('id'), requestOptions);
 }
+
 export function multiDownload(layerModel, filtersModel, options) {
   const requestOptions = {
     bbox: filtersModel.get('area'),
@@ -424,9 +424,9 @@ export function multiDownload(layerModel, filtersModel, options) {
   requestOptions.sizeX = options.sizeX;
   requestOptions.sizeY = options.sizeY;
 
-  //return getEOCoverageSetXML(layerModel, requestOptions);
   return getEOCoverageSetKVP(layerModel, requestOptions);
 }
+
 export function getDownloadInfos(layerModel, filtersModel, recordModel, options = {}) {
   const kvp = getCoverageKVP(
     recordModel.get('id'), {

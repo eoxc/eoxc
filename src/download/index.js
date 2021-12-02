@@ -81,24 +81,8 @@ export function downloadRecord(layerModel, filtersModel, recordModel, options) {
 }
 
 export function downloadMultipleRecords(layerModel, url, filterModel, options) {
-
-
-
   const urlOrElement = dowloadEOSet(layerModel, filterModel, options);
   downloadUrl(url + '?' + urlOrElement);
-  // if (urlOrElement) {
-
-  //   const form = $(`<form method="post" action="${url}" enctype="text/plain" target="_blank">
-  //     <input type="hidden" name='<?xml version' value='"1.0"?>${urlOrElement}'></input>
-  //   </form>`);
-  //   if (form) {
-  //     const elem = form[0];
-  //     document.body.appendChild(elem);
-  //     elem.submit();
-  //     setTimeout(() => elem.remove(), 10000);
-  //   }
-  // }
-
 }
 
 export function downloadFullResolutionWCS(layerModel, mapModel, filtersModel, options) {
