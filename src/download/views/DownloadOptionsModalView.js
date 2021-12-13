@@ -12,6 +12,7 @@ import FiltersModel from '../../core/models/FiltersModel';
 
 import { downloadRecord, downloadMultipleRecords } from '../../download';
 import { getProjectionOl } from '../../contrib/OpenLayers/utils';
+import { flattenDownloadSelectionByCoverage } from '../url';
 
 export default ModalView.extend({
   template,
@@ -148,6 +149,10 @@ export default ModalView.extend({
           .map(recordModel => [recordModel, searchModel]))
       ), []);
     }
+
+    // flatten the products records into per-coverage records, if coverages are set in properties
+    this.records = flattenDownloadSelectionByCoverage(this.records);
+
     this.showDownloadOptions = this.records.reduce((acc, record) => (
       acc || record[1].get('layerModel').get('download.protocol') === 'EO-WCS'
     ), false);
