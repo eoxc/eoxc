@@ -15,6 +15,7 @@ const DownloadView = Marionette.CompositeView.extend({
       termsAndConditionsUrl: this.termsAndConditionsUrl,
       downloadEnabled: this.downloadEnabled,
       selectFilesEnabled: typeof this.onSelectFiles !== 'undefined',
+      wpsProcessing: this.wpsProcessing
     };
   },
   className: 'download-view',
@@ -36,6 +37,7 @@ const DownloadView = Marionette.CompositeView.extend({
     'click .download-as-url-list': 'onDownloadAsUrlListClicked',
     'click .select-files': 'onSelectFilesClicked',
     'click .deselect-all': 'onDeselectAllClicked',
+    'click .start-wps-processing' : 'onStartWPSProcessingClicked',
     'change .terms-and-conditions': 'onTermsAndAndConditionsChange',
   },
 
@@ -52,7 +54,9 @@ const DownloadView = Marionette.CompositeView.extend({
     this.termsAndConditionsUrl = options.termsAndConditionsUrl;
     this.downloadEnabled = options.downloadEnabled;
     this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
-
+    this.wpsProcessing =
+    this.collection.filter((searchModel)=>searchModel.get('layerModel').get('wpsProcessing')
+    ).length > 0;
     this.collection.each((searchModel) => {
       this.listenTo(
         searchModel.get('downloadSelection'), 'reset update', this.onDownloadSelectionChange
@@ -61,6 +65,7 @@ const DownloadView = Marionette.CompositeView.extend({
     this.onSelectFiles = options.onSelectFiles;
     this.onStartDownload = options.onStartDownload;
     this.onMultiDownload = options.onMultiDownload;
+    this.onStartWPSProcessing = options.onStartWPSProcessing;
   },
 
   onChildBeforeRender() {
@@ -149,6 +154,10 @@ const DownloadView = Marionette.CompositeView.extend({
     this.collection.each(searchModel =>
       searchModel.get('downloadSelection').reset([])
     );
+  },
+
+  onStartWPSProcessingClicked(){
+    this.onStartWPSProcessing();
   },
 
   onTermsAndAndConditionsChange() {
