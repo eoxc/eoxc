@@ -554,7 +554,10 @@ class OpenLayersMapView extends Marionette.ItemView {
     const boxFunc = createBox();
     this.drawControls = {
       point: new Draw({ type: 'Point' }),
-      line: new Draw({ type: 'LineString' }),
+      line: new Draw({
+        type: 'LineString',
+        maxPoints: 2
+     }),
       polygon: new Draw({ type: 'Polygon' }),
       bbox: new Draw({
         type: 'Circle',
@@ -621,7 +624,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     });
 
     if (this.maxAreaFilter) {
-      
+
       this.maxAreaExceedLabel = new Control({
         element: $(`
         <div class="eoxc-area-exceed-label">
@@ -680,7 +683,9 @@ class OpenLayersMapView extends Marionette.ItemView {
     const extent = transformExtent(event.feature.getGeometry().getExtent(), this.projection, 'EPSG:4326');
     if (event.feature.getGeometry().isBox) {
       geom = wrapToBounds(extent, bounds);
-    } else {
+    } else if(event.feature.getGeometry().getType() === 'LineString'){
+      geom = this.geoJSONFormat.writeFeatureObject(event.feature, this.readerOptions)
+    }else {
       // it is a feature (point/polygon)
       geom = wrapToBounds(this.geoJSONFormat.writeFeatureObject(event.feature, this.readerOptions), bounds);
       if (this.constrainOutCoords) {

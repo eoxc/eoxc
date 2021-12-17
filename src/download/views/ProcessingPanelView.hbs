@@ -25,28 +25,96 @@
                     <label class="control-label">{{this.title}}</label>
                   </div>
                   <div class="col-sm-10">
-                    <select class="form-control select-inputs">
+                    <select class="form-control select-inputs parameter-{{this.id}}" name="{{this.id}}">
                       <option>---</option>
                       {{#each this.options}}
-                        <option value="{{this.id}}">{{this.value}}</option>
+                        <option value="{{this.title}}">{{this.title}}</option>
                       {{/each}}
                     </select>
                   </div>
                 </div>
-              {{else}}
+              {{else }}
+                {{#if this.box }}
+                  <div class="form-group">
+                    <div class="col-sm-2">
+                      <label class="control-label">{{t 'Bounding Box'}}</label>
+                    </div>
+                    <div class="col-sm-10">
+                      <div class="checkbox">
+                        <label>
+                          <input type="checkbox" class="subset-by-bounds" {{#if subsetByBounds}}checked="checked"{{/if}}>{{t 'Use bounding box of current spatial filter to crop'}}
+                        </label>
+                      </div>
+                      <div class="input-group">
+                        <input class="form-control show-bbox input-sm box-0" placeholder="Min-X" value="{{bbox.[0]}}">
+                        <span class="input-group-addon"> </span>
+                        <input class="form-control show-bbox input-sm box-1" placeholder="Min-Y" value="{{bbox.[1]}}">
+                        <span class="input-group-addon"> </span>
+                        <input class="form-control show-bbox input-sm box-2" placeholder="Max-X" value="{{bbox.[2]}}">
+                        <span class="input-group-addon"> </span>
+                        <input class="form-control show-bbox input-sm box-3" placeholder="Max-Y" value="{{bbox.[3]}}">
+                        <span class="input-group-addon"> </span>
+                        <div class="input-group-btn">
+                          <button type="button" class="btn btn-default btn-draw-bbox">{{t 'Draw Bounding Box'}}</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {{else}}
+                  {{#if this.line }}
+                    <div class="form-group">
+                      <div class="col-sm-2">
+                        <label class="control-label">{{t 'Horizontal line'}}</label>
+                      </div>
+                      <div class="col-sm-8 line-points">
+                        <div class="input-group line-point-1">
+                          <input class="form-control show-bbox input-sm point1-X" placeholder="Point1-X" >
+                          <span class="input-group-addon"> </span>
+                          <input class="form-control show-bbox input-sm point1-Y" placeholder="Point1-Y" >
+                          <span class="input-group-addon"> </span>
+                        </div>
+                        <div class="input-group line-point-2">
+                          <input class="form-control show-bbox input-sm point2-X" placeholder="Point2-X" >
+                          <span class="input-group-addon"> </span>
+                          <input class="form-control show-bbox input-sm point2-Y" placeholder="Point2-Y" >
+                          <span class="input-group-addon"> </span>
+                        </div>
+                      </div>
+                      <div class="input-group-btn col-sm-2 line-draw-button">
+                            <button type="button" class="btn btn-default btn-draw-line">{{t 'Horizontal line'}}</button>
+                      </div>
+                    </div>
+                {{else}}
+                    <div class="form-group">
+                      <div class="col-sm-2">
+                        <label class="control-label">{{this.title}}</label>
+                      </div>
+                      <div class="col-sm-10">
+                        <div class="radio">
+                          <label>
+                            <input name="input-parameter-{{this.id}}" class={{this.id}} type="text">
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  {{/if}}
+                {{/if}}
+              {{/if}}
+            {{/each}}
+            {{#each this.outputs}}
                 <div class="form-group">
                   <div class="col-sm-2">
                     <label class="control-label">{{this.title}}</label>
                   </div>
                   <div class="col-sm-10">
-                    <div class="radio">
-                      <label>
-                        <input type="text">
-                      </label>
-                    </div>
+                    <select class="form-control select-output parameter-{{this.id}}" name="{{this.id}}">
+                      <option>---</option>
+                      {{#each this.mime_types}}
+                        <option value="{{this.title}}" >{{this.title}}</option>
+                      {{/each}}
+                    </select>
                   </div>
                 </div>
-              {{/if}}
             {{/each}}
             </div>
           {{/each}}
