@@ -36,5 +36,7 @@ export default Backbone.Model.extend({
     subsetByBounds: false,
 
     useMultipleDownload: false,
+
+    downloadLimitCount: null,
   }
 });

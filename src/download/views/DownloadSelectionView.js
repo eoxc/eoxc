@@ -7,6 +7,7 @@ import './DownloadSelectionView.css';
 import SelectionListView from './SelectionListView';
 import { downloadCustom, getDownloadInfos } from '../../download/';
 import metalinkTemplate from '../Metalink.hbs';
+import { flattenDownloadSelectionByCoverage } from '../url';
 
 const DownloadView = Marionette.CompositeView.extend({
   template,
@@ -234,14 +235,14 @@ const DownloadView = Marionette.CompositeView.extend({
       return arr.reduce((acc, val) => acc.concat(val), []);
     }
 
-
     const chunks = this.collection
-      .map(searchModel =>
-        searchModel.get('downloadSelection')
+      .map(searchModel => {
+        const records = flattenDownloadSelectionByCoverage(searchModel.get('downloadSelection'));
+        return records
           .map(recordModel => getDownloadInfos(
             searchModel.get('layerModel'), this.filtersModel, recordModel, options)
           )
-      );
+        });
 
     return Promise.all(flatten(chunks))
       .then(received => flatten(received));
