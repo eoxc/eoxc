@@ -1053,7 +1053,7 @@ class OpenLayersMapView extends Marionette.ItemView {
     }
 
     const params = Object.assign(
-      baseWmsParams, previousParams, previousDimension);
+      previousParams, baseWmsParams, previousDimension);
     const mapSizePx = this.map.getSize();
     let bbox = transformExtent(this.map.getView().calculateExtent(mapSizePx), this.projection, layerProjection);
     bbox = wrapBox(bbox);

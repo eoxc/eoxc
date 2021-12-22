@@ -1,6 +1,5 @@
 import 'bootstrap-slider';
 import 'bootstrap-slider/dist/css/bootstrap-slider.css';
-import $ from 'jquery';
 import Marionette from 'backbone.marionette';
 import _ from 'underscore';
 import './LayerOptionsCoreView.css';
@@ -11,8 +10,9 @@ import template from './LayerOptionsCoreView.hbs';
 const LayerOptionsCoreView = Marionette.ItemView.extend({
   template,
   events: {
-    'change .layer-option': 'onLayerOptionChange',
-    'change .visualization-selector': 'onVisualizationChange'
+    'change .layer-option.layer-option-selection': 'onLayerOptionChange',
+    'change .visualization-selector': 'onVisualizationChange',
+    'slideStop input[data-provide="slider"]': 'applySettings',
   },
 
   templateHelpers() {
@@ -20,6 +20,17 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
       options: this.getDisplayOptions(),
       legendUrl: this.display ? this.display.legendUrl : null,
     };
+  },
+
+  onAttach() {
+    this.$('[data-provide="slider"]').slider({
+      formatter(value) {
+        if (Array.isArray(value)) {
+          return `${value[0]} - ${value[1]}`;
+        }
+        return value;
+      },
+    });
   },
 
   initialize(options) {
@@ -56,18 +67,17 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
       let counter = -1;
       const options = this.model.get(`${this.displayOption}.options`)
         .map((option) => {
-          let low;
-          let high;
-          let targetLow;
-          let targetHigh;
-          const target = option.target;
           counter += 1;
-          if (typeof option.min !== 'undefined') {
-            [targetLow, targetHigh] = Array.isArray(target) ? target : target.split(',');
-            low = this.model.get(targetLow);
-            high = this.model.get(targetHigh);
-          }
-          return Object.assign({}, option, { counter, low, high, targetLow, targetHigh });
+          const isRendered = typeof option.values !== 'undefined' || typeof option.min !== 'undefined';
+          const step = typeof option.step !== 'undefined' ? option.step : 1;
+
+          const defaultValue = option.default;
+          const low = defaultValue ? (Array.isArray(defaultValue) ? defaultValue[0] : defaultValue) : option.min;
+          const high = Array.isArray(defaultValue) ? defaultValue[1] : option.max;
+          const sliderValue = option.range ? `[${low},${high}]` : low;
+          const value = option.range ? `${low}${option.rangeSeparator || ','}${high}` : low;
+
+          return Object.assign({}, option, { counter, low, high, step, sliderValue, value, isRendered });
         });
       return options;
     }
@@ -93,17 +103,6 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
       this.model.set(`${this.displayOption}.opacity`, parseInt(this.$slider.val(), 10) / 100);
     });
 
-    const $dataSliders = this.$('input[data-slider-min]');
-    if ($dataSliders.length) {
-      $dataSliders.slider()
-        .on('slideStop', (event) => {
-          const $target = $(event.target);
-          this.model.set({
-            [$target.data('targetLow')]: event.value[0],
-            [$target.data('targetHigh')]: event.value[1],
-          });
-        });
-    }
     this.applySettings();
   },
 
@@ -155,8 +154,15 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
       const values = [];
       const selectedIndices = [];
       $forms.each((i, el) => {
-        values.push(el.value);
-        selectedIndices.push(el.selectedIndex);
+        let value = el.value;
+        const separatorToReplace = option.rangeSeparator;
+        if (separatorToReplace) {
+          value = value.replace(",", separatorToReplace)
+        }
+        values.push(value);
+        if (typeof option.min === 'undefined') {
+          selectedIndices.push(el.selectedIndex);
+        }
       });
 
       // reset isSelected in model and update it with what is selected in ui
@@ -170,7 +176,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[0]}].isCurrentB1`, true);
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[1]}].isCurrentB2`, true);
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[2]}].isCurrentB3`, true);
-      } else {
+      } else if (!option.range) {
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[0]}].isCurrentB1`, true);
       }
 
