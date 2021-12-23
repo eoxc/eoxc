@@ -172,11 +172,11 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
         this.model.set(`${this.displayOption}.options[${index}].values[${j}].isCurrentB3`, false);
       });
 
-      if (option.selectThree) {
+      if (option.selectThree && !option.min) {
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[0]}].isCurrentB1`, true);
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[1]}].isCurrentB2`, true);
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[2]}].isCurrentB3`, true);
-      } else if (!option.range) {
+      } else if (!option.min) {
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[0]}].isCurrentB1`, true);
       }
 

@@ -13,27 +13,72 @@
           </input>
         </label>
         {{#if this.selectThree}}
-          <div class="col-sm-4 option-row">
-            <select class="form-control layer-option" name="{{this.target}}">
-              {{#each this.values}}
-                <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
-          <div class="col-sm-4 option-row">
-            <select class="form-control layer-option" name="{{this.target}}">
-              {{#each this.values}}
-                <option value="{{this.value}}" {{#if this.isCurrentB2}} selected="selected"{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
-          <div class="col-sm-4 option-row">
-            <select class="form-control layer-option" name="{{this.target}}">
-              {{#each this.values}}
-                <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
+          {{#if this.values}}
+            <div class="col-sm-4 option-row">
+              <select class="form-control layer-option" name="{{this.target}}">
+                {{#each this.values}}
+                  <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div class="col-sm-4 option-row">
+              <select class="form-control layer-option" name="{{this.target}}">
+                {{#each this.values}}
+                  <option value="{{this.value}}" {{#if this.isCurrentB2}} selected="selected"{{/if}}>{{this.label}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div class="col-sm-4 option-row">
+              <select class="form-control layer-option" name="{{this.target}}">
+                {{#each this.values}}
+                  <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
+                {{/each}}
+              </select>
+            </div>
+          {{else if this.min}}
+            <div class="col-sm-4 option-row">
+              <input class="layer-option layer-option-slider"
+                name="{{this.target}}"
+                value="{{ this.value }}"
+                data-provide="slider"
+                data-range="{{ this.range }}"
+                data-slider-min="{{ this.min }}"
+                data-slider-max="{{ this.max }}"
+                data-slider-step="{{ this.step }}"
+                data-slider-value="{{ this.sliderValue }}"
+                data-tooltip-position="top"
+                data-slider-tooltip=""
+              />
+            </div>
+            <div class="col-sm-4 option-row">
+              <input class="layer-option layer-option-slider"
+                name="{{this.target}}"
+                value="{{ this.value }}"
+                data-provide="slider"
+                data-range="{{ this.range }}"
+                data-slider-min="{{ this.min }}"
+                data-slider-max="{{ this.max }}"
+                data-slider-step="{{ this.step }}"
+                data-slider-value="{{ this.sliderValue }}"
+                data-tooltip-position="top"
+                data-slider-tooltip=""
+              />
+            </div>
+            <div class="col-sm-4 option-row">
+              <input class="layer-option layer-option-slider"
+                name="{{this.target}}"
+                value="{{ this.value }}"
+                data-provide="slider"
+                data-range="{{ this.range }}"
+                data-slider-min="{{ this.min }}"
+                data-slider-max="{{ this.max }}"
+                data-slider-step="{{ this.step }}"
+                data-slider-value="{{ this.sliderValue }}"
+                data-tooltip-position="top"
+                data-slider-tooltip=""
+              />
+            </div>
+          {{/if}}
         {{/if}}
       {{#unless this.selectThree }}
         <div class="col-sm-10 option-row">
