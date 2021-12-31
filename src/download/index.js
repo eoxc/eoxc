@@ -91,7 +91,10 @@ export function downloadFullResolutionWCS(layerModel, mapModel, filtersModel, op
 }
 
 export function downloadCustom(filename, mediaType, content) {
-  saveAs(new Blob([content], { type: mediaType }), filename);
+  if (!(content instanceof Blob)){
+    content = new Blob([content], { type: mediaType })
+  }
+  saveAs(content, filename);
 }
 
 export function getDownloadInfos(layerModel, filtersModel, recordModel, options) {

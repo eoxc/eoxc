@@ -27,6 +27,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
       bbox: this.bbox.map(v => v.toFixed(4)),
       title: this.model.getTitle(),
       headerText: this.headerText,
+      coverageID: this.model.get('id'),
       selectedProcess: null,
       processes: this.processingModel.processes,
     };
@@ -38,11 +39,11 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     'change .select-inputs':'oninputSelect',
     'change .select-output':'onOutputSelect',
     'change .show-bbox': 'onBBoxInputChange',
+    'change .subset-by-bounds':'onDefaultBBoxChecked',
     [`change [name^='input-parameter-']`]: 'onInputInsert',
 
   },
   initialize(options) {
-    this.requestOptions ={}
     this.processingModel = options.processingModel;
     this.mapView = options.mapView;
     this.mapModel = options.mapModel;
@@ -88,18 +89,35 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   },
 
   onProcessChange() {
+    const val = this.$('.select-process').val();
+    const currentClassName = ".process-" + val;
+
     this.mapModel.set('tool', null);
     this.mapModel.set('area', null);
-    this.model.set('requestOptions', null)
-    const val = this.$('.select-process').val();
-    const currentClassName = ".process-" + val
-    this.model.set('selectedProcess', (val !== '' && val !== '---') ? val : null);
+
+    this.requestOptions ={
+      outputs:{},
+    }
+
+
     this.processingModel.processes.map(process => {
-      var className = ".process-" + process.id
+
+      var classTag = process.additionalInputs ? process.additionalInputs.identifier : process.id;
+      let className = ".process-" + classTag;
       this.$(className).hide();
+      if (currentClassName === className) {
+        if (process.additionalInputs ){
+          this.requestOptions.identifier = process.additionalInputs.identifier;
+        }
+        if (process.CoverageIdUsage){
+          this.requestOptions.coverage = this.model.get('id');
+        }
+        this.model.set('selectedProcess', process.id);
+
+      }
     });
 
-
+    this.model.set('requestOptions', this.requestOptions)
     if(this.model.get('selectedProcess')) {
       this.$('.record-details-map').show();
       this.$(currentClassName).show();
@@ -127,23 +145,38 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
 
     }
   },
+
+  onDefaultBBoxChecked(){
+
+    const checked = this.$('.subset-by-bounds').is(':checked');
+    //TODO: perform usage of image extent
+    // if (checked) {
+    //   this.updateBboxInputs()
+    // }
+
+  },
+
   oninputSelect(){
-    var parent = this.$('.process-' + this.model.get('selectedProcess'));
-    var selection = parent.find('.select-inputs')
+    const tag = this.requestOptions.identifier ? this.requestOptions.identifier : this.model.get('selectedProcess')
+    const parent = this.$('.process-' + tag);
+    const selection = parent.find('.select-inputs')
     selection.map((n, el) => this.requestOptions[el.name]=el.value);
     this.model.set('requestOptions', this.requestOptions)
 
 
   },
   onOutputSelect(){
-    var parent = this.$('.process-' + this.model.get('selectedProcess'));
-    var selection = parent.find('.select-output')
-    selection.map((n, el) => this.requestOptions[el.name]=el.value);
+    const tag = this.requestOptions.identifier ? this.requestOptions.identifier : this.model.get('selectedProcess')
+    const parent = this.$('.process-' + tag);
+    const selection = parent.find('.select-output')
+    selection.map((n, el) => this.requestOptions.outputs[el.name]=el.value);
     this.model.set('requestOptions', this.requestOptions)
   },
+
   onInputInsert(){
-    var parent = this.$('.process-' + this.model.get('selectedProcess'));
-    var inputs = parent.find('input[name^="input-parameter-"]')
+    const tag = this.requestOptions.identifier ? this.requestOptions.identifier : this.model.get('selectedProcess')
+    const parent = this.$('.process-' + tag);
+    const inputs = parent.find('input[name^="input-parameter-"]')
     inputs.map((_,el) => {
       this.requestOptions[el.className] = el.value
     });
@@ -161,14 +194,17 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     this.model.set('requestOptions', this.requestOptions);
 
   },
+
   updateLinesInputs(){
+
     Object.keys(this.line).map(key => {
       let className1 = '.'+ key +'-X';
       let className2 = '.'+ key +'-Y';
-      this.$(className1) && this.$(className1).val(this.line[key][0])
-      this.$(className2) && this.$(className2).val(this.line[key][1])
+      this.$(className1) && this.$(className1).val(this.line[key][0]);
+      this.$(className2) && this.$(className2).val(this.line[key][1]);
+
     })
-    this.requestOptions.line = this.line;
+    this.requestOptions.line = [this.line.point1[0], this.line.point1[1], this.line.point2[0], this.line.point2[1]];
     this.model.set('requestOptions', this.requestOptions);
 
 

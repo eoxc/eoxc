@@ -11,13 +11,21 @@
               <select class="form-control select-process">
                 <option>---</option>
                 {{#each processes}}
-                  <option value="{{this.id}}">{{this.title}}</option>
+                  <option value={{#if this.additionalInputs}}"{{this.additionalInputs.identifier}}"{{else}}"{{this.id}}"{{/if}}>{{this.title}}</option>
                 {{/each}}
               </select>
             </div>
           </div>
+          <div class="form-group">
+            <div class="col-sm-2">
+              <label class="control-label">{{t 'DEM Tile'}}</label>
+            </div>
+            <div class="col-sm-10">
+                <label class="control-label">{{t coverageID}}</label>
+            </div>
+          </div>
           {{#each processes}}
-          <div class="process-parameters process-{{this.id}}">
+          <div class= {{#if this.additionalInputs}}"process-parameters  process-{{this.additionalInputs.identifier}}"{{else}}"process-parameters  process-{{this.id}}"{{/if}}>
             {{#each this.inputs}}
               {{#if this.options}}
                 <div class="form-group">
@@ -42,7 +50,7 @@
                     <div class="col-sm-10">
                       <div class="checkbox">
                         <label>
-                          <input type="checkbox" class="subset-by-bounds" {{#if subsetByBounds}}checked="checked"{{/if}}>{{t 'Use bounding box of current spatial filter to crop'}}
+                          <input type="checkbox" class="subset-by-bounds" checked="checked">{{t 'Use bounding box of current coverage'}}
                         </label>
                       </div>
                       <div class="input-group">
@@ -110,7 +118,7 @@
                     <select class="form-control select-output parameter-{{this.id}}" name="{{this.id}}">
                       <option>---</option>
                       {{#each this.mime_types}}
-                        <option value="{{this.title}}" >{{this.title}}</option>
+                        <option value="{{this.id}}" >{{this.title}}</option>
                       {{/each}}
                     </select>
                   </div>
