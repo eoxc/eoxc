@@ -18,7 +18,6 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   templateHelpers() {
     return {
       options: this.getDisplayOptions(),
-      legendUrl: this.display ? this.display.legendUrl : null,
     };
   },
 
