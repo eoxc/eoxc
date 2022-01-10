@@ -47,3 +47,11 @@ input[type="radio"].visualization-selector:checked + span:before {
 .slider .tooltip {
   pointer-events: none;
 }
+
+.control-label {
+  padding-top: 2px;
+}
+
+.layer-option-selection {
+  padding: 2px 4px;
+}

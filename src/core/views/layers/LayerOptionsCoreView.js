@@ -5,6 +5,7 @@ import _ from 'underscore';
 import './LayerOptionsCoreView.css';
 
 import template from './LayerOptionsCoreView.hbs';
+import { flatten } from '../../../download/url';
 
 // eslint-disable-next-line max-len
 const LayerOptionsCoreView = Marionette.ItemView.extend({
@@ -12,7 +13,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   events: {
     'change .layer-option.layer-option-selection': 'onLayerOptionChange',
     'change .visualization-selector': 'onVisualizationChange',
-    'slideStop input[data-provide="slider"]': 'applySettings',
+    'slideStop input[data-provide="slider"]': 'onLayerOptionChange',
   },
 
   templateHelpers() {
@@ -67,16 +68,59 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
       const options = this.model.get(`${this.displayOption}.options`)
         .map((option) => {
           counter += 1;
-          const isRendered = typeof option.values !== 'undefined' || typeof option.min !== 'undefined';
           const step = typeof option.step !== 'undefined' ? option.step : 1;
+          const valuesFromTarget = this.model.get(option.target);
+          let low, high, sliderValue, value;
+          const rangeInputsConfig = [];
+          const countRangeInputs = option.min ? (option.selectThree ? 3 : 1) : 0;
+          for (let i=0; i < countRangeInputs; i++) {
+            // create config for range input element
+            let defaultValue = null;
+            if (typeof valuesFromTarget === 'undefined') {
+              // data for slider come from config
+              defaultValue = option.default;
+            } else {
+              // data for slider come from model 
+              // split config at comma and "rangeSeparator"
+              defaultValue = valuesFromTarget.split(',').reduce( (newArr, el, i) => {
+                let subArr = el.split(option.rangeSeparator);
+                newArr[i] = subArr;
+                return newArr;
+              }, []);
+              defaultValue = flatten(defaultValue);
+            }
+            if (!defaultValue) {
+              low = option.min;
+              high = option.max;
+            } else if (!Array.isArray(defaultValue)) {
+              low = defaultValue;
+              high = defaultValue;
+            } else if (defaultValue.length == 2) {
+              low = defaultValue[0];
+              high = defaultValue[1];
+            } else if (defaultValue.length == 3) {
+              low = defaultValue[i];
+              high = defaultValue[i];
+            } else if (defaultValue.length == 6) {
+              low = defaultValue[i * 2];
+              high = defaultValue[1 + i * 2];
+            }
+            sliderValue = option.range ? `[${low},${high}]` : low;
+            value = option.range ? `${low}${option.rangeSeparator || ','}${high}` : low;
 
-          const defaultValue = option.default;
-          const low = defaultValue ? (Array.isArray(defaultValue) ? defaultValue[0] : defaultValue) : option.min;
-          const high = Array.isArray(defaultValue) ? defaultValue[1] : option.max;
-          const sliderValue = option.range ? `[${low},${high}]` : low;
-          const value = option.range ? `${low}${option.rangeSeparator || ','}${high}` : low;
-
-          return Object.assign({}, option, { counter, low, high, step, sliderValue, value, isRendered });
+            rangeInputsConfig.push({
+              min: option.min,
+              max: option.max,
+              range: option.range,
+              selectThree: option.selectThree,
+              target: option.target,
+              step,
+              sliderValue,
+              value,
+            })
+          }
+          // get actual values either from target (was already configured) or from default
+          return Object.assign({}, option, { counter, rangeInputsConfig });
         });
       return options;
     }
@@ -101,7 +145,9 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
     this.$slider.on('change', () => {
       this.model.set(`${this.displayOption}.opacity`, parseInt(this.$slider.val(), 10) / 100);
     });
+  },
 
+  afterRender() {
     this.applySettings();
   },
 
@@ -171,11 +217,11 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
         this.model.set(`${this.displayOption}.options[${index}].values[${j}].isCurrentB3`, false);
       });
 
-      if (option.selectThree && !option.min) {
+      if (option.selectThree && typeof option.min === 'undefined') {
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[0]}].isCurrentB1`, true);
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[1]}].isCurrentB2`, true);
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[2]}].isCurrentB3`, true);
-      } else if (!option.min) {
+      } else if (typeof option.min === 'undefined') {
         this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[0]}].isCurrentB1`, true);
       }
 
