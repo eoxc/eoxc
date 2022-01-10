@@ -1,5 +1,5 @@
 <form class="form-horizontal">
-  <div class="form-group panel">
+  <div class="form-group">
     <label class="col-sm-2 control-label">{{t 'Opacity'}}</label>
     <div class="col-sm-12">
       <input class="form-control opacity-slider">
@@ -11,48 +11,54 @@
         <input type="radio" id="visualization-selector_{{this.counter}}" name="visualization-selector" class="visualization-selector" {{#if this.isChosen}} checked{{/if}}><span>{{t this.name}}</span>
         </input>
       </label>
-      {{#if this.values}}
-        <div class="{{#if this.selectThree}}col-sm-4{{else}}col-sm-12{{/if}} option-row">
-          <select class="form-control layer-option layer-option-selection" name="{{this.target}}">
-            {{#each this.values}}
-              <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
-            {{/each}}
-          </select>
-        </div>
-        {{#if this.selectThree}}
-          <div class="col-sm-4 option-row">
-            <select class="form-control layer-option layer-option-selection" name="{{this.target}}">
+      {{#each this.parameters}}
+        <label class="col-sm-2 control-label">
+          {{t this.name}}
+        </label>
+        {{#if this.values}}
+          <div class="{{#if this.selectThree}}col-sm-4{{else}}col-sm-12{{/if}} option-row">
+            <select class="form-control layer-option layer-option-selection" data-counter="{{counterMultiple}}" name="{{this.target}}">
               {{#each this.values}}
-                <option value="{{this.value}}" {{#if this.isCurrentB2}} selected="selected"{{/if}}>{{this.label}}</option>
+                <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
               {{/each}}
             </select>
           </div>
-          <div class="col-sm-4 option-row">
-            <select class="form-control layer-option layer-option-selection" name="{{this.target}}">
-              {{#each this.values}}
-                <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
+          {{#if this.selectThree}}
+            <div class="col-sm-4 option-row">
+              <select class="form-control layer-option layer-option-selection" data-counter="{{counterMultiple}}" name="{{this.target}}">
+                {{#each this.values}}
+                  <option value="{{this.value}}" {{#if this.isCurrentB2}} selected="selected"{{/if}}>{{this.label}}</option>
+                {{/each}}
+              </select>
+            </div>
+            <div class="col-sm-4 option-row">
+              <select class="form-control layer-option layer-option-selection" data-counter="{{counterMultiple}}" name="{{this.target}}">
+                {{#each this.values}}
+                  <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
+                {{/each}}
+              </select>
+            </div>
+          {{/if}}
         {{/if}}
-      {{/if}}
-      {{#each this.rangeInputsConfig}}
-        <div class="option-row 
-        {{#if this.selectThree}}col-sm-4{{else}}col-sm-12{{/if}}"
-        >
-          <input class="layer-option layer-option-slider"
-            name="{{this.target}}"
-            value="{{this.value}}"
-            data-provide="slider"
-            data-range="{{this.range}}"
-            data-slider-min="{{this.min}}"
-            data-slider-max="{{this.max}}"
-            data-slider-step="{{this.step}}"
-            data-slider-value="{{this.sliderValue}}"
-            data-tooltip-position="top"
-            data-slider-tooltip=""
-          />
-        </div>
+        {{#each this.rangeInputsConfig}}
+          <div class="option-row 
+          {{#if this.selectThree}}col-sm-4{{else}}col-sm-12{{/if}}"
+          >
+            <input class="layer-option"
+              name="{{this.target}}"
+              value="{{this.value}}"
+              data-provide="slider"
+              data-range="{{this.range}}"
+              data-slider-min="{{this.min}}"
+              data-slider-max="{{this.max}}"
+              data-slider-step="{{this.step}}"
+              data-slider-value="{{this.sliderValue}}"
+              data-tooltip-position="top"
+              data-slider-tooltip=""
+              data-counter="{{../counterMultiple}}"
+            />
+          </div>
+        {{/each}}
       {{/each}}
     </div>
   {{/each}}
