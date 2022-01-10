@@ -1,5 +1,5 @@
 <form class="form-horizontal">
-  <div class="form-group">
+  <div class="form-group panel">
     <label class="col-sm-2 control-label">{{t 'Opacity'}}</label>
     <div class="col-sm-12">
       <input class="form-control opacity-slider">
@@ -12,14 +12,14 @@
         </input>
       </label>
       {{#if this.values}}
+        <div class="{{#if this.selectThree}}col-sm-4{{else}}col-sm-12{{/if}} option-row">
+          <select class="form-control layer-option layer-option-selection" name="{{this.target}}">
+            {{#each this.values}}
+              <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
+            {{/each}}
+          </select>
+        </div>
         {{#if this.selectThree}}
-          <div class="col-sm-4 option-row">
-            <select class="form-control layer-option layer-option-selection" name="{{this.target}}">
-              {{#each this.values}}
-                <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
           <div class="col-sm-4 option-row">
             <select class="form-control layer-option layer-option-selection" name="{{this.target}}">
               {{#each this.values}}
@@ -32,14 +32,6 @@
               {{#each this.values}}
                 <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
               {{/each}}
-            </select>
-          </div>
-        {{else}}
-          <div class="col-sm-12 option-row">
-            <select class="form-control layer-option layer-option-selection" name="{{this.target}}">
-            {{#each this.values}}
-              <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
-            {{/each}}
             </select>
           </div>
         {{/if}}

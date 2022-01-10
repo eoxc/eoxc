@@ -76,7 +76,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
           for (let i=0; i < countRangeInputs; i++) {
             // create config for range input element
             let defaultValue = null;
-            if (typeof valuesFromTarget === 'undefined') {
+            if (typeof valuesFromTarget === 'undefined' || valuesFromTarget === '') {
               // data for slider come from config
               defaultValue = option.default;
             } else {
@@ -117,7 +117,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
               step,
               sliderValue,
               value,
-            })
+            });
           }
           // get actual values either from target (was already configured) or from default
           return Object.assign({}, option, { counter, rangeInputsConfig });
