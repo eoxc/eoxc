@@ -77,9 +77,40 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     });
 
   },
+
+  preferencesSetup(values, process, parentClass, preferences){
+
+    values.inputs.map(value =>{
+      // set up input selection values
+      const inputsSelection = this.$(parentClass).find('.select-inputs');
+      inputsSelection.map((n, el) =>{
+        if(value.id === el.name && preferences[process] && preferences[process][value.id])
+        el.value = preferences[process][value.id]
+      });
+
+      // set up input inserted values
+      const inputsInsert = this.$(parentClass).find('input[name^="input-parameter-"]');
+      inputsInsert.map((n, el) => {
+        if(value.id === el.className && preferences[process] && preferences[process][value.id])
+        el.value = preferences[process][value.id];
+      });
+    });
+
+    // set up output values.
+    values.outputs.map(value => {
+      const outputSelect = this.$(parentClass).find('.select-output')
+      outputSelect.map((n, el) => {
+        if(value.id === el.name && preferences[process] && preferences[process][value.id])
+        el.value = preferences[process][value.id];
+      });
+
+    })
+  },
+
   onRender(){
+
     this.onProcessChange();
-    this.updateBboxInputs()
+    this.updateBboxInputs();
   },
 
   onAttach() {
@@ -91,6 +122,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   onProcessChange() {
     const val = this.$('.select-process').val();
     const currentClassName = ".process-" + val;
+    const preferences = this.getPreferences();
 
     this.mapModel.set('tool', null);
     this.mapModel.set('area', null);
@@ -105,6 +137,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
       var classTag = process.additionalInputs ? process.additionalInputs.identifier : process.id;
       let className = ".process-" + classTag;
       this.$(className).hide();
+      this.preferencesSetup(process, classTag, className, preferences)
       if (currentClassName === className) {
         if (process.additionalInputs ){
           this.requestOptions.identifier = process.additionalInputs.identifier;
@@ -149,10 +182,13 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   onDefaultBBoxChecked(){
 
     const checked = this.$('.subset-by-bounds').is(':checked');
-    //TODO: perform usage of image extent
-    // if (checked) {
-    //   this.updateBboxInputs()
-    // }
+
+    if (checked) {
+      this.mapModel.set('tool', null);
+      this.mapModel.set('area', null);
+      this.bbox = transformExtent(this.model.get('bbox'), 'EPSG:4326', this.mapProjection);
+      this.updateBboxInputs();
+    }
 
   },
 
@@ -160,7 +196,12 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     const tag = this.requestOptions.identifier ? this.requestOptions.identifier : this.model.get('selectedProcess')
     const parent = this.$('.process-' + tag);
     const selection = parent.find('.select-inputs')
-    selection.map((n, el) => this.requestOptions[el.name]=el.value);
+    selection.map((n, el) => {
+      this.requestOptions[el.name]=el.value;
+      this.updatePreferences(tag, el.name, el.value);
+
+    });
+
     this.model.set('requestOptions', this.requestOptions)
 
 
@@ -169,7 +210,11 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     const tag = this.requestOptions.identifier ? this.requestOptions.identifier : this.model.get('selectedProcess')
     const parent = this.$('.process-' + tag);
     const selection = parent.find('.select-output')
-    selection.map((n, el) => this.requestOptions.outputs[el.name]=el.value);
+    selection.map((n, el) => {
+      this.requestOptions.outputs[el.name]=el.value;
+      this.updatePreferences(tag, el.name, el.value);
+
+    });
     this.model.set('requestOptions', this.requestOptions)
   },
 
@@ -178,7 +223,8 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     const parent = this.$('.process-' + tag);
     const inputs = parent.find('input[name^="input-parameter-"]')
     inputs.map((_,el) => {
-      this.requestOptions[el.className] = el.value
+      this.requestOptions[el.className] = el.value;
+      this.updatePreferences(tag, el.className, el.value);
     });
     this.model.set('requestOptions', this.requestOptions)
 
@@ -192,6 +238,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     })
     this.requestOptions.bbox = this.bbox;
     this.model.set('requestOptions', this.requestOptions);
+    updatePreferences(parent, key, value);
 
   },
 
@@ -208,7 +255,27 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     this.model.set('requestOptions', this.requestOptions);
 
 
-  }
+  },
+
+  getPreferences() {
+    try {
+      return JSON.parse(localStorage.getItem(
+        'wps-options-view-preferences'
+      ) || '{}');
+    } catch (error) {
+      return {};
+    }
+  },
+
+  updatePreferences(parent, key, value) {
+    const preferences = this.getPreferences();
+    preferences[parent] = preferences[parent] ? preferences[parent] : {};
+    preferences[parent][key] = value
+    localStorage.setItem(
+      'wps-options-view-preferences',
+      JSON.stringify(preferences),
+    );
+  },
 
 });
 
