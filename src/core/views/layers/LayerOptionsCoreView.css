@@ -55,3 +55,7 @@ input[type="radio"].visualization-selector:checked + span:before {
 .layer-option-selection {
   padding: 2px 4px;
 }
+
+.form-group {
+  border-bottom: white, 2px;
+}
