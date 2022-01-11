@@ -25,3 +25,7 @@ export function getDownloadInfos(recordModel) {
   }
   return Promise.resolve([]);
 }
+
+export function flatten(arr) {
+  return arr.reduce((acc, val) => acc.concat(val), []);
+}

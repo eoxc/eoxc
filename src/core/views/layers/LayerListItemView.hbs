@@ -17,25 +17,10 @@
       <i class="fa fa-arrow-down layer-download-full-resolution"></i>
     {{/if}}
     {{#if display.options}}
-      {{#if display.legendUrl}}
-        <i class="fa fa-paint-brush layer-show-options"></i>
-      {{/if}}
+      <i class="fa fa-paint-brush layer-show-options"></i>
+    {{else}}
+      <i class="fa fa-adjust layer-adjust-opacity" data-toggle="popover"></i>
     {{/if}}
-    {{#if display.options}}
-      {{#unless display.legendUrl}}
-        <i class="fa fa-paint-brush layer-show-options"></i>
-      {{/unless}}
-    {{/if}}
-    {{#unless display.options}}
-      {{#if display.legendUrl}}
-        <i class="fa fa-paint-brush layer-show-options"></i>
-      {{/if}}
-    {{/unless}}
-    {{#unless display.options}}
-      {{#unless display.legendUrl}}
-        <i class="fa fa-adjust layer-adjust-opacity" data-toggle="popover"></i>
-      {{/unless}}
-    {{/unless}}
   </span>
 </div>
 {{else}}

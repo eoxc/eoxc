@@ -1,73 +1,151 @@
 import 'bootstrap-slider';
 import 'bootstrap-slider/dist/css/bootstrap-slider.css';
-import $ from 'jquery';
 import Marionette from 'backbone.marionette';
 import _ from 'underscore';
 import './LayerOptionsCoreView.css';
 
 import template from './LayerOptionsCoreView.hbs';
+import { flatten } from '../../../download/url';
 
 // eslint-disable-next-line max-len
 const LayerOptionsCoreView = Marionette.ItemView.extend({
   template,
   events: {
-    'change .layer-option': 'onLayerOptionChange',
-    'change .visualization-selector': 'onVisualizationChange'
+    'change .layer-option.layer-option-selection': 'onLayerOptionChange',
+    'change .visualization-selector': 'onVisualizationChange',
+    'slideStop .layer-option-slider': 'onLayerOptionChange',
   },
 
   templateHelpers() {
     return {
       options: this.getDisplayOptions(),
-      legendUrl: this.display ? this.display.legendUrl : null,
     };
+  },
+
+  onAttach() {
+    // setup range sliders
+    this.$('[data-provide="slider"]').slider({
+      formatter(value) {
+        if (Array.isArray(value)) {
+          return `${value[0]} - ${value[1]}`;
+        }
+        return value;
+      },
+    });
+    this.applySettings();
   },
 
   initialize(options) {
     this.useDetailsDisplay = options.useDetailsDisplay && !!this.model.get('detailsDisplay');
     this.displayOption = this.useDetailsDisplay ? 'detailsDisplay' : 'display';
     this.model = options.model;
+    // make config valid, overwriting it in place
+    this.model.set(`${this.displayOption}.options`, this.makeConfigValid(this.model.get(`${this.displayOption}.options`)))
     this.displayOptions = this.model.get(`${this.displayOption}.options`);
+  },
+
+  makeConfigValid(displayOptions) {
+    // ensure backwards compatibility when options.parameters did not exist
+    _.each(displayOptions, (option) => {
+      if (!Array.isArray(option.parameters)) {
+        option.parameters = [{
+          "values": option.values,
+          "target": option.target,
+        }];
+      }
+    });
+    return displayOptions
   },
 
   getDisplayOptions() {
     if (this.displayOptions) {
-      // if opened for the first time, choose the first option
+      // if opened for the first time, choose the first option as chosen
       if (_.filter(this.displayOptions, option => option.isChosen === true).length === 0) {
         this.model.set(`${this.displayOption}.options[0].isChosen`, true);
       }
-      // if opened for the first time, preset b1, b2, b3 as indices[0, 1, 2]
       _.each(this.displayOptions, (option, i) => {
-        if (option.values) {
-          const result = _.every(['isCurrentB1', 'isCurrentB2', 'isCurrentB3'], isCurrent => _.filter(option.values, val => val[isCurrent] === true).length === 0);
-          if (result && option.selectThree) {
-            this.model.set(`${this.displayOption}.options[${i}].values[0].isCurrentB1`, true);
-            this.model.set(`${this.displayOption}.options[${i}].values[1].isCurrentB2`, true);
-            this.model.set(`${this.displayOption}.options[${i}].values[2].isCurrentB3`, true);
-          } else if (result) {
-            this.model.set(`${this.displayOption}.options[${i}].values[0].isCurrentB1`, true);
+        // if opened for the first time, preset first three entries from selection as selected as indices[0, 1, 2]
+        _.each(option.parameters, (param, j) => {
+          if (param.values) {
+            const result = _.every(['isCurrentB1', 'isCurrentB2', 'isCurrentB3'], isCurrent => _.filter(param.values, val => val[isCurrent] === true).length === 0);
+            if (result) {
+              this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[0].isCurrentB1`, true);
+            }
+            if (result && param.selectThree) {
+              this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[1].isCurrentB2`, true);
+              this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[2].isCurrentB3`, true);
+            }
+            _.each(param.values, (value, k) => {
+              const label = typeof (value.label) !== 'undefined' ? value.label : value.value;
+              this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${k}].label`, label);
+            });
           }
-          _.each(option.values, (value, j) => {
-            const label = typeof (value.label) !== 'undefined' ? value.label : value.value;
-            this.model.set(`${this.displayOption}.options[${i}].values[${j}].label`, label);
-          });
-        }
+        })
       });
-      // to set internal numeric id of elements
+      // to set internal numeric id of inputs
       let counter = -1;
       const options = this.model.get(`${this.displayOption}.options`)
         .map((option) => {
-          let low;
-          let high;
-          let targetLow;
-          let targetHigh;
-          const target = option.target;
-          counter += 1;
-          if (typeof option.min !== 'undefined') {
-            [targetLow, targetHigh] = Array.isArray(target) ? target : target.split(',');
-            low = this.model.get(targetLow);
-            high = this.model.get(targetHigh);
-          }
-          return Object.assign({}, option, { counter, low, high, targetLow, targetHigh });
+          counter += 1; // for radio input
+          let counterMultiple = -1; // for selections
+          const parameters = option.parameters.map((param) => {
+            counterMultiple += 1;
+            // create config for range input element
+            const step = typeof param.step !== 'undefined' ? param.step : 1;
+            const valuesFromTarget = this.model.get(param.target);
+            let low, high, sliderValue, value;
+            const rangeInputsConfig = [];
+            const countRangeInputs = param.min ? (param.selectThree ? 3 : 1) : 0;
+            for (let i=0; i < countRangeInputs; i++) {
+              let defaultValue = null;
+              if (typeof valuesFromTarget === 'undefined' || valuesFromTarget === '') {
+                // data for slider come from config
+                // default expected to be an array of values (min, max)
+                defaultValue = param.default;
+              } else {
+                // data for slider come from model 
+                // split config at comma and "rangeSeparator"
+                defaultValue = valuesFromTarget.split(',').reduce( (newArr, el, i) => {
+                  let subArr = el.split(param.rangeSeparator);
+                  newArr[i] = subArr;
+                  return newArr;
+                }, []);
+                defaultValue = flatten(defaultValue);
+              }
+              if (!defaultValue) {
+                low = param.min;
+                high = param.max;
+              } else if (!Array.isArray(defaultValue)) {
+                low = defaultValue;
+                high = defaultValue;
+              } else if (defaultValue.length == 2) {
+                low = defaultValue[0];
+                high = defaultValue[1];
+              } else if (defaultValue.length == 3 || defaultValue.length == 1) {
+                low = defaultValue[i];
+                high = defaultValue[i];
+              } else if (defaultValue.length == 6) {
+                low = defaultValue[i * 2];
+                high = defaultValue[1 + i * 2];
+              }
+              // configure the value ranges
+              sliderValue = param.range ? `[${low},${high}]` : low; // for the component
+              value = param.range ? `${low}${param.rangeSeparator || ','}${high}` : low; // saved into model
+
+              rangeInputsConfig.push({
+                min: param.min,
+                max: param.max,
+                range: param.range,
+                selectThree: param.selectThree,
+                target: param.target,
+                step,
+                sliderValue,
+                value,
+              });
+            }
+            return Object.assign({}, param, { counterMultiple, rangeInputsConfig });
+            });
+          return Object.assign({}, option, { parameters, counter});
         });
       return options;
     }
@@ -75,6 +153,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   },
 
   onRender() {
+    // configure default opacity slider
     let opacity = this.model.get(this.displayOption).opacity;
     opacity = typeof opacity === 'undefined' ? 1 : opacity;
     this.$slider = this.$('.opacity-slider').slider({
@@ -92,19 +171,6 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
     this.$slider.on('change', () => {
       this.model.set(`${this.displayOption}.opacity`, parseInt(this.$slider.val(), 10) / 100);
     });
-
-    const $dataSliders = this.$('input[data-slider-min]');
-    if ($dataSliders.length) {
-      $dataSliders.slider()
-        .on('slideStop', (event) => {
-          const $target = $(event.target);
-          this.model.set({
-            [$target.data('targetLow')]: event.value[0],
-            [$target.data('targetHigh')]: event.value[1],
-          });
-        });
-    }
-    this.applySettings();
   },
 
   onLayerOptionChange(event) {
@@ -149,38 +215,55 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
 
   applySettings() {
     // set values from currently chosen form/s in layerModel
-    _.each(this.model.get(`${this.displayOption}.options`), (option, index) => {
-      // get corresponding form/s
-      const $forms = this.$(`#visualization-selector_${index}`).parent().parent().find('.layer-option');
-      const values = [];
-      const selectedIndices = [];
-      $forms.each((i, el) => {
-        values.push(el.value);
-        selectedIndices.push(el.selectedIndex);
+    const options = this.model.get(`${this.displayOption}.options`);
+    // first reset the unselected options to clear the parameters
+    _.each(options, (option) => {
+      _.each(option.parameters, (param) => {
+        if (option.isChosen !== true) {
+          this.model.set(param.target, '');
+        }
       });
+    });
 
-      // reset isSelected in model and update it with what is selected in ui
-      _.each(option.values, (value, j) => {
-        this.model.set(`${this.displayOption}.options[${index}].values[${j}].isCurrentB1`, false);
-        this.model.set(`${this.displayOption}.options[${index}].values[${j}].isCurrentB2`, false);
-        this.model.set(`${this.displayOption}.options[${index}].values[${j}].isCurrentB3`, false);
-      });
-
-      if (option.selectThree) {
-        this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[0]}].isCurrentB1`, true);
-        this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[1]}].isCurrentB2`, true);
-        this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[2]}].isCurrentB3`, true);
-      } else {
-        this.model.set(`${this.displayOption}.options[${index}].values[${selectedIndices[0]}].isCurrentB1`, true);
-      }
-
-      if (option.isChosen === true) {
-        // set options to model and trigger a reload of layer in map
-        this.model.set(`${$forms.attr('name')}`, values.join(','));
-      } else {
-        // reset option
-        this.model.set(`${$forms.attr('name')}`, '');
-      }
+    // to set the parameter values for the chosen option
+    _.each(options, (option, i) => {
+      _.each(option.parameters, (param, j) => {
+        const $forms = this.$(`#visualization-selector_${i}`).parent().parent().find(`[data-counter='${j}']`);
+        const values = [];
+        const selectedIndices = [];
+        _.each($forms, (form) => {
+          // either get value from range input or from select input
+          let value = form.value;
+          const separatorToReplace = param.rangeSeparator;
+          if (separatorToReplace) {
+            value = value.replace(",", separatorToReplace)
+          }
+          values.push(value);
+          if (typeof param.min === 'undefined') {
+            selectedIndices.push(form.selectedIndex);
+          }
+        });
+  
+        // reset isSelected in model and update it with what is selected in ui
+        _.each(param.values, (_, l) => {
+          this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${l}].isCurrentB1`, false);
+          this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${l}].isCurrentB2`, false);
+          this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${l}].isCurrentB3`, false);
+        });
+  
+        if (typeof param.min === 'undefined') {
+          this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${selectedIndices[0]}].isCurrentB1`, true);
+        }
+        if (param.selectThree && typeof param.min === 'undefined') {
+          this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${selectedIndices[1]}].isCurrentB2`, true);
+          this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${selectedIndices[2]}].isCurrentB3`, true);
+        }
+  
+        if (option.isChosen === true) {
+          // set options to model and trigger a reload of layer in map
+          this.model.set(param.target, values.join(','));
+        } 
+      })
     });
     _.each(this.model.get(`${this.displayOption}.options`), (option) => {
       if (option.isChosen === true) {
