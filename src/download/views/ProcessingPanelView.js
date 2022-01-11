@@ -78,14 +78,17 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
 
   },
 
-  preferencesSetup(values, process, parentClass, preferences){
+  preferencesSetup(values, process, parentClass, preferences, selectedProcess){
 
     values.inputs.map(value =>{
       // set up input selection values
       const inputsSelection = this.$(parentClass).find('.select-inputs');
       inputsSelection.map((n, el) =>{
         if(value.id === el.name && preferences[process] && preferences[process][value.id])
-        el.value = preferences[process][value.id]
+        el.value = preferences[process][value.id];
+        if(process === selectedProcess){
+          this.requestOptions[el.name]=el.value;
+        }
       });
 
       // set up input inserted values
@@ -93,6 +96,9 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
       inputsInsert.map((n, el) => {
         if(value.id === el.className && preferences[process] && preferences[process][value.id])
         el.value = preferences[process][value.id];
+        if(process === selectedProcess){
+        this.requestOptions[el.className]=el.value;
+        }
       });
     });
 
@@ -102,6 +108,9 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
       outputSelect.map((n, el) => {
         if(value.id === el.name && preferences[process] && preferences[process][value.id])
         el.value = preferences[process][value.id];
+        if(process === selectedProcess){
+        this.requestOptions.outputs[el.name]=el.value;
+        }
       });
 
     })
@@ -110,7 +119,6 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   onRender(){
 
     this.onProcessChange();
-    this.updateBboxInputs();
   },
 
   onAttach() {
@@ -137,8 +145,11 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
       var classTag = process.additionalInputs ? process.additionalInputs.identifier : process.id;
       let className = ".process-" + classTag;
       this.$(className).hide();
-      this.preferencesSetup(process, classTag, className, preferences)
+      this.preferencesSetup(process, classTag, className, preferences, val)
       if (currentClassName === className) {
+        if(process.hasBBOX) {
+          this.updateBboxInputs()
+        }
         if (process.additionalInputs ){
           this.requestOptions.identifier = process.additionalInputs.identifier;
         }
@@ -163,9 +174,11 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   onDrawBBoxClicked() {
     this.mapModel.set('tool', 'bbox');
   },
+
   onDrawLineClicked() {
     this.mapModel.set('tool', 'line');
   },
+
   onBBoxInputChange() {
     const bbox = this.$('.show-bbox')
       .map((index, elem) => $(elem).val())
@@ -238,7 +251,6 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     })
     this.requestOptions.bbox = this.bbox;
     this.model.set('requestOptions', this.requestOptions);
-    updatePreferences(parent, key, value);
 
   },
 
