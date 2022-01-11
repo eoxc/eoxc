@@ -100,9 +100,6 @@ export function searchAllRecords(layerModel, filtersModel, mapModel, options = {
   }]);
 
   worker.onmessage = ({ data }) => {
-    // TODO: DELETE ME
-//    data[1].records.forEach(
-//      element => element.properties.coverages = [element.properties.title + "__DEM1__coverage", element.properties.title + "__DEM1__coverage"]);
     emitter.emit(...data);
   };
 
