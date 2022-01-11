@@ -39,7 +39,22 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
     this.useDetailsDisplay = options.useDetailsDisplay && !!this.model.get('detailsDisplay');
     this.displayOption = this.useDetailsDisplay ? 'detailsDisplay' : 'display';
     this.model = options.model;
+    // make config valid, overwriting it in place
+    this.model.set(`${this.displayOption}.options`, this.makeConfigValid(this.model.get(`${this.displayOption}.options`)))
     this.displayOptions = this.model.get(`${this.displayOption}.options`);
+  },
+
+  makeConfigValid(displayOptions) {
+    // ensure backwards compatibility when options.parameters did not exist
+    _.each(displayOptions, (option) => {
+      if (!Array.isArray(option.parameters)) {
+        option.parameters = [{
+          "values": option.values,
+          "target": option.target,
+        }];
+      }
+    });
+    return displayOptions
   },
 
   getDisplayOptions() {
