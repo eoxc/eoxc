@@ -22,10 +22,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   templateHelpers() {
     return {
       processingModel: this.processingModel,
-      thumbnailUrl: this.model.getThumbnailUrl(),
-      browseUrl: this.model.getBrowseUrl(),
       bbox: this.bbox.map(v => v.toFixed(4)),
-      title: this.model.getTitle(),
       headerText: this.headerText,
       coverageID: this.model.get('id'),
       selectedProcess: null,
