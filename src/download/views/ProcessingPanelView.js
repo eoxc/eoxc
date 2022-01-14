@@ -139,7 +139,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
 
     this.processingModel.processes.map(process => {
 
-      var classTag = process.additionalInputs ? process.additionalInputs.identifier : process.id;
+      var classTag = process.additionalInputs && process.additionalInputs.identifier ? process.additionalInputs.identifier : process.id;
       let className = ".process-" + classTag;
       this.$(className).hide();
       this.preferencesSetup(process, classTag, className, preferences, val)
@@ -148,7 +148,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
           this.updateBboxInputs()
         }
         if (process.additionalInputs ){
-          this.requestOptions.identifier = process.additionalInputs.identifier;
+          Object.keys(process.additionalInputs).map(key => this.requestOptions[key] = process.additionalInputs[key])
         }
         if (process.CoverageIdUsage){
           this.requestOptions.coverage = this.model.get('id');

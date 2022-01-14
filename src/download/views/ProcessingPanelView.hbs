@@ -11,7 +11,7 @@
               <select class="form-control select-process">
                 <option>---</option>
                 {{#each processes}}
-                  <option value={{#if this.additionalInputs}}"{{this.additionalInputs.identifier}}"{{else}}"{{this.id}}"{{/if}}>{{this.title}}</option>
+                  <option value={{#if this.additionalInputs}} {{#if this.additionalInputs.identifier}} "{{this.additionalInputs.identifier}}"{{else}}"{{this.id}}"{{/if}}{{else}}"{{this.id}}"{{/if}}>{{this.title}}</option>
                 {{/each}}
               </select>
             </div>
@@ -25,7 +25,7 @@
             </div>
           </div>
           {{#each processes}}
-          <div class= {{#if this.additionalInputs}}"process-parameters  process-{{this.additionalInputs.identifier}}"{{else}}"process-parameters  process-{{this.id}}"{{/if}}>
+          <div class= {{#if this.additionalInputs}}{{#if this.additionalInputs.identifier}}"process-parameters  process-{{this.additionalInputs.identifier}}"{{else}}"process-parameters  process-{{this.id}}"{{/if}}{{else}}"process-parameters  process-{{this.id}}"{{/if}}>
             {{#each this.inputs}}
               {{#if this.options}}
                 <div class="form-group">
