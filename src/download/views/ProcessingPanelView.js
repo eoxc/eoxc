@@ -160,10 +160,9 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
 
     this.model.set('requestOptions', this.requestOptions)
     if(this.model.get('selectedProcess')) {
-      this.$('.record-details-map').show();
+      this.onDefaultBBoxChecked();
       this.$(currentClassName).show();
-    }else{
-      this.$('.record-details-map').hide();
+
     }
 
   },
@@ -190,14 +189,26 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   },
 
   onDefaultBBoxChecked(){
-
-    const checked = this.$('.subset-by-bounds').is(':checked');
+    const tag = this.requestOptions.identifier ? this.requestOptions.identifier : this.model.get('selectedProcess')
+    const parent = this.$('.process-' + tag);
+    const checked = parent.find('.subset-by-bounds').is(':checked');
 
     if (checked) {
+      parent.find('.btn-draw-bbox').prop('disabled', true);
+      parent.find('.box-0').prop('disabled', true);
+      parent.find('.box-1').prop('disabled', true);
+      parent.find('.box-2').prop('disabled', true);
+      parent.find('.box-3').prop('disabled', true);
       this.mapModel.set('tool', null);
       this.mapModel.set('area', null);
       this.bbox = transformExtent(this.model.get('bbox'), 'EPSG:4326', this.mapProjection);
       this.updateBboxInputs();
+    }else {
+      parent.find('.btn-draw-bbox').prop('disabled', false);
+      parent.find('.box-0').prop('disabled', false);
+      parent.find('.box-1').prop('disabled', false);
+      parent.find('.box-2').prop('disabled', false);
+      parent.find('.box-3').prop('disabled', false);
     }
 
   },
