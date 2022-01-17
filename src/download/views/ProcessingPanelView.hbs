@@ -38,19 +38,29 @@
             </div>
             {{#each this.inputs}}
               {{#if this.options}}
+                {{#if this.options.[1]}}
+                  <div class="form-group">
+                    <div class="col-sm-2">
+                      <label class="control-label">{{this.title}}</label>
+                    </div>
+                    <div class="col-sm-10">
+                      <select class="form-control select-inputs parameter-{{this.id}} {{this.id}}" name="{{this.id}}">
+                        {{#each this.options}}
+                          <option value="{{this.title}}">{{this.title}}</option>
+                        {{/each}}
+                      </select>
+                    </div>
+                  </div>
+                {{else}}
                 <div class="form-group">
                   <div class="col-sm-2">
-                    <label class="control-label">{{this.title}}</label>
+                    <label class="control-label">{{this.options.[0].id}}</label>
                   </div>
                   <div class="col-sm-10">
-                    <select class="form-control select-inputs parameter-{{this.id}} {{this.id}}" name="{{this.id}}">
-                      <option>---</option>
-                      {{#each this.options}}
-                        <option value="{{this.title}}">{{this.title}}</option>
-                      {{/each}}
-                    </select>
+                      <label class="control-label parameter-{{this.id}} {{this.id}}" name="{{this.id}}">{{this.options.[0].title}}</label>
                   </div>
                 </div>
+                {{/if}}
               {{else }}
                 {{#if this.box }}
                   <div class="form-group">
@@ -124,14 +134,19 @@
                   <div class="col-sm-2">
                     <label class="control-label">{{this.title}}</label>
                   </div>
-                  <div class="col-sm-10">
-                    <select class="form-control select-output parameter-{{this.id}} {{this.id}}" name="{{this.id}}">
-                      <option>---</option>
-                      {{#each this.mime_types}}
-                        <option value="{{this.id}}" >{{this.title}}</option>
-                      {{/each}}
-                    </select>
-                  </div>
+                  {{#if this.mime_types.[1]}}
+                    <div class="col-sm-10">
+                      <select class="form-control select-output parameter-{{this.id}} {{this.id}}" name="{{this.id}}">
+                        {{#each this.mime_types}}
+                          <option value="{{this.id}}" >{{this.title}}</option>
+                        {{/each}}
+                      </select>
+                    </div>
+                  {{else}}
+                      <div class="col-sm-10">
+                          <label class="control-label parameter-{{this.id}} {{this.id}}" name="{{this.id}}">{{this.mime_types.[0].title}}</label>
+                      </div>
+                  {{/if}}
                 </div>
             {{/each}}
             </div>
