@@ -153,6 +153,10 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
         if (process.CoverageIdUsage){
           this.requestOptions.coverage = this.model.get('id');
         }
+        // in case we have only one output it will be selected by default
+        if (process.outputs[0].mime_types.length === 1){
+          this.requestOptions.outputs[process.outputs[0].id] = process.outputs[0].mime_types[0].id
+        }
         this.model.set('selectedProcess', process.id);
 
       }
