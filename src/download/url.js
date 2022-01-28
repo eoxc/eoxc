@@ -26,6 +26,36 @@ export function getDownloadInfos(recordModel) {
   return Promise.resolve([]);
 }
 
-export function flatten(arr) {
-  return arr.reduce((acc, val) => acc.concat(val), []);
+/**
+ * Flattens downloadSelection list, each entry is split into individual coverages from properties.coverages
+ * if input list is a list of lists, assuming that downloadSelection will be a first item and the rest of items will be appended to the created coverage
+ * @param {Array} downloadSelections Array of OpenSearchRecordModels or of arrays, where OpenSearchRecordModel is item on index 0
+ * @returns {Array} Flattened array per coverage
+ */
+export function flattenDownloadSelectionByCoverage(downloadSelections) {
+  let records = [];
+  downloadSelections.forEach((record) => {
+    let downloadSel = record;
+    if (Array.isArray(record)) {
+      downloadSel = record.shift();
+    }
+    const coverages = downloadSel.attributes.properties.coverages;
+
+    if (coverages) {
+      for (let j = 0; j < coverages.length; j++) {
+        // for each coverage create a copy of original OpenSearchRecordModel, replace its ID with coverageID and push it back to the records array
+        const recordClone = $.extend(true, {}, downloadSel);
+        recordClone.attributes.id = coverages[j];
+        if (Array.isArray(record)) {
+          records.push([recordClone, ...record]);
+        } else {
+          records.push(recordClone);
+        }
+      }
+    } else {
+      // keep original entry
+      records.push(downloadSel);
+    }
+  });
+  return records;
 }
