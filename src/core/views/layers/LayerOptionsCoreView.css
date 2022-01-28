@@ -56,6 +56,6 @@ input[type="radio"].visualization-selector:checked + span:before {
   padding: 2px 4px;
 }
 
-.form-group {
+.layer-display-options-wrapper {
   border-top: 2px solid white;
 }

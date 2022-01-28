@@ -6,7 +6,7 @@
     </div>
   </div>
   {{#each options}}
-    <div class="form-group">
+    <div class="form-group layer-display-options-wrapper">
       <label for="visualization-selector_{{this.counter}}" class="col-sm-2 control-label">
         <input type="radio" id="visualization-selector_{{this.counter}}" name="visualization-selector" class="visualization-selector" {{#if this.isChosen}} checked{{/if}}><span>{{t this.name}}</span>
         </input>
