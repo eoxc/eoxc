@@ -6,6 +6,7 @@ import template from './DownloadSelectionView.hbs';
 import './DownloadSelectionView.css';
 import SelectionListView from './SelectionListView';
 import { downloadCustom, getDownloadInfos } from '../../download/';
+import { flatten } from '../../download/url';
 import metalinkTemplate from '../Metalink.hbs';
 import { flattenDownloadSelectionByCoverage } from '../url';
 

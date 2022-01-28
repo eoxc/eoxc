@@ -39,3 +39,23 @@ input[type="radio"].visualization-selector:checked + span:before {
   padding-left: 7px;
   padding-right: 7px;
 }
+
+.slider-horizontal {
+  width: 100% !important;
+}
+
+.slider .tooltip {
+  pointer-events: none;
+}
+
+.control-label {
+  padding-top: 2px;
+}
+
+.layer-option-selection {
+  padding: 2px 4px;
+}
+
+.form-group {
+  border-top: 2px solid white;
+}
