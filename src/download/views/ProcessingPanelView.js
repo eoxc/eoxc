@@ -5,6 +5,7 @@ import template from './ProcessingPanelView.hbs';
 import { transformExtent } from 'ol/proj';
 import turfBBox from '@turf/bbox';
 import { getProjectionOl } from '../../contrib/OpenLayers/utils';
+import _ from 'underscore';
 
 require('./DownloadOptionsModalView.css');
 require('../../search/views/RecordDetailsView.css');
@@ -36,6 +37,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     'change .select-inputs':'oninputSelect',
     'change .select-output':'onOutputSelect',
     'change .show-bbox': 'onBBoxInputChange',
+    'change .show-line':'onLineInputChange',
     'change .subset-by-bounds':'onDefaultBBoxChecked',
     [`change [name^='input-parameter-']`]: 'onInputInsert',
 
@@ -49,7 +51,10 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
     this.mapProjection = getProjectionOl(this.mapModel.get('projection'));
 
     this.bbox = transformExtent(this.model.get('bbox'), 'EPSG:4326', this.mapProjection);
-
+    this.line = {
+      point1:[],
+      point2: []
+    }
 
     this.listenTo(this.mapModel, 'change:area', () => {
       const area = this.mapModel.get('area');
@@ -180,7 +185,9 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
   },
 
   onBBoxInputChange() {
-    const bbox = this.$('.show-bbox')
+    let tag = this.requestOptions.identifier ? this.requestOptions.identifier : this.model.get('selectedProcess')
+    let parent = this.$('.process-' + tag);
+    const bbox = parent.find('.show-bbox')
       .map((index, elem) => $(elem).val())
       .get()
       .map(parseFloat);
@@ -190,6 +197,41 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
       this.mapModel.set('area', transformExtent(bbox, this.mapProjection, 'EPSG:4326'));
 
     }
+  },
+
+  onLineInputChange(){
+
+    Object.keys(this.line).map(key => {
+      let className1 = '.'+ key +'-X';
+      let className2 = '.'+ key +'-Y';
+      this.line[key][0] = parseFloat(this.$(className1).val());
+      this.line[key][1] = parseFloat(this.$(className2).val());
+
+    })
+    let line = [this.line.point1[0], this.line.point1[1], this.line.point2[0], this.line.point2[1]]
+    if (_.every(line, (point) => !isNaN(point))){
+      this.requestOptions.line = line;
+
+      this.changeLineDimension();
+      this.model.set('requestOptions', this.requestOptions);
+    }
+
+
+  },
+
+  changeLineDimension(){
+    let line = transformExtent(this.requestOptions.line, 'EPSG:4326', this.mapProjection);
+    const geom = {
+      type:'Feature',
+      geometry:{
+        type:'LineString',
+        coordinates:[
+          [line[0], line[1]],
+          [line[2], line[3]]
+        ]
+      }
+    };
+    this.mapModel.set('area', geom)
   },
 
   onDefaultBBoxChecked(){
@@ -274,7 +316,7 @@ const RecordDetailsView = Marionette.LayoutView.extend(/** @lends search/views/l
       this.$(className1) && this.$(className1).val(this.line[key][0]);
       this.$(className2) && this.$(className2).val(this.line[key][1]);
 
-    })
+    });
     this.requestOptions.line = [this.line.point1[0], this.line.point1[1], this.line.point2[0], this.line.point2[1]];
     this.model.set('requestOptions', this.requestOptions);
 
