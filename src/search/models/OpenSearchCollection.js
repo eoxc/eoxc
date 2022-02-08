@@ -25,6 +25,23 @@ class OpenSearchRecordModel extends RecordModel {
     return null;
   }
 
+  getiframeUrl(iframeUrlTemplate = undefined) {
+    if (iframeUrlTemplate) {
+      return _.template(iframeUrlTemplate, {
+        interpolate: /\{\{(.+?)\}\}/g
+      })(this.toJSON());
+    }
+    return "/dem-app/";
+    // const properties = this.get('properties');
+    // if (properties && properties.media) {
+    //   const quickLook = properties.media.find(m => m.category === 'QUICKLOOK');
+    //   if (quickLook) {
+    //     return quickLook.url;
+    //   }
+    // }
+    return null;
+  }
+
   getQuickLookUrl(quickLookUrlTemplate = undefined) {
     if (quickLookUrlTemplate) {
       return _.template(quickLookUrlTemplate, {
