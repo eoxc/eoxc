@@ -31,14 +31,13 @@ class OpenSearchRecordModel extends RecordModel {
         interpolate: /\{\{(.+?)\}\}/g
       })(this.toJSON());
     }
-    return "/dem-app/";
-    // const properties = this.get('properties');
-    // if (properties && properties.media) {
-    //   const quickLook = properties.media.find(m => m.category === 'QUICKLOOK');
-    //   if (quickLook) {
-    //     return quickLook.url;
-    //   }
-    // }
+    const properties = this.get('properties');
+    if (properties && properties.media) {
+      const quickLook = properties.media.find(m => m.category === 'IFRAME');
+      if (quickLook) {
+        return quickLook.url;
+      }
+    }
     return null;
   }
 
