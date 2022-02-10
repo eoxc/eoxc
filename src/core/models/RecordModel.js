@@ -17,6 +17,11 @@ class RecordModel extends Backbone.Model {
     return null;
   }
 
+  getiframeUrl() {
+    // overwrite in sub-class
+    return null;
+  }
+
   getTitle() {
     return this.get('id');
   }
