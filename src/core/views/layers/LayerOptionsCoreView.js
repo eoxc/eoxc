@@ -95,7 +95,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
             const valuesFromTarget = this.model.get(param.target);
             let low, high, sliderValue, value;
             const rangeInputsConfig = [];
-            const countRangeInputs = param.min ? (param.selectThree ? 3 : 1) : 0;
+            const countRangeInputs = typeof param.min !== 'undefined' ? (param.selectThree ? 3 : 1) : 0;
             for (let i=0; i < countRangeInputs; i++) {
               let defaultValue = null;
               if (typeof valuesFromTarget === 'undefined' || valuesFromTarget === '') {
