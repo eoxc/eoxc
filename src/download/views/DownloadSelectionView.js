@@ -232,10 +232,6 @@ const DownloadView = Marionette.CompositeView.extend({
   },
 
   _getDownloadInfos(options) {
-    function flatten(arr) {
-      return arr.reduce((acc, val) => acc.concat(val), []);
-    }
-
     const chunks = this.collection
       .map(searchModel => {
         const records = flattenDownloadSelectionByCoverage(searchModel.get('downloadSelection'));
