@@ -16,32 +16,34 @@
           {{t this.name}}
         </label>
         {{#if this.values}}
-          <div class="{{#if this.selectThree}}col-sm-4{{else}}col-sm-12{{/if}} option-row">
-            <select class="form-control layer-option layer-option-selection" data-counter="{{counterMultiple}}" name="{{this.target}}">
-              {{#each this.values}}
-                <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
-              {{/each}}
-            </select>
-          </div>
-          {{#if this.selectThree}}
-            <div class="col-sm-4 option-row">
+          {{#if this.values.[0].value}}
+            <div class="{{#if this.selectThree}}col-sm-4{{else}}col-sm-12{{/if}} option-row">
               <select class="form-control layer-option layer-option-selection" data-counter="{{counterMultiple}}" name="{{this.target}}">
                 {{#each this.values}}
-                  <option value="{{this.value}}" {{#if this.isCurrentB2}} selected="selected"{{/if}}>{{this.label}}</option>
+                  <option value="{{this.value}}" {{#if this.isCurrentB1}} selected="selected"{{/if}}>{{this.label}}</option>
                 {{/each}}
               </select>
             </div>
-            <div class="col-sm-4 option-row">
-              <select class="form-control layer-option layer-option-selection" data-counter="{{counterMultiple}}" name="{{this.target}}">
-                {{#each this.values}}
-                  <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
-                {{/each}}
-              </select>
-            </div>
+            {{#if this.selectThree}}
+              <div class="col-sm-4 option-row">
+                <select class="form-control layer-option layer-option-selection" data-counter="{{counterMultiple}}" name="{{this.target}}">
+                  {{#each this.values}}
+                    <option value="{{this.value}}" {{#if this.isCurrentB2}} selected="selected"{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+              <div class="col-sm-4 option-row">
+                <select class="form-control layer-option layer-option-selection" data-counter="{{counterMultiple}}" name="{{this.target}}">
+                  {{#each this.values}}
+                    <option value="{{this.value}}" {{#if this.isCurrentB3}} selected="selected"{{/if}}>{{this.label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+            {{/if}}
           {{/if}}
         {{/if}}
         {{#each this.rangeInputsConfig}}
-          <div class="option-row 
+          <div class="option-row
           {{#if this.selectThree}}col-sm-4{{else}}col-sm-12{{/if}}"
           >
             <input class="layer-option layer-option-slider"

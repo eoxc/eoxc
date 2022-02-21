@@ -92,18 +92,18 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
             counterMultiple += 1;
             // create config for range input element
             const step = typeof param.step !== 'undefined' ? param.step : 1;
-            const valuesFromTarget = this.model.get(param.target);
+            const valuesFromTarget = param.target ? this.model.get(param.target) : '';
             let low, high, sliderValue, value;
             const rangeInputsConfig = [];
             const countRangeInputs = typeof param.min !== 'undefined' ? (param.selectThree ? 3 : 1) : 0;
             for (let i=0; i < countRangeInputs; i++) {
               let defaultValue = null;
-              if (typeof valuesFromTarget === 'undefined' || valuesFromTarget === '') {
+              if (typeof valuesFromTarget === 'undefined' || valuesFromTarget === '' || typeof valuesFromTarget === 'object') {
                 // data for slider come from config
                 // default expected to be an array of values (min, max)
                 defaultValue = param.default;
               } else {
-                // data for slider come from model 
+                // data for slider come from model
                 // split config at comma and "rangeSeparator"
                 defaultValue = valuesFromTarget.split(',').reduce( (newArr, el, i) => {
                   let subArr = el.split(param.rangeSeparator);
@@ -183,6 +183,9 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   },
 
   replaceLayerParameters(option) {
+    const layerID = this.model.get(`${this.displayOption}.id`) + (option.IdAttached || '');
+    this.model.set(`${this.displayOption}.extraParameters.LAYERS`, layerID);
+
     // perform replacing of parameters in underyling model if it was configured
     const replaceList = option.replace;
     _.each(replaceList, (config) => {
@@ -243,14 +246,14 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
             selectedIndices.push(form.selectedIndex);
           }
         });
-  
+
         // reset isSelected in model and update it with what is selected in ui
         _.each(param.values, (_, l) => {
           this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${l}].isCurrentB1`, false);
           this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${l}].isCurrentB2`, false);
           this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${l}].isCurrentB3`, false);
         });
-  
+
         if (typeof param.min === 'undefined') {
           this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${selectedIndices[0]}].isCurrentB1`, true);
         }
@@ -258,11 +261,23 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
           this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${selectedIndices[1]}].isCurrentB2`, true);
           this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${selectedIndices[2]}].isCurrentB3`, true);
         }
-  
+
         if (option.isChosen === true) {
           // set options to model and trigger a reload of layer in map
-          this.model.set(param.target, values.join(','));
-        } 
+          if(param.oneToManyMapping){
+            let variables = this.model.get(param.target) || {};
+            variables[param.value] =  values.join(',')
+            let variablesParameter = []
+            _.each(_.keys(variables), key => {
+              variablesParameter.push(`${key}=${variables[key]}`)
+            });
+            this.model.set('detailsDisplay.variablesParameter', variablesParameter.join(','));
+            this.model.set(param.target, variables);
+          }
+          else{
+            this.model.set(param.target, values.join(','));
+          }
+        }
       })
     });
     _.each(this.model.get(`${this.displayOption}.options`), (option) => {
