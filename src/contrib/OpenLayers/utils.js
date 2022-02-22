@@ -94,6 +94,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   let layer;
 
   const projection = getProj(displayParams.projection || 'EPSG:4326');
+  const gutter = typeof displayParams.gutter !== 'undefined' ? displayParams.gutter : 0;
   const projectionExtent = projection.getExtent();
   const size = extentGetWidth(projectionExtent) / (displayParams.tileSize || 256);
   const resolutions = new Array(18);
@@ -179,7 +180,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
           opacity,
           source: new WMSTileSource({
             projection,
-            transition: 0,
+            gutter,
             crossOrigin: 'anonymous',
             params: Object.assign({
               LAYERS: layerId,
