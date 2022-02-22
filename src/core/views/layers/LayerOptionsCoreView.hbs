@@ -6,7 +6,7 @@
     </div>
   </div>
   {{#each options}}
-    <div class="form-group layer-display-options-wrapper">
+    <div class="form-group layer-display-options-wrapper panel">
       <label class="col-sm-2 control-label">
         <input type="radio" id="visualization-selector_{{this.counter}}" name="visualization-selector" class="visualization-selector" {{#if this.isChosen}} checked{{/if}}>
         <a data-toggle="collapse" data-parent="#display-options-accordion" class="visualization-selector-collapse" href="#collapse-display-options-{{this.counter}}">{{t this.name}}</a>

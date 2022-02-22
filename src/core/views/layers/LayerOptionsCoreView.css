@@ -57,7 +57,3 @@ input[type="radio"].visualization-selector:checked + a:before {
 .layer-option-selection {
   padding: 2px 4px;
 }
-
-.layer-display-options-wrapper {
-  border-top: 2px solid white;
-}
