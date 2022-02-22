@@ -16,11 +16,13 @@ input[type="radio"].visualization-selector {
   position: absolute;
   width: 1px;
 }
-input[type="radio"].visualization-selector + span {
+input[type="radio"].visualization-selector + a {
+  display: block;
+  width: 100%;
   cursor: pointer;
 }
 
-input[type="radio"].visualization-selector + span:before {
+input[type="radio"].visualization-selector + a:before {
   font-family: 'FontAwesome';
   font-size: 20px;
   display: inline-block;
@@ -30,7 +32,7 @@ input[type="radio"].visualization-selector + span:before {
   margin-right: 8px;
 }
 
-input[type="radio"].visualization-selector:checked + span:before {
+input[type="radio"].visualization-selector:checked + a:before {
   content: "\f06e"; /* eye */
   color: #555;
 }
@@ -54,8 +56,4 @@ input[type="radio"].visualization-selector:checked + span:before {
 
 .layer-option-selection {
   padding: 2px 4px;
-}
-
-.layer-display-options-wrapper {
-  border-top: 2px solid white;
 }
