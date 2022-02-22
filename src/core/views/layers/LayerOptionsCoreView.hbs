@@ -1,4 +1,4 @@
-<form class="form-horizontal">
+<form class="form-horizontal" id="display-options-accordion">
   <div class="form-group">
     <label class="col-sm-2 control-label">{{t 'Opacity'}}</label>
     <div class="col-sm-12">
@@ -7,10 +7,12 @@
   </div>
   {{#each options}}
     <div class="form-group layer-display-options-wrapper">
-      <label for="visualization-selector_{{this.counter}}" class="col-sm-2 control-label">
-        <input type="radio" id="visualization-selector_{{this.counter}}" name="visualization-selector" class="visualization-selector" {{#if this.isChosen}} checked{{/if}}><span>{{t this.name}}</span>
+      <label class="col-sm-2 control-label">
+        <input type="radio" id="visualization-selector_{{this.counter}}" name="visualization-selector" class="visualization-selector" {{#if this.isChosen}} checked{{/if}}>
+        <a data-toggle="collapse" data-parent="#display-options-accordion" class="visualization-selector-collapse" href="#collapse-display-options-{{this.counter}}">{{t this.name}}</a>
         </input>
       </label>
+      <div id="collapse-display-options-{{this.counter}}" class="panel-collapse collapse {{#if this.isChosen}}in{{/if}}">
       {{#each this.parameters}}
         <label class="col-sm-2 control-label">
           {{t this.name}}
@@ -62,6 +64,7 @@
           </div>
         {{/each}}
       {{/each}}
+      </div>
     </div>
   {{/each}}
 </form>

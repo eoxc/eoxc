@@ -13,6 +13,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   events: {
     'change .layer-option.layer-option-selection': 'onLayerOptionChange',
     'change .visualization-selector': 'onVisualizationChange',
+    'click .visualization-selector-collapse': 'onCollapseVisualizationSelector',
     'slideStop .layer-option-slider': 'onLayerOptionChange',
   },
 
@@ -201,6 +202,11 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
         }
       }
     });
+  },
+
+  onCollapseVisualizationSelector(event) {
+    // manual passing click through a link to input underneath
+    event.target.previousElementSibling.click();
   },
 
   onVisualizationChange(event) {
