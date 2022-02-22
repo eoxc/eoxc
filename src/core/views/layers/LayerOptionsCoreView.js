@@ -217,6 +217,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   },
 
   applySettings() {
+    this.model.set(`${this.displayOption}.variablesParameter`, '');
     // set values from currently chosen form/s in layerModel
     const options = this.model.get(`${this.displayOption}.options`);
     // first reset the unselected options to clear the parameters
@@ -271,7 +272,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
             _.each(_.keys(variables), key => {
               variablesParameter.push(`${key}=${variables[key]}`)
             });
-            this.model.set('detailsDisplay.variablesParameter', variablesParameter.join(','));
+            this.model.set(`${this.displayOption}.variablesParameter`, variablesParameter.join(','));
             this.model.set(param.target, variables);
           }
           else{
