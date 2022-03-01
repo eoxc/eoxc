@@ -184,8 +184,10 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   },
 
   replaceLayerParameters(option) {
-    const layerID = this.model.get(`${this.displayOption}.id`) + (option.IdAttached || '');
-    this.model.set(`${this.displayOption}.extraParameters.LAYERS`, layerID);
+    if (this.displayOption === 'detailsDisplay') {
+      const layerID = this.model.get(`${this.displayOption}.id`) + (option.IdAttached || '');
+      this.model.set(`${this.displayOption}.extraParameters.LAYERS`, layerID);
+    }
 
     // perform replacing of parameters in underyling model if it was configured
     const replaceList = option.replace;
