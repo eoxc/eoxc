@@ -329,12 +329,14 @@ function getLayerParams(mapModel, displayParams, filtersModel) {
   const extraParameters = displayParams.extraParameters;
   if (extraParameters) {
     Object.keys(extraParameters).forEach((key) => {
-      if (typeof extraParameters[key] === 'string') {
-        params[key] = extraParameters[key];
-      } else if (extraParameters[key].template) {
-        params[key] = _.template(extraParameters[key].template, {
-          interpolate: /\{\{(.+?)\}\}/g
-        })(extraParameters[key]);
+      if (typeof extraParameters[key]!== "undefined") {
+        if (typeof extraParameters[key] === 'string') {
+          params[key] = extraParameters[key];
+        } else if (extraParameters[key].template) {
+          params[key] = _.template(extraParameters[key].template, {
+            interpolate: /\{\{(.+?)\}\}/g
+          })(extraParameters[key]);
+        }
       }
     });
   }

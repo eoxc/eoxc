@@ -184,8 +184,8 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   },
 
   replaceLayerParameters(option) {
-    if (this.displayOption === 'detailsDisplay') {
-      const layerID = this.model.get(`${this.displayOption}.id`) + (option.IdAttached || '');
+    if  (typeof option.IdAttached != 'undefined') {
+      const layerID = this.model.get(`${this.displayOption}.id`) + (option.IdAttached);
       this.model.set(`${this.displayOption}.extraParameters.LAYERS`, layerID);
     }
 
