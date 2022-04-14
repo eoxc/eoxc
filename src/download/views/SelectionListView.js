@@ -36,7 +36,7 @@ const SelectionListView = Marionette.CompositeView.extend({
 
   constructor(options) {
     const collection = new Backbone.Collection();
-    collection.searchModel = options.searchModel;
+    collection.searchModel = options.searchModel ? options.searchModel : options.model;
     Marionette.CompositeView.prototype.constructor.call(this, Object.assign({}, options, {
       collection
     }));

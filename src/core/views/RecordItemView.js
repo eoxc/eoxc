@@ -27,7 +27,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     const time = this.model.get('properties').time;
     const start = Array.isArray(time) ? time[0] : time;
     let thumbnailUrl = this.model.getThumbnailUrl(
-      this.collection ? this.collection.searchModel.get('layerModel').get('search.thumbnailUrlTemplate')
+      this.collection && this.collection.searchModel ? this.collection.searchModel.get('layerModel').get('search.thumbnailUrlTemplate')
                       : undefined
     );
     if (this.thumbnailUrlPattern && !(new RegExp(this.thumbnailUrlPattern)).test(thumbnailUrl)) {
@@ -46,7 +46,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
       .one('load', () => this.$('img').fadeIn('slow'))
       .one('error', () => {
         const quickLookUrl = this.model.getQuickLookUrl(
-          this.collection ? this.collection.searchModel.get('layerModel').get('search.quickLookUrlTemplate')
+          this.collection && this.collection.searchModel ? this.collection.searchModel.get('layerModel').get('search.quickLookUrlTemplate')
                           : undefined
         );
         if (quickLookUrl) {
