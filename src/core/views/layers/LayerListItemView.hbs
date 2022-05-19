@@ -3,7 +3,7 @@
   <span class="input-group-addon">
     <input type="checkbox" id="{{id}}-visible" class="layer-visible" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
   </span>
-  <span class="form-control display-name">
+  <span class="form-control display-name" {{#if display.infoPopup}} data-html="true" data-toggle="popover" title="{{id}}" data-content="<p><a href={{GetCapabilities}}>{{GetCapabilities}}</a></p>"{{/if}}>
     {{#if link}}
       <a href="{{link}}" target="_blank">{{displayName}}</a>
     {{else}}

@@ -44,19 +44,24 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   },
 
   templateHelpers() {
+    this.GetCapabilities = this.model.get('display') && this.model.get('display').urls ? `${this.model.get('display').urls[0]}?service=${this.model.get('display').protocol}&request=GetCapabilities` : ''
     return {
       singleChoice: this.singleChoice,
       fullDisplay: this.fullDisplay,
       options: this.model.get('display.options'),
+      GetCapabilities: this.GetCapabilities,
     };
   },
 
   onAttach() {
-    this.$popoverButton = this.$('[data-toggle="popover"]');
+    this.$popoverButton = this.$('.layer-adjust-opacity');
     this.$popoverButton.popover({
       container: 'body',
       content: 'x',
       trigger: 'manual',
+    });
+    $('.display-name').popover({
+      placement: "top"
     });
   },
 
@@ -73,49 +78,51 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   onPopoverInserted() {
     this.isPopoverShown = true;
     const popoverId = this.$('.layer-adjust-opacity').attr('aria-describedby');
-    const $popover = $(`#${popoverId}`);
-    const $popoverContent = $popover.find('.popover-content');
-    $popover.addClass('layer-adjust-opacity-popover');
-    $popoverContent
-      .empty().text('')
-      .css('width', '200px');
+    if (popoverId){
+      const $popover = $(`#${popoverId}`);
+      const $popoverContent = $popover.find('.popover-content');
+      $popover.addClass('layer-adjust-opacity-popover');
+      $popoverContent
+        .empty().text('')
+        .css('width', '200px');
 
-    let opacity = this.model.get('display.opacity');
-    opacity = typeof opacity === 'undefined' ? 1 : opacity;
+      let opacity = this.model.get('display.opacity');
+      opacity = typeof opacity === 'undefined' ? 1 : opacity;
 
-    this.$slider = $('<input/>')
-      .appendTo($popoverContent)
-      .slider({
-        min: 0,
-        max: 100,
-        value: opacity * 100,
-        formatter(value) {
-          return `${value}%`;
-        }
+      this.$slider = $('<input/>')
+        .appendTo($popoverContent)
+        .slider({
+          min: 0,
+          max: 100,
+          value: opacity * 100,
+          formatter(value) {
+            return `${value}%`;
+          }
+        });
+      this.$slider.on('slide', (event) => {
+        this.model.set('display.opacity', event.value / 100);
       });
-    this.$slider.on('slide', (event) => {
-      this.model.set('display.opacity', event.value / 100);
-    });
-    this.$slider.on('change', () => {
-      this.model.set('display.opacity', parseInt(this.$slider.val(), 10) / 100);
-    });
-    this.$slider.on('slideStop', () => $popover.focus());
+      this.$slider.on('change', () => {
+        this.model.set('display.opacity', parseInt(this.$slider.val(), 10) / 100);
+      });
+      this.$slider.on('slideStop', () => $popover.focus());
 
-    $popover.attr('tabindex', '0');
-    $popover.focus();
+      $popover.attr('tabindex', '0');
+      $popover.focus();
 
-    $popover[0].onblur = (event) => {
-      // fix for IE, as the blur event is also raised when a child gets focused:
-      // check if the currently targeted element is a descendant. Only hide the
-      // popover when the new target is outside of the popover.
-      const $target = $(event.explicitOriginalTarget || document.activeElement);
-      if ($target.closest($popover).length === 0) {
-        this.$popoverButton.popover('hide');
-        $popover[0].onblur = null;
-      } else {
-        $popover.focus();
-      }
-    };
+      $popover[0].onblur = (event) => {
+        // fix for IE, as the blur event is also raised when a child gets focused:
+        // check if the currently targeted element is a descendant. Only hide the
+        // popover when the new target is outside of the popover.
+        const $target = $(event.explicitOriginalTarget || document.activeElement);
+        if ($target.closest($popover).length === 0) {
+          this.$popoverButton.popover('hide');
+          $popover[0].onblur = null;
+        } else {
+          $popover.focus();
+        }
+      };
+    }
   },
 
   onPopoverHidden() {
