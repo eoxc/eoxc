@@ -99,6 +99,7 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   const size = extentGetWidth(projectionExtent) / (displayParams.tileSize || 256);
   const resolutions = new Array(18);
   const matrixIds = new Array(18);
+  // added to make s2maps WMTS layers load correct tileMatrix
   const customAdditionBasedOnProj = projection.getCode() === 'EPSG:4326' ? 1 : 0;
   for (let z = 0; z < 18; ++z) {
     // generate resolutions and matrixIds arrays for this WMTS
@@ -123,11 +124,6 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
   const layerId = displayParams.id ? displayParams.id : displayParams.ids.join(',');
   const opacity = typeof displayParams.opacity === 'number' ? displayParams.opacity : 1;
   const urls = typeof displayParams.url !== 'undefined' ? [displayParams.url] : displayParams.urls;
-  if (urls.length === 0) {
-    // to avoid errors, empty string needs to be inserted if empty in ol6
-    urls.push('');
-  }
-
 
   if (displayParams.capabilitiesUrl) {
     layer = new TileLayer({
@@ -146,6 +142,10 @@ export function createRasterLayer(layerModel, useDetailsDisplay = false) {
         layer.setSource(new WMTSSource(options));
       });
   } else {
+    if (urls.length === 0) {
+      // to avoid errors, empty string needs to be inserted if empty in ol6
+      urls.push('');
+    }
     switch (displayParams.protocol) {
       case 'WMTS':
         layer = new TileLayer({
