@@ -23,6 +23,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
 
     // when using options
     'click .layer-show-options': 'onShowOptionsClick',
+    'click .display-name':'onPopoverClick',
   },
 
   modelEvents: {
@@ -44,12 +45,15 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   },
 
   templateHelpers() {
-    this.GetCapabilities = this.model.get('display') && this.model.get('display').urls ? `${this.model.get('display').urls[0]}?service=${this.model.get('display').protocol}&request=GetCapabilities` : ''
+    const GetCapabilities = this.model.get('display') && this.model.get('display').urls ? `${this.model.get('display').urls[0]}?service=${this.model.get('display').protocol}&request=GetCapabilities` : '';
+    const description = this.model.get('display') && this.model.get('display').description;
+    this.template = `<p><p><strong>GetCapabilities:</strong></p><a href=${GetCapabilities}>${GetCapabilities}</a></p>${description}`;
+
     return {
       singleChoice: this.singleChoice,
       fullDisplay: this.fullDisplay,
       options: this.model.get('display.options'),
-      GetCapabilities: this.GetCapabilities,
+      template: this.template,
     };
   },
 
@@ -60,11 +64,12 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
       content: 'x',
       trigger: 'manual',
     });
-    $('.display-name').popover({
-      placement: "top"
-    });
-  },
 
+    $('.display-name').popover({
+      placement: 'top',
+      trigger: "manual"
+      })
+  },
   onLayerAdjustOpacityClick() {
     if (!this.isPopoverShown) {
       this.$popoverButton.popover('show');
@@ -150,6 +155,12 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   hidePopover() {
     this.$popoverButton.popover('hide');
   },
+  onPopoverClick (e){
+    $("[data-toggle='popover']").popover('toggle');
+    $("[data-toggle='popover']").not(e.target).popover("hide");
+
+  }
+
 });
 
 export default LayerListItemView;
