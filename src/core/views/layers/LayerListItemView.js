@@ -24,6 +24,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     // when using options
     'click .layer-show-options': 'onShowOptionsClick',
     'click .display-name':'onPopoverClick',
+    'click .close': 'close',
   },
 
   modelEvents: {
@@ -67,7 +68,7 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
 
     $('.display-name').popover({
       placement: 'top',
-      trigger: "manual"
+      trigger: 'manual'
       })
   },
   onLayerAdjustOpacityClick() {
@@ -156,10 +157,16 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
     this.$popoverButton.popover('hide');
   },
   onPopoverClick (e){
+
+    $('.popover-title').find('button').remove();
     $("[data-toggle='popover']").popover('toggle');
     $("[data-toggle='popover']").not(e.target).popover("hide");
+    $('.popover-title').append('<button id="popovercloseid" type="button" class="close">&times;</button>');
 
-  }
+  },
+  close() {
+    $("[data-toggle='popover']").popover("hide");
+  },
 
 });
 
