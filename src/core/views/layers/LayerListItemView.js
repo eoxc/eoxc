@@ -46,15 +46,19 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
   },
 
   templateHelpers() {
-    const GetCapabilities = this.model.get('display') && this.model.get('display').urls ? `${this.model.get('display').urls[0]}?service=${this.model.get('display').protocol}&request=GetCapabilities` : '';
-    const description = this.model.get('display') && this.model.get('display').description;
-    this.template = `<p><p><strong>GetCapabilities:</strong></p><a href=${GetCapabilities}>${GetCapabilities}</a></p>${description}`;
+    const capabilitiesLink = this.model.get('display') && this.model.get('display').urls &&
+    (this.model.get('display').protocol === "WMS" || this.model.get('display').protocol === "WMTS") ?
+    `${this.model.get('display').urls[0]}?service=${this.model.get('display').protocol}&request=GetCapabilities` : '';
+    const description = this.model.get('display') && this.model.get('display').description ? this.model.get('display').description : '';
+    const GetCapabilities = `<p><p><strong>GetCapabilities:</strong></p><a href=${capabilitiesLink}>${capabilitiesLink}</a></p>`
+    this.template = `${GetCapabilities}${description}`;
 
     return {
       singleChoice: this.singleChoice,
       fullDisplay: this.fullDisplay,
       options: this.model.get('display.options'),
       template: this.template,
+      infoPopup: this.model.get('display').infoPopup,
     };
   },
 

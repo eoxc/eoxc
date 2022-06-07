@@ -1,5 +1,5 @@
 {{#if fullDisplay}}
-<div class="input-group" id="layer-item-{{id}}">
+<div class="input-group" id="layer-item-{{id}}" style="cursor: pointer;">
   <span class="input-group-addon">
     <input type="checkbox" id="{{id}}-visible" class="layer-visible" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
   </span>
@@ -25,18 +25,22 @@
 </div>
 {{else}}
   {{#if singleChoice}}
-  <div class="radio">
-    <label for="{{id}}-visible">
-      <input type="radio" id="{{id}}-visible" class="layer-visible" name="singleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
-      {{displayName}}
-    </label>
-  </div>
+    <div class="input-group" id="layer-item-{{id}}" style="cursor: pointer;">
+      <span class="input-group-addon">
+        <input type="checkbox" id="{{id}}-visible" class="layer-visible" name="singleChoice" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
+      </span>
+      <span class="form-control display-name" data-html="true" data-toggle="popover" title="{{id}}"  data-container="#layer-item-{{id}}" data-content="<div>{{template}}</div>" data-template='<div class="popover-1 popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'>
+          {{displayName}}
+      </span>
+    </div>
   {{else}}
-  <div class="checkbox">
-    <label for="{{id}}-visible">
-      <input type="checkbox" id="{{id}}-visible" class="layer-visible" name="multipleChoice" {{#if display.visible}}checked="checked"{{/if}}/><span></span>
-      {{displayName}}
-    </label>
-  </div>
+    <div class="input-group" id="layer-item-{{id}}" style="cursor: pointer;">
+      <span class="input-group-addon">
+        <input type="checkbox" id="{{id}}-visible" class="layer-visible" name="multipleChoice" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
+      </span>
+      <span class="form-control display-name" data-html="true" data-toggle="popover" title="{{id}}"  data-container="#layer-item-{{id}}" data-content="<div>{{template}}</div>" data-template='<div class="popover-1 popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'>
+          {{displayName}}
+      </span>
+    </div>
   {{/if}}
 {{/if}}
