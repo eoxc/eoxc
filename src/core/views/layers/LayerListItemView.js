@@ -137,15 +137,6 @@ const LayerListItemView = Marionette.ItemView.extend(/** @lends core/views/layer
 
   onPopoverHidden() {
     this.isPopoverShown = false;
-    if (typeof this.$slider !== 'undefined') {
-      try {
-        // try/catch because infoPopup hide triggers on opacity slider hide
-        // because listening on same event, quick fix
-        this.$slider.off('slide');
-        this.$slider.off('change');
-        this.$slider.slider('destroy');
-      } catch (error) {}
-    }
   },
 
   onLayerVisibleChange() {
