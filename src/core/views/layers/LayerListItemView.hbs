@@ -3,7 +3,7 @@
   <span class="input-group-addon">
     <input type="checkbox" id="{{id}}-visible" class="layer-visible" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
   </span>
-  <span class="form-control display-name" {{#if display.infoPopup}} data-html="true" data-toggle="popover" title="{{id}}"  data-container="#layer-item-{{id}}" data-content="<div>{{template}}</div>" data-template='<div class="popover-1 popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'{{/if}}>
+  <span class="form-control display-name" {{#if display.infoPopup}} data-html="true" data-toggle="popover" title="{{displayName}}"  data-container="#layer-item-{{id}}" data-content="<div>{{template}}</div>" data-template='<div class="popover-1 popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'{{/if}}>
     {{#if link}}
       <a href="{{link}}" target="_blank">{{displayName}}</a>
     {{else}}
@@ -29,7 +29,7 @@
       <span class="input-group-addon">
         <input type="checkbox" id="{{id}}-visible" class="layer-visible" name="singleChoice" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
       </span>
-      <span class="form-control display-name" data-html="true" data-toggle="popover" title="{{id}}"  data-container="#layer-item-{{id}}" data-content="<div>{{template}}</div>" data-template='<div class="popover-1 popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'>
+      <span class="form-control display-name" data-html="true" data-toggle="popover" title="{{displayName}}"  data-container="#layer-item-{{id}}" data-content="<div>{{template}}</div>" data-template='<div class="popover-1 popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'>
           {{displayName}}
       </span>
     </div>
@@ -38,7 +38,7 @@
       <span class="input-group-addon">
         <input type="checkbox" id="{{id}}-visible" class="layer-visible" name="multipleChoice" {{#if display.visible}}checked="checked"{{/if}}/><label for="{{id}}-visible"><span></span></label>
       </span>
-      <span class="form-control display-name" data-html="true" data-toggle="popover" title="{{id}}"  data-container="#layer-item-{{id}}" data-content="<div>{{template}}</div>" data-template='<div class="popover-1 popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'>
+      <span class="form-control display-name" data-html="true" data-toggle="popover" title="{{displayName}}"  data-container="#layer-item-{{id}}" data-content="<div>{{template}}</div>" data-template='<div class="popover-1 popover" role="tooltip"><h3 class="popover-title"></h3><div class="popover-content"></div></div>'>
           {{displayName}}
       </span>
     </div>
