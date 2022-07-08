@@ -87,6 +87,12 @@ function getCoverageXML(coverageid, options = {}) {
     params.push('<wcs:mediaType>multipart/related</wcs:mediaType>');
   }
 
+  if (options.extraParameters) {
+    for (const [key, value] of Object.entries(options.extraParameters)) {
+      params.push(`<wcs:${key}>${value}</wcs:${key}>`);
+    }
+  }
+
   if (extension.length > 0) {
     params.push('<wcs:Extension>');
     for (let i = 0; i < extension.length; ++i) {
@@ -130,8 +136,8 @@ function getEOCoverageSetXML(eoids, options = {}) {
     axisNames = options.axisNames;
   }
 
-  if (options.package) {
-    params.push(`<wcs:format>${options.package}</wcs:format>`);
+  if (options.format) {
+    params.push(`<wcs:format>${options.format}</wcs:format>`);
   }
 
   if (options.package) {
@@ -186,6 +192,12 @@ function getEOCoverageSetXML(eoids, options = {}) {
 
   if (options.multipart) {
     params.push('<wcs:mediaType>multipart/related</wcs:mediaType>');
+  }
+
+  if (options.extraParameters) {
+    for (const [key, value] of Object.entries(options.extraParameters)) {
+      params.push(`<wcs:${key}>${value}</wcs:${key}>`);
+    }
   }
 
   params.push('</wcseo:GetEOCoverageSet>');
@@ -265,6 +277,12 @@ function getEOCoverageSetKVP(eoids, options = {}) {
     params.push(['interpolation', options.interpolation]);
   }
 
+  if (options.extraParameters) {
+    for (const [key, value] of Object.entries(options.extraParameters)) {
+      params.push([key, value]);
+    }
+  }
+
   return params
     .map(param => param.join('='))
     .join('&');
@@ -338,6 +356,12 @@ function getCoverageKVP(coverageid, options = {}) {
     params.push(['interpolation', options.interpolation]);
   }
 
+  if (options.extraParameters) {
+    for (const [key, value] of Object.entries(options.extraParameters)) {
+      params.push([key, value]);
+    }
+  }
+
   return params
     .map(param => param.join('='))
     .join('&');
@@ -391,6 +415,7 @@ export function download(layerModel, filtersModel, recordModel, options) {
     scale: options.scale,
     interpolation: options.interpolation,
     axisNames: layerModel.get('download.axisNames'),
+    extraParameters: layerModel.get('download.extraParameters'),
   };
   if (options.resolutionX && options.resolutionY) {
     // compute size based on specified resolution
@@ -419,6 +444,7 @@ export function multiDownload(layerModel, filtersModel, options) {
     package: options.package,
     scale: options.scale,
     interpolation: options.interpolation,
+    extraParameters: layerModel.get('download.extraParameters'),
   };
   // use sizes directly
   requestOptions.sizeX = options.sizeX;
@@ -454,6 +480,7 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
     sizeY: options.sizeY,
     interpolation: options.interpolation,
     axisNames: layerModel.get('fullResolution.axisNames'),
+    extraParameters: layerModel.get('download.extraParameters'),
   };
   const id = layerModel.get('fullResolution.id');
   let kvp = getCoverageKVP(id, requestOptions);
