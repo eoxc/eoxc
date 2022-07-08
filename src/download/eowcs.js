@@ -415,7 +415,7 @@ export function download(layerModel, filtersModel, recordModel, options) {
     scale: options.scale,
     interpolation: options.interpolation,
     axisNames: layerModel.get('download.axisNames'),
-    extraParameters: layerModel.get('download.extraParameters'),
+    extraParameters: layerModel && layerModel.get('download.extraParameters'),
   };
   if (options.resolutionX && options.resolutionY) {
     // compute size based on specified resolution
@@ -444,7 +444,7 @@ export function multiDownload(eoids, layerModel, filtersModel, options) {
     package: options.package,
     scale: options.scale,
     interpolation: options.interpolation,
-    extraParameters: layerModel.get('download.extraParameters'),
+    extraParameters: layerModel && layerModel.get('download.extraParameters'),
   };
   // use sizes directly
   requestOptions.sizeX = options.sizeX;
@@ -480,7 +480,7 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
     sizeY: options.sizeY,
     interpolation: options.interpolation,
     axisNames: layerModel.get('fullResolution.axisNames'),
-    extraParameters: layerModel.get('download.extraParameters'),
+    extraParameters: layerModel && layerModel.get('download.extraParameters'),
   };
   const id = layerModel.get('fullResolution.id');
   let kvp = getCoverageKVP(id, requestOptions);
