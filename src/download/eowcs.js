@@ -435,7 +435,7 @@ export function download(layerModel, filtersModel, recordModel, options) {
   return getCoverageXML(recordModel.get('id'), requestOptions);
 }
 
-export function multiDownload(layerModel, filtersModel, options) {
+export function multiDownload(eoids, layerModel, filtersModel, options) {
   const requestOptions = {
     bbox: filtersModel.get('area'),
     outputCRS: options.outputCRS,
@@ -450,7 +450,7 @@ export function multiDownload(layerModel, filtersModel, options) {
   requestOptions.sizeX = options.sizeX;
   requestOptions.sizeY = options.sizeY;
 
-  return getEOCoverageSetKVP(layerModel, requestOptions);
+  return getEOCoverageSetKVP(eoids, requestOptions);
 }
 
 export function getDownloadInfos(layerModel, filtersModel, recordModel, options = {}) {

@@ -414,7 +414,7 @@ export default ModalView.extend({
         }
         eoids.push(recordModel.id);
       });
-      downloadMultipleRecords(eoids, url, filtersModel, options);
+      downloadMultipleRecords(eoids, searchModel.get('layerModel'), url, filtersModel, options);
     } else {
     // if EO-WCS, use a timeout
       const timeout = this.showDownloadOptions ? 500 : 0;
