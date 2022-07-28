@@ -9,10 +9,18 @@ function getCoverageXML(coverageid, options = {}) {
     throw new Error('Parameters "coverageid" is mandatory.');
   }
   const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
+  const ns = [];
+  if (options.wcsExtensionsXMLNamespaces) {
+    for (const [key, value] of Object.entries(options.wcsExtensionsXMLNamespaces)) {
+      ns.push(`xmlns:${key}="${value}"`)
+    }
+  }
+  const extraNsStr = ns.join('');
   const params = [
-    `<wcs:GetCoverage service="WCS" version="2.0.1" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:wcscrs="http://www.opengis.net/wcs/crs/1.0" xmlns:wcsmask="http://www.opengis.net/wcs/mask/1.0" xmlns:int="http://www.opengis.net/wcs/interpolation/1.0" xmlns:scal="http://www.opengis.net/wcs/scaling/1.0">
-     <wcs:CoverageId>${coverageid}</wcs:CoverageId>`,
+    `<wcs:GetCoverage service="WCS" version="2.0.1" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:wcscrs="http://www.opengis.net/wcs/crs/1.0" xmlns:wcsmask="http://www.opengis.net/wcs/mask/1.0" xmlns:int="http://www.opengis.net/wcs/interpolation/1.0" xmlns:scal="http://www.opengis.net/wcs/scaling/1.0" ${extraNsStr}>`,
   ];
+  
+  params.push(`<wcs:CoverageId>${coverageid}</wcs:CoverageId>`)
   const extension = [];
 
   let axisNames;
@@ -87,9 +95,9 @@ function getCoverageXML(coverageid, options = {}) {
     params.push('<wcs:mediaType>multipart/related</wcs:mediaType>');
   }
 
-  if (options.extraParameters) {
-    for (const [key, value] of Object.entries(options.extraParameters)) {
-      params.push(`<wcs:${key}>${value}</wcs:${key}>`);
+  if (options.wcsExtensionsXMLParameters) {
+    for (const [key, value] of Object.entries(options.wcsExtensionsXMLParameters)) {
+      extension.push(`<${key}>${value}</${key}>`);
     }
   }
 
@@ -109,16 +117,24 @@ function getEOCoverageSetXML(eoids, options = {}) {
   let subsetY = options.subsetY;
 
   if (!eoids) {
-    throw new Error('Parameters "coverageid" is mandatory.');
+    throw new Error('Parameter "coverageid" is mandatory.');
   }
   if (!options.package) {
-    throw new Error('Parameters "packageFormat" is missing.');
+    throw new Error('Parameter "packageFormat" is missing.');
   }
   const subsetCRS = options.subsetCRS || 'http://www.opengis.net/def/crs/EPSG/0/4326';
+  const ns = [];
+  if (options.wcsExtensionsXMLNamespaces) {
+    for (const [key, value] of Object.entries(options.wcsExtensionsXMLNamespaces)) {
+      ns.push(`xmlns:${key}="${value}"`)
+    }
+  }
+  const extraNsStr = ns.join('');
   const params = [
-    `<wcseo:GetEOCoverageSet xmlns:wcseo="http://www.opengis.net/wcs/wcseo/1.1" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:int="http://www.opengis.net/wcs/interpolation/1.0" xmlns:scal="http://www.opengis.net/wcs/scaling/1.0" xmlns:crs="http://www.opengis.net/wcs/crs/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.opengis.net/wcs/wcseo/1.1 http://schemas.opengis.net/wcs/wcseo/1.1/wcsEOAll.xsd" service="WCS" version="2.0.1">
-     <wcseo:eoId>${eoids}</wcseo:eoId>`,
+    `<wcseo:GetEOCoverageSet service="WCS" version="2.0.1" xmlns:wcseo="http://www.opengis.net/wcs/wcseo/1.1" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:int="http://www.opengis.net/wcs/interpolation/1.0" xmlns:scal="http://www.opengis.net/wcs/scaling/1.0" xmlns:crs="http://www.opengis.net/wcs/crs/1.0" ${extraNsStr}>`,
   ];
+
+  params.push(`<wcseo:eoId>${eoids}</wcseo:eoId>`);
   const extension = [];
 
   let axisNames;
@@ -194,10 +210,18 @@ function getEOCoverageSetXML(eoids, options = {}) {
     params.push('<wcs:mediaType>multipart/related</wcs:mediaType>');
   }
 
-  if (options.extraParameters) {
-    for (const [key, value] of Object.entries(options.extraParameters)) {
-      params.push(`<wcs:${key}>${value}</wcs:${key}>`);
+  if (options.wcsExtensionsXMLParameters) {
+    for (const [key, value] of Object.entries(options.wcsExtensionsXMLParameters)) {
+      extension.push(`<${key}>${value}</${key}>`);
     }
+  }
+
+  if (extension.length > 0) {
+    params.push('<wcs:Extension>');
+    for (let i = 0; i < extension.length; ++i) {
+      params.push(extension[i]);
+    }
+    params.push('</wcs:Extension>');
   }
 
   params.push('</wcseo:GetEOCoverageSet>');
@@ -277,8 +301,8 @@ function getEOCoverageSetKVP(eoids, options = {}) {
     params.push(['interpolation', options.interpolation]);
   }
 
-  if (options.extraParameters) {
-    for (const [key, value] of Object.entries(options.extraParameters)) {
+  if (options.wcsExtensionsKVPParameters) {
+    for (const [key, value] of Object.entries(options.wcsExtensionsKVPParameters)) {
       params.push([key, value]);
     }
   }
@@ -356,8 +380,8 @@ function getCoverageKVP(coverageid, options = {}) {
     params.push(['interpolation', options.interpolation]);
   }
 
-  if (options.extraParameters) {
-    for (const [key, value] of Object.entries(options.extraParameters)) {
+  if (options.wcsExtensionsKVPParameters) {
+    for (const [key, value] of Object.entries(options.wcsExtensionsKVPParameters)) {
       params.push([key, value]);
     }
   }
@@ -415,7 +439,6 @@ export function download(layerModel, filtersModel, recordModel, options) {
     scale: options.scale,
     interpolation: options.interpolation,
     axisNames: layerModel.get('download.axisNames'),
-    extraParameters: layerModel && layerModel.get('download.extraParameters'),
   };
   if (options.resolutionX && options.resolutionY) {
     // compute size based on specified resolution
@@ -429,9 +452,12 @@ export function download(layerModel, filtersModel, recordModel, options) {
   }
 
   if (layerModel.get('download.method') === 'GET') {
+    requestOptions.wcsExtensionsKVPParameters = layerModel && layerModel.get('download.wcsExtensionsKVPParameters');
     const kvp = getCoverageKVP(recordModel.get('id'), requestOptions);
     return `${layerModel.get('download.url')}?${kvp}`;
   }
+  requestOptions.wcsExtensionsXMLParameters = layerModel && layerModel.get('download.wcsExtensionsXMLParameters');
+  requestOptions.wcsExtensionsXMLNamespaces = layerModel && layerModel.get('download.wcsExtensionsXMLNamespaces');
   return getCoverageXML(recordModel.get('id'), requestOptions);
 }
 
@@ -444,7 +470,7 @@ export function multiDownload(eoids, layerModel, filtersModel, options) {
     package: options.package,
     scale: options.scale,
     interpolation: options.interpolation,
-    extraParameters: layerModel && layerModel.get('download.extraParameters'),
+    wcsExtensionsKVPParameters: layerModel && layerModel.get('download.wcsExtensionsKVPParameters'),
   };
   // use sizes directly
   requestOptions.sizeX = options.sizeX;
@@ -480,7 +506,7 @@ export function downloadFullResolution(layerModel, mapModel, filtersModel, optio
     sizeY: options.sizeY,
     interpolation: options.interpolation,
     axisNames: layerModel.get('fullResolution.axisNames'),
-    extraParameters: layerModel && layerModel.get('download.extraParameters'),
+    wcsExtensionsKVPParameters: layerModel && layerModel.get('download.wcsExtensionsKVPParameters'),
   };
   const id = layerModel.get('fullResolution.id');
   let kvp = getCoverageKVP(id, requestOptions);
