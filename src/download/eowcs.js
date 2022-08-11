@@ -133,8 +133,11 @@ function getEOCoverageSetXML(eoids, options = {}) {
   const params = [
     `<wcseo:GetEOCoverageSet service="WCS" version="2.0.1" xmlns:wcseo="http://www.opengis.net/wcs/wcseo/1.1" xmlns:wcs="http://www.opengis.net/wcs/2.0" xmlns:int="http://www.opengis.net/wcs/interpolation/1.0" xmlns:scal="http://www.opengis.net/wcs/scaling/1.0" xmlns:crs="http://www.opengis.net/wcs/crs/1.0" ${extraNsStr}>`,
   ];
-
-  params.push(`<wcseo:eoId>${eoids}</wcseo:eoId>`);
+  if (eoids.length > 0) {
+    for (let i = 0; i < eoids.length; ++i) {
+      params.push(`<wcseo:eoId>${eoids[i]}</wcseo:eoId>`);
+    }
+  }
   const extension = [];
 
   let axisNames;
@@ -153,7 +156,7 @@ function getEOCoverageSetXML(eoids, options = {}) {
   }
 
   if (options.format) {
-    params.push(`<wcs:format>${options.format}</wcs:format>`);
+    params.push(`<wcseo:format>${options.format}</wcseo:format>`);
   }
 
   if (options.package) {
@@ -207,7 +210,7 @@ function getEOCoverageSetXML(eoids, options = {}) {
   }
 
   if (options.multipart) {
-    params.push('<wcs:mediaType>multipart/related</wcs:mediaType>');
+    params.push('<wcseo:mediaType>multipart/related</wcseo:mediaType>');
   }
 
   if (options.wcsExtensionsXMLParameters) {
