@@ -38,6 +38,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
 
   initialize(options) {
     this.useDetailsDisplay = options.useDetailsDisplay && !!this.model.get('detailsDisplay');
+    this.recordModel = options.recordModel;
     this.displayOption = this.useDetailsDisplay ? 'detailsDisplay' : 'display';
     this.model = options.model;
     // make config valid, overwriting it in place
@@ -184,26 +185,42 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   },
 
   replaceLayerParameters(option) {
-    if  (typeof option.IdAttached != 'undefined') {
-      const layerID = this.model.get(`${this.displayOption}.id`) + (option.IdAttached);
-      this.model.set(`${this.displayOption}.extraParameters.LAYERS`, layerID);
-    }
-
     // perform replacing of parameters in underyling model if it was configured
     const replaceList = option.replace;
     _.each(replaceList, (config) => {
       if (typeof config.target === 'string' && typeof config.value !== 'undefined') {
         if (config.value.template) {
-          // interpolate template
-          const evaluated = _.template(config.value.template, {
-            interpolate: /\{\{(.+?)\}\}/g
-          })(this.model.toJSON());
+          let evaluated = null;
+          // interpolate template from Record if able
+          if (this.recordModel) {
+            // special prefix record.something for interpolation
+            evaluated = _.template(config.value.template, {
+              interpolate: /\{\{record\.(.+?)\}\}/g
+            })(this.recordModel.toJSON());
+          }
+          // fallback, interpolate template from layer if able
+          if (evaluated !== null && typeof evaluated === 'string' && evaluated.includes('{{')) {
+            evaluated = _.template(config.value.template, {
+              interpolate: /\{\{(.+?)\}\}/g
+            })(this.model.toJSON());
+          }
           this.model.set(config.target, evaluated);
         } else {
           this.model.set(config.target, config.value);
         }
       }
     });
+    if (typeof option.IdAttached !== 'undefined') {
+      // default layerID when adding attachment is layer.id itself
+      let layerID = this.model.get(`${this.displayOption}.id`);
+      if (this.model.get(`${this.displayOption}.extraParameters.LAYERS`)) {
+        // if extraParameters.LAYERS override was already set during replace
+        // only append attachment to it
+        layerID = this.model.get(`${this.displayOption}.extraParameters.LAYERS`);
+      }
+      layerID = layerID + option.IdAttached;
+      this.model.set(`${this.displayOption}.extraParameters.LAYERS`, layerID);
+    }
   },
 
   onCollapseVisualizationSelector(event) {
