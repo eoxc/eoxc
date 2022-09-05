@@ -38,6 +38,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
 
   initialize(options) {
     this.useDetailsDisplay = options.useDetailsDisplay && !!this.model.get('detailsDisplay');
+    this.recordModel = options.recordModel;
     this.displayOption = this.useDetailsDisplay ? 'detailsDisplay' : 'display';
     this.model = options.model;
     // make config valid, overwriting it in place
@@ -58,12 +59,32 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
     return displayOptions
   },
 
+  getPreferences() {
+    try {
+      return JSON.parse(localStorage.getItem(
+        'display-options-preferences'
+      ) || '{}');
+    } catch (error) {
+      return {};
+    }
+  },
+
+  updatePreferences(key, value) {
+    const preferences = this.getPreferences();
+    preferences[key] = value;
+    localStorage.setItem(
+      'display-options-preferences',
+      JSON.stringify(preferences),
+    );
+  },
+
   getDisplayOptions() {
     if (this.displayOptions) {
       // if opened for the first time, choose the first option as chosen
       if (_.filter(this.displayOptions, option => option.isChosen === true).length === 0) {
         this.model.set(`${this.displayOption}.options[0].isChosen`, true);
       }
+      const userPreferences = this.getPreferences();
       _.each(this.displayOptions, (option, i) => {
         // if opened for the first time, preset first three entries from selection as selected as indices[0, 1, 2]
         _.each(option.parameters, (param, j) => {
@@ -76,6 +97,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
               this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[1].isCurrentB2`, true);
               this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[2].isCurrentB3`, true);
             }
+            // set 'label' for each value from selection list falling back to 'value'
             _.each(param.values, (value, k) => {
               const label = typeof (value.label) !== 'undefined' ? value.label : value.value;
               this.model.set(`${this.displayOption}.options[${i}].parameters[${j}].values[${k}].label`, label);
@@ -93,25 +115,15 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
             counterMultiple += 1;
             // create config for range input element
             const step = typeof param.step !== 'undefined' ? param.step : 1;
-            const valuesFromTarget = param.target ? this.model.get(param.target) : '';
             let low, high, sliderValue, value;
             const rangeInputsConfig = [];
             const countRangeInputs = typeof param.min !== 'undefined' ? (param.selectThree ? 3 : 1) : 0;
             for (let i=0; i < countRangeInputs; i++) {
-              let defaultValue = null;
-              if (typeof valuesFromTarget === 'undefined' || valuesFromTarget === '' || typeof valuesFromTarget === 'object') {
-                // data for slider come from config
-                // default expected to be an array of values (min, max)
-                defaultValue = param.default;
-              } else {
-                // data for slider come from model
-                // split config at comma and "rangeSeparator"
-                defaultValue = valuesFromTarget.split(',').reduce( (newArr, el, i) => {
-                  let subArr = el.split(param.rangeSeparator);
-                  newArr[i] = subArr;
-                  return newArr;
-                }, []);
-                defaultValue = flatten(defaultValue);
+              // use default value from options and get from localStorage for override
+              let defaultValue = param.default;
+              const lookupKeyPreferences = `${this.model.get('id')}_${this.displayOption}_${counter}_rangeInput_${counterMultiple}_${i}`;
+              if (typeof userPreferences[lookupKeyPreferences] !== 'undefined') {
+                defaultValue = userPreferences[lookupKeyPreferences];
               }
               if (!defaultValue) {
                 low = param.min;
@@ -142,6 +154,7 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
                 step,
                 sliderValue,
                 value,
+                lookupKeyPreferences,
               });
             }
             return Object.assign({}, param, { counterMultiple, rangeInputsConfig });
@@ -172,6 +185,20 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
     this.$slider.on('change', () => {
       this.model.set(`${this.displayOption}.opacity`, parseInt(this.$slider.val(), 10) / 100);
     });
+    this.$(".layer-option-slider").on('slideStop', this.handleSlideStop.bind(this));
+  },
+
+  onDestroy() {
+    this.$slider.off('change');
+    this.$slider.off('slide');
+    this.$(".layer-option-slider").off('slideStop');
+  },
+
+  handleSlideStop(evt) {
+    // set value at localStorage for override when reopened
+    const sliderValue = this.$(evt.target).data('slider').getValue();
+    const preferencesKey = this.$(evt.target).data('lookupkeypreferences');
+    this.updatePreferences(preferencesKey, sliderValue);
   },
 
   onLayerOptionChange(event) {
@@ -184,26 +211,42 @@ const LayerOptionsCoreView = Marionette.ItemView.extend({
   },
 
   replaceLayerParameters(option) {
-    if  (typeof option.IdAttached != 'undefined') {
-      const layerID = this.model.get(`${this.displayOption}.id`) + (option.IdAttached);
-      this.model.set(`${this.displayOption}.extraParameters.LAYERS`, layerID);
-    }
-
     // perform replacing of parameters in underyling model if it was configured
     const replaceList = option.replace;
     _.each(replaceList, (config) => {
       if (typeof config.target === 'string' && typeof config.value !== 'undefined') {
         if (config.value.template) {
-          // interpolate template
-          const evaluated = _.template(config.value.template, {
-            interpolate: /\{\{(.+?)\}\}/g
-          })(this.model.toJSON());
+          let evaluated = null;
+          // interpolate template from Record if able
+          if (this.recordModel) {
+            // special prefix record.something for interpolation
+            evaluated = _.template(config.value.template, {
+              interpolate: /\{\{record\.(.+?)\}\}/g
+            })(this.recordModel.toJSON());
+          }
+          // fallback, interpolate template from layer if able
+          if (typeof evaluated === 'string' && evaluated.includes('{{')) {
+            evaluated = _.template(config.value.template, {
+              interpolate: /\{\{(.+?)\}\}/g
+            })(this.model.toJSON());
+          }
           this.model.set(config.target, evaluated);
         } else {
           this.model.set(config.target, config.value);
         }
       }
     });
+    if (typeof option.IdAttached !== 'undefined') {
+      // default layerID when adding attachment is layer.id itself
+      let layerID = this.model.get(`${this.displayOption}.id`);
+      if (this.model.get(`${this.displayOption}.extraParameters.LAYERS`)) {
+        // if extraParameters.LAYERS override was already set during replace
+        // only append attachment to it
+        layerID = this.model.get(`${this.displayOption}.extraParameters.LAYERS`);
+      }
+      layerID = layerID + option.IdAttached;
+      this.model.set(`${this.displayOption}.extraParameters.LAYERS`, layerID);
+    }
   },
 
   onCollapseVisualizationSelector(event) {
