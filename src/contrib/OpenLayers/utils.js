@@ -329,7 +329,7 @@ function getLayerParams(mapModel, displayParams, filtersModel) {
   const extraParameters = displayParams.extraParameters;
   if (extraParameters) {
     Object.keys(extraParameters).forEach((key) => {
-      if (typeof extraParameters[key]!== "undefined") {
+      if (typeof extraParameters[key]!== "undefined" && extraParameters[key] !== null) {
         if (typeof extraParameters[key] === 'string') {
           params[key] = extraParameters[key];
         } else if (extraParameters[key].template) {

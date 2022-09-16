@@ -46,6 +46,7 @@ export function flattenDownloadSelectionByCoverage(downloadSelections) {
         // for each coverage create a copy of original OpenSearchRecordModel, replace its ID with coverageID and push it back to the records array
         const recordClone = $.extend(true, {}, downloadSel);
         recordClone.attributes.id = coverages[j];
+        recordClone.attributes.itemID = downloadSel.attributes.id;
         if (Array.isArray(record)) {
           records.push([recordClone, ...record]);
         } else {
