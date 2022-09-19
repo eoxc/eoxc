@@ -21,8 +21,9 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     this.collection = this.model.collection || options.collection;
     this.thumbnailUrlPattern = options.thumbnailUrlPattern;
     this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
+
     this.usedUrl = null;
-    this.firstFetch = true;
+    this.firstThumbnailFetch = true;
   },
 
   templateHelpers() {
@@ -45,10 +46,11 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   },
 
   fetchFailureHandler() {
-    if (this.firstFetch) {
+    this.unSetupQueueListeners();
+    if (this.firstThumbnailFetch) {
+      // first failed request was thumbnail, enqueue quicklook
       this.enqueueQuickLook();
     }
-    this.unSetupQueueListeners();
   },
 
   setupQueueListeners() {
@@ -65,12 +67,14 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     if (window.requestQueue) {
       const urlObj = new URL(url);
       if (window.BackboneEventBus.cache[urlObj.href]) {
+        // take thumbnail from cache and set to image element src
         const imageBlobUrl = window.BackboneEventBus.cache[urlObj.href];
         this.setImageSrc(imageBlobUrl);
       } else {
         this.usedUrl = urlObj.href;
         this.setupQueueListeners();
         if (!window.requestQueue.has(this.usedUrl)) {
+          // put item to queue
           window.requestQueue.enqueue(urlObj, {}, {
             'lifo': true, 'itemID': this.usedUrl,
           });
@@ -80,7 +84,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
       fetch(url)
         .then((response) => response.blob())
         .then((imageBlob) => {
-          // Then create a local URL for that image
+          // create a local URL for the image
           const imageObjectURL = URL.createObjectURL(imageBlob);
           this.setImageSrc(imageObjectURL);
         }).bind(this);
@@ -88,6 +92,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   },
 
   enqueueThumbnail() {
+    // attempt to get Thumbnail url and enqueue if passes validation
     const url = this.model.getThumbnailUrl(
       this.collection && this.collection.searchModel ? this.collection.searchModel.get('layerModel').get('search.thumbnailUrlTemplate')
         : undefined
@@ -100,6 +105,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   },
 
   enqueueQuickLook() {
+    // attempt to get Quicklook or fallback thumbnail url and enqueue
     const url = this.model.getQuickLookUrl(
       this.collection && this.collection.searchModel ? this.collection.searchModel.get('layerModel').get('search.quickLookUrlTemplate')
                       : undefined
@@ -116,7 +122,8 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   onRender() {
     const didEnqueue = this.enqueueThumbnail();
     if (!didEnqueue) {
-      this.firstFetch = false;
+      // did not enqueue, signal that quicklook is being fetched
+      this.firstThumbnailFetch = false;
       this.enqueueQuickLook();
     }
   },
@@ -152,6 +159,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
 
   onDestroy() {
     if (window.requestQueue) {
+      // delete still present listeners, dequeue current url
       this.unSetupQueueListeners();
       window.requestQueue.dequeue(this.usedUrl);
     }
