@@ -54,28 +54,28 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   },
 
   setupQueueListeners() {
-    window.BackboneEventBus.on(`fetch:success:${this.usedUrl}`, this.fetchSuccessHandler, this);
-    window.BackboneEventBus.on(`fetch:failure:${this.usedUrl}`, this.fetchFailureHandler, this);
+    window.EventBusLimitedRequestQueue.on(`fetch:success:${this.usedUrl}`, this.fetchSuccessHandler, this);
+    window.EventBusLimitedRequestQueue.on(`fetch:failure:${this.usedUrl}`, this.fetchFailureHandler, this);
   },
 
   unSetupQueueListeners() {
-    window.BackboneEventBus.off(`fetch:success:${this.usedUrl}`, null, this);
-    window.BackboneEventBus.off(`fetch:failure:${this.usedUrl}`, null, this);
+    window.EventBusLimitedRequestQueue.off(`fetch:success:${this.usedUrl}`, null, this);
+    window.EventBusLimitedRequestQueue.off(`fetch:failure:${this.usedUrl}`, null, this);
   },
 
   enqueueImageFetch(url) {
-    if (window.requestQueue) {
+    if (window.LimitedRequestQueue) {
       const urlObj = new URL(url);
-      if (window.BackboneEventBus.cache[urlObj.href]) {
+      if (window.EventBusLimitedRequestQueue.cache[urlObj.href]) {
         // take thumbnail from cache and set to image element src
-        const imageBlobUrl = window.BackboneEventBus.cache[urlObj.href];
+        const imageBlobUrl = window.EventBusLimitedRequestQueue.cache[urlObj.href];
         this.setImageSrc(imageBlobUrl);
       } else {
         this.usedUrl = urlObj.href;
         this.setupQueueListeners();
-        if (!window.requestQueue.has(this.usedUrl)) {
+        if (!window.LimitedRequestQueue.has(this.usedUrl)) {
           // put item to queue
-          window.requestQueue.enqueue(urlObj, {}, {
+          window.LimitedRequestQueue.enqueue(urlObj, {}, {
             'lifo': true, 'itemID': this.usedUrl,
           });
         }
@@ -158,10 +158,10 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   },
 
   onDestroy() {
-    if (window.requestQueue) {
+    if (window.LimitedRequestQueue) {
       // delete still present listeners, dequeue current url
       this.unSetupQueueListeners();
-      window.requestQueue.dequeue(this.usedUrl);
+      window.LimitedRequestQueue.dequeue(this.usedUrl);
     }
   },
 });
