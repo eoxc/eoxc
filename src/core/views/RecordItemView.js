@@ -22,6 +22,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     this.thumbnailUrlPattern = options.thumbnailUrlPattern;
     this.fallbackThumbnailUrl = options.fallbackThumbnailUrl;
     this.usedUrl = null;
+    this.firstFetch = true;
   },
 
   templateHelpers() {
@@ -38,87 +39,86 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     $img.attr('src', imageObjectURL);
   },
 
-  boundHandler(imageBlob) {
+  fetchSuccessHandler(imageBlob) {
     this.setImageSrc(imageBlob);
-    this.unSetupQueueListener();
+    this.unSetupQueueListeners();
   },
 
-  setupQueueListener() {
-    const id = this.getID();
-    window.BackboneEventBus.on(`fetch:${id}`, this.boundHandler, this);
+  fetchFailureHandler() {
+    if (this.firstFetch) {
+      this.enqueueQuickLook();
+    }
+    this.unSetupQueueListeners();
   },
 
-  unSetupQueueListener() {
-    const id = this.getID();
-    window.BackboneEventBus.off(`fetch:${id}`, null, this);
+  setupQueueListeners() {
+    window.BackboneEventBus.on(`fetch:success:${this.usedUrl}`, this.fetchSuccessHandler, this);
+    window.BackboneEventBus.on(`fetch:failure:${this.usedUrl}`, this.fetchFailureHandler, this);
   },
 
-  getID() {
-    return `${this.usedUrl}`;
+  unSetupQueueListeners() {
+    window.BackboneEventBus.off(`fetch:success:${this.usedUrl}`, null, this);
+    window.BackboneEventBus.off(`fetch:failure:${this.usedUrl}`, null, this);
   },
 
-  enqueueThumbnailImageFetch() {
-    let url = this.model.getThumbnailUrl(
+  enqueueImageFetch(url) {
+    if (window.requestQueue) {
+      const urlObj = new URL(url);
+      if (window.BackboneEventBus.cache[urlObj.href]) {
+        const imageBlobUrl = window.BackboneEventBus.cache[urlObj.href];
+        this.setImageSrc(imageBlobUrl);
+      } else {
+        this.usedUrl = urlObj.href;
+        this.setupQueueListeners();
+        if (!window.requestQueue.has(this.usedUrl)) {
+          window.requestQueue.enqueue(urlObj, {}, {
+            'lifo': true, 'itemID': this.usedUrl,
+          });
+        }
+      }
+    } else {
+      fetch(url)
+        .then((response) => response.blob())
+        .then((imageBlob) => {
+          // Then create a local URL for that image
+          const imageObjectURL = URL.createObjectURL(imageBlob);
+          this.setImageSrc(imageObjectURL);
+        }).bind(this);
+    }
+  },
+
+  enqueueThumbnail() {
+    const url = this.model.getThumbnailUrl(
       this.collection && this.collection.searchModel ? this.collection.searchModel.get('layerModel').get('search.thumbnailUrlTemplate')
         : undefined
     );
-    if (this.thumbnailUrlPattern && !(new RegExp(this.thumbnailUrlPattern)).test(url)) {
-      url = '';
+    if (!(isValidUrl(url) && this.thumbnailUrlPattern && !(new RegExp(this.thumbnailUrlPattern)).test(url))) {
+      this.enqueueImageFetch(url);
+      return true;
     }
-    if (isValidUrl(url)) {
-      if (window.requestQueue) {
-        const urlObj = new URL(url);
-        if (window.BackboneEventBus.cache[urlObj.href]) {
-          const imageBlobUrl = window.BackboneEventBus.cache[urlObj.href];
-          this.setImageSrc(imageBlobUrl);
-        } else {
-          this.usedUrl = urlObj.href;
-          this.setupQueueListener();
-          const id = this.getID();
-          if (!window.requestQueue.has(id)) {
-            window.requestQueue.enqueue(urlObj, {}, {
-              'lifo': true, 'itemID': this.getID(),
-            });
-          }
-        }
-      } else {
-        fetch(url)
-          .then((response) => response.blob())
-          .then((imageBlob) => {
-            // Then create a local URL for that image
-            const imageObjectURL = URL.createObjectURL(imageBlob);
-            this.setImageSrc(imageObjectURL);
-          }).bind(this);
-      }
+    return false;
+  },
 
+  enqueueQuickLook() {
+    const url = this.model.getQuickLookUrl(
+      this.collection && this.collection.searchModel ? this.collection.searchModel.get('layerModel').get('search.quickLookUrlTemplate')
+                      : undefined
+    );
+    if (isValidUrl(url)) {
+      this.enqueueImageFetch(url);
+    } else if (isValidUrl(this.fallbackThumbnailUrl)) {
+      this.enqueueImageFetch(this.fallbackThumbnailUrl);
+    } else {
+      $this.$('img').attr('alt', imageError());
     }
   },
 
   onRender() {
-    this.enqueueThumbnailImageFetch();
-    // const $img = this.$('img');
-    // $img
-    //   .one('load', () => this.$('img').fadeIn('slow'))
-    //   .one('error', () => {
-    //     const quickLookUrl = this.model.getQuickLookUrl(
-    //       this.collection && this.collection.searchModel ? this.collection.searchModel.get('layerModel').get('search.quickLookUrlTemplate')
-    //                       : undefined
-    //     );
-    //     if (quickLookUrl) {
-    //       $img
-    //       .attr('src', quickLookUrl)
-    //       .one('load', () => this.$('img').fadeIn('slow'))
-    //       .one('error', () => {
-    //       });
-    //     } else if (this.fallbackThumbnailUrl) {
-    //       $img
-    //         .one('error', () => $img.attr('alt', imageError()))
-    //         .attr('src', this.fallbackThumbnailUrl)
-    //         .addClass('error');
-    //     } else {
-    //       $img.attr('alt', imageError());
-    //     }
-    //   });
+    const didEnqueue = this.enqueueThumbnail();
+    if (!didEnqueue) {
+      this.firstFetch = false;
+      this.enqueueQuickLook();
+    }
   },
 
   onAttach() {
@@ -152,17 +152,9 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
 
   onDestroy() {
     if (window.requestQueue) {
-      this.unSetupQueueListener(this.usedUrl);
+      this.unSetupQueueListeners();
       window.requestQueue.dequeue(this.usedUrl);
     }
-  },
-
-  onDestroy() {
-    if (window.requestQueue) {
-      this.unSetupQueueListener();
-    }
-    const id = this.getID();
-    window.requestQueue.dequeue(id);
   },
 });
 
