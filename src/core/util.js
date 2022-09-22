@@ -162,3 +162,12 @@ export function setSearchParam(key, value) {
 export function numberThousandSep(x, sep) {
   return x.toString().replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, sep);
 }
+
+export function isValidUrl(urlString) {
+  try { 
+    return Boolean(new URL(urlString)); 
+  }
+  catch(e){ 
+    return false; 
+  }
+}
