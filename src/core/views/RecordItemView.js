@@ -36,8 +36,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
   },
 
   setImageSrc(imageObjectURL) {
-    const $img = this.$('img');
-    $img.attr('src', imageObjectURL);
+    this.$('img').attr('src', imageObjectURL);
   },
 
   fetchSuccessHandler(imageBlob) {
@@ -49,7 +48,10 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     this.unSetupQueueListeners();
     if (this.firstThumbnailFetch) {
       // first failed request was thumbnail, enqueue quicklook
+      this.firstThumbnailFetch = false;
       this.enqueueQuickLook();
+    } else {
+      this.enqueueFallbackThumbnail();
     }
   },
 
@@ -81,6 +83,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
         }
       }
     } else {
+      // TODO in case of thumbnail failure on this step is not catched to fetch fallback or quicklook!
       fetch(url)
         .then((response) => response.blob())
         .then((imageBlob) => {
@@ -108,15 +111,24 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
     // attempt to get Quicklook or fallback thumbnail url and enqueue
     const url = this.model.getQuickLookUrl(
       this.collection && this.collection.searchModel ? this.collection.searchModel.get('layerModel').get('search.quickLookUrlTemplate')
-                      : undefined
+                      : null
     );
-    if (isValidUrl(url)) {
+    if (this.usedUrl === url) {
+      // no need to fetch something that failed already
+      this.$('img').attr('alt', imageError());
+    } else if (isValidUrl(url)) {
       this.enqueueImageFetch(url);
-    } else if (isValidUrl(this.fallbackThumbnailUrl)) {
-      this.enqueueImageFetch(this.fallbackThumbnailUrl);
     } else {
-      $this.$('img').attr('alt', imageError());
+      this.enqueueFallbackThumbnail();
     }
+  },
+
+  enqueueFallbackThumbnail() {
+    if (isValidUrl(this.fallbackThumbnailUrl)) {
+      // intentionally avoid cache & queue for fallbackThumbnailUrl
+      this.$('img').attr('src', this.fallbackThumbnailUrl);
+    }
+    this.$('img').attr('alt', imageError())
   },
 
   onRender() {
