@@ -1,6 +1,6 @@
 # EOxC client framework
 
-The full documentation is available [here](http://eoxc.github.io/eoxc/).
+The full documentation is available [here](https://eoxc.github.io/eoxc/).
 
 ## Setup
 
