@@ -100,7 +100,7 @@ const RecordItemView = Marionette.ItemView.extend(/** @lends core/views/layers.R
       this.collection && this.collection.searchModel ? this.collection.searchModel.get('layerModel').get('search.thumbnailUrlTemplate')
         : undefined
     );
-    if (!(isValidUrl(url) && this.thumbnailUrlPattern && !(new RegExp(this.thumbnailUrlPattern)).test(url))) {
+    if (isValidUrl(url) || (this.thumbnailUrlPattern && new RegExp(this.thumbnailUrlPattern).test(url))) {
       this.enqueueImageFetch(url);
       return true;
     }
